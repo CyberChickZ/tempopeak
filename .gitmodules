@@ -1,0 +1,3 @@
+[submodule "external/mamba"]
+	path = external/mamba
+	url = https://github.com/state-spaces/mamba.git
