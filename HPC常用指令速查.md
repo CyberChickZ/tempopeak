@@ -42,3 +42,5 @@
 ## 新增模型 (ResNet+BiMamba)
 - 运行新模型冒烟测试：`python test_model.py`
   - 预期输出：`output shape: [B, T]`，`sum over time: 1.0`
+- 运行合成数据训练测试：`python train.py`
+  - 预期：Loss 快速下降，Acc 接近 1.0
