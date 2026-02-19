@@ -38,3 +38,7 @@
   EOF
   ```
   - 作用：计算平均前向耗时，快速评估时序模块计算开销。
+
+## 新增模型 (ResNet+BiMamba)
+- 运行新模型冒烟测试：`python test_model.py`
+  - 预期输出：`output shape: [B, T]`，`sum over time: 1.0`
