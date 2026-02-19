@@ -60,6 +60,4 @@ class EventModel(nn.Module):
 
         scores = self.score(h).squeeze(-1)
 
-        p = torch.softmax(scores, dim=1)
-
-        return p
+        return scores
