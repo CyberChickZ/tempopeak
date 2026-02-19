@@ -7,7 +7,8 @@ model = EventModel().cuda()
 
 x = torch.randn(B, T, 3, H, W).cuda()
 
-p = model(x)
+p_logits = model(x)
+p = torch.softmax(p_logits, dim=1)
 
-print("output shape:", p.shape)
-print("sum over time:", p.sum(dim=1))
+print("output shape:", p_logits.shape)
+print("sum over time (after softmax):", p.sum(dim=1))
