@@ -25,10 +25,11 @@ def main():
 
     print("Starting training loop with synthetic data...")
 
-    for step in range(50):
+    # 在循环外固定一个 batch，验证模型是否能 overfit (loss 下降)
+    x = torch.randn(B, T, 3, H, W, device=device)
+    t_gt = torch.randint(0, T, (B,), device=device)
 
-        x = torch.randn(B, T, 3, H, W, device=device)
-        t_gt = torch.randint(0, T, (B,), device=device)
+    for step in range(50):
 
         optimizer.zero_grad()
 
