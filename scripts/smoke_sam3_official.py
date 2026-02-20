@@ -79,6 +79,9 @@ for response in predictor.handle_stream_request(
     )
 ):
     frame_idx = response["frame_index"]
+    if frame_idx >= 20: 
+        break
+        
     out = response["outputs"]
     outputs_per_frame[frame_idx] = out
     
