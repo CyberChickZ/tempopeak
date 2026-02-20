@@ -135,6 +135,22 @@ def pcs_detect_one(frame_idx: int, text: str, pick_mode: str):
         m = m[0]
     return mask_centroid(m)
 
+def add_point_and_prime(frame_idx: int, obj_id: int, cxy: list[float]):
+    points = [[[[cxy[0], cxy[1]]]]]
+    labels = [[[1]]]
+    trk_proc.add_inputs_to_inference_session(
+        inference_session=trk_session,
+        frame_idx=frame_idx,
+        obj_ids=obj_id,
+        input_points=points,
+        input_labels=labels,
+    )
+    # NOTE: Keep this immediate prime call.
+    # Without it, adding another object later can overwrite `obj_with_new_inputs`,
+    # and then propagation may crash with:
+    # "ValueError: maskmem_features in conditioning outputs cannot be empty when not is_initial_conditioning_frame"
+    _ = trk_model(inference_session=trk_session, frame_idx=frame_idx)
+
 # -------------------------
 # Step A: initial scan to acquire at least one prompt (ball/racket)
 # -------------------------
@@ -143,15 +159,7 @@ for fi in range(min(SCAN_INIT_MAX_FRAMES, len(video_frames))):
     if not have_ball:
         c = pcs_detect_one(fi, "ball", pick_mode="small")
         if c is not None:
-            points = [[[[c[0], c[1]]]]]
-            labels = [[[1]]]
-            trk_proc.add_inputs_to_inference_session(
-                inference_session=trk_session,
-                frame_idx=fi,
-                obj_ids=BALL_ID,
-                input_points=points,
-                input_labels=labels,
-            )
+            add_point_and_prime(fi, BALL_ID, c)
             have_ball = True
             init_start_frame = fi if init_start_frame is None else min(init_start_frame, fi)
             print("init acquire ball at frame", fi, "point", c)
@@ -159,15 +167,7 @@ for fi in range(min(SCAN_INIT_MAX_FRAMES, len(video_frames))):
     if not have_racket:
         c = pcs_detect_one(fi, "racket", pick_mode="large")
         if c is not None:
-            points = [[[[c[0], c[1]]]]]
-            labels = [[[1]]]
-            trk_proc.add_inputs_to_inference_session(
-                inference_session=trk_session,
-                frame_idx=fi,
-                obj_ids=RACKET_ID,
-                input_points=points,
-                input_labels=labels,
-            )
+            add_point_and_prime(fi, RACKET_ID, c)
             have_racket = True
             init_start_frame = fi if init_start_frame is None else min(init_start_frame, fi)
             print("init acquire racket at frame", fi, "point", c)
@@ -177,9 +177,6 @@ for fi in range(min(SCAN_INIT_MAX_FRAMES, len(video_frames))):
 
 if init_start_frame is None:
     raise RuntimeError("failed to acquire any prompt in initial scan window")
-
-# Tracker requires running forward once on a frame with inputs to set start frame
-_ = trk_model(inference_session=trk_session, frame_idx=init_start_frame)
 
 # -------------------------
 # Step B: tracking loop + per-frame PCS re-acquire
