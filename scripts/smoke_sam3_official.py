@@ -7,20 +7,11 @@ from pathlib import Path
 import sam3
 from sam3.model_builder import build_sam3_video_predictor
 
-import cv2
-import matplotlib.pyplot as plt
-import numpy as np
-from sam3.visualization_utils import (
-    load_frame,
-    prepare_masks_for_visualization,
-    visualize_formatted_frame_output,
-)
-
 # -------------------------
 # Config 
 # -------------------------
 VIDEO_PATH = "/nfs/hpc/share/zhanhaoc/hpe/tempopeak/datasets/serve/00001.mp4"
-OUT_PARAMS_DIR = "/nfs/hpc/share/zhanhaoc/hpe/tempopeak/outputs/smoke_sam3_official_vis"
+OUT_JSON = "/nfs/hpc/share/zhanhaoc/hpe/tempopeak/outputs/smoke_sam3_official_tracks.json"
 
 gpus_to_use = range(torch.cuda.device_count()) if torch.cuda.is_available() else []
 
@@ -79,9 +70,6 @@ for response in predictor.handle_stream_request(
     )
 ):
     frame_idx = response["frame_index"]
-    if frame_idx >= 20: 
-        break
-        
     out = response["outputs"]
     outputs_per_frame[frame_idx] = out
     
@@ -111,11 +99,29 @@ _ = predictor.handle_request(
 )
 predictor.shutdown()
 
-# We'll save the raw outputs dict so we can use visualize_formatted_frame_output
-Path(OUT_PARAMS_DIR).mkdir(parents=True, exist_ok=True)
+Path(OUT_JSON).parent.mkdir(parents=True, exist_ok=True)
+with open(OUT_JSON, "w") as f:
+    json.dump(tracks, f, indent=2)
 
-print("Preparing video frames for visualization...")
-# Sam3 visualization API requires a list of video frames loaded either as numpy or file paths.
+print(f"Tracked frames: {len(tracks)}")
+print(f"Wrote to: {OUT_JSON}")
+
+# -------------------------
+# Visualization 
+# -------------------------
+import cv2
+import matplotlib.pyplot as plt
+from sam3.visualization_utils import (
+    load_frame,
+    prepare_masks_for_visualization,
+    visualize_formatted_frame_output,
+)
+
+OUT_DIR = "/nfs/hpc/share/zhanhaoc/hpe/tempopeak/outputs/smoke_sam3_official_vis"
+print(f"Generating visualization frames using official SAM3 tools to {OUT_DIR}...")
+os.makedirs(OUT_DIR, exist_ok=True)
+
+# 1. Load video frames for vis
 cap = cv2.VideoCapture(VIDEO_PATH)
 video_frames_for_vis = []
 while True:
@@ -125,25 +131,29 @@ while True:
     video_frames_for_vis.append(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
 cap.release()
 
-print("Processing masks and generating figures...")
-# Reformat the outputs for visualization
-outputs_per_frame_prepared = prepare_masks_for_visualization(outputs_per_frame)
+# 2. Reformat outputs for visualization
+print("Preparing masks for visualization...")
+outputs_per_frame_vis = prepare_masks_for_visualization(outputs_per_frame)
 
-# We will save a figure every 5 frames instead of plotting them interactively
-vis_frame_stride = 5
-plt.ioff() # Disable interactive mode
-for frame_idx in range(0, len(outputs_per_frame_prepared), vis_frame_stride):
-    # This function expects `outputs_list` to be a list of output dicts (one for each model if comparing).
-    # We pass our single model's dict.
-    visualize_formatted_frame_output(
+# 3. Export visual frames
+vis_frame_stride = 1
+plt.close("all")
+
+for frame_idx in range(0, len(outputs_per_frame_vis), vis_frame_stride):
+    fig, ax = visualize_formatted_frame_output(
         frame_idx,
         video_frames_for_vis,
-        outputs_list=[outputs_per_frame_prepared],
-        titles=[f"SAM 3 Official Tracker (Frame {frame_idx})"],
-        figsize=(10, 6),
+        outputs_list=[outputs_per_frame_vis],
+        titles=["SAM 3 Dense Tracking outputs"],
+        figsize=(12, 8),
     )
-    plt.savefig(f"{OUT_PARAMS_DIR}/frame_{frame_idx:04d}.jpg")
-    plt.close("all")
+    
+    # Save the current plot
+    out_path = os.path.join(OUT_DIR, f"frame_{frame_idx:05d}.jpg")
+    plt.savefig(out_path, bbox_inches='tight', pad_inches=0)
+    plt.close(fig)
+    
+    if frame_idx % 10 == 0:
+        print(f"Saved visualization for frame {frame_idx}")
 
-print(f"Visualization frames saved to {OUT_PARAMS_DIR}/")
-
+print(f"All visualization frames saved to: {OUT_DIR}")
