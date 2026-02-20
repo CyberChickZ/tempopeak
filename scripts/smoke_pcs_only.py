@@ -63,7 +63,7 @@ for idx in sample_indices:
     # PIL image size is (width, height)
     target_sizes = [pil_img.size[::-1]] 
     res_ball = processor.post_process_instance_segmentation(
-        outputs, threshold=0.0, mask_threshold=0.5, target_sizes=target_sizes
+        outputs, threshold=0.4, mask_threshold=0.5, target_sizes=target_sizes
     )[0]
     
     if len(res_ball["masks"]) > 0:
@@ -77,7 +77,7 @@ for idx in sample_indices:
         outputs = model(**inputs)
 
     res_racket = processor.post_process_instance_segmentation(
-        outputs, threshold=0.0, mask_threshold=0.5, target_sizes=target_sizes
+        outputs, threshold=0.4, mask_threshold=0.5, target_sizes=target_sizes
     )[0]
 
     if len(res_racket["masks"]) > 0:
