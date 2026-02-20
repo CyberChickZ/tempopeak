@@ -95,22 +95,25 @@ tracks = {}  # frame_idx -> {"ball": [x,y] or None, "racket": [x,y] or None}
 # returns centroid or None
 # -------------------------
 def pcs_detect_one(frame_idx: int, text: str, pick_mode: str):
-    # build a short session but reuse same full video; then only consume out.frame_idx == frame_idx
+    # Build a true single-frame "video" to do independent image-level prediction
+    # This avoids any temporal context overhead from the rest of the video.
+    single_frame = [video_frames[frame_idx]]
     sess = pcs_proc.init_video_session(
-        video=video_frames,
+        video=single_frame,
         inference_device=device,
         processing_device="cpu",
         video_storage_device="cpu",
         dtype=dtype,
     )
-    sess = pcs_proc.add_text_prompt(inference_session=sess, text=text)
+    # The prompt is applied to the only frame, which is index 0
+    sess = pcs_proc.add_text_prompt(inference_session=sess, text=text, frame_idx=0)
 
     out_frame = None
     for out in pcs_model.propagate_in_video_iterator(inference_session=sess):
-        if int(out.frame_idx) != int(frame_idx):
-            continue
+        # We only have one frame
         out_frame = pcs_proc.postprocess_outputs(sess, out)
         break
+    
     if out_frame is None:
         return None
 
