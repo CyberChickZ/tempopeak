@@ -5,7 +5,7 @@ import torch
 from accelerate import Accelerator
 from transformers.video_utils import load_video
 from transformers import (
-    Sam3VideoModel, Sam3VideoProcessor,
+    Sam3Model, Sam3Processor,
     Sam3TrackerVideoModel, Sam3TrackerVideoProcessor,
 )
 
@@ -62,10 +62,10 @@ print("Loaded frames:", len(video_frames))
 dtype = torch.float32 if USE_FP32 else torch.bfloat16
 
 # -------------------------
-# Load PCS model/processor (text -> instance masks per frame)
+# Load PCS model/processor (text -> instance masks per image)
 # -------------------------
-pcs_model = Sam3VideoModel.from_pretrained(HF_LOCAL_MODEL, local_files_only=True).to(device, dtype=dtype)
-pcs_proc = Sam3VideoProcessor.from_pretrained(HF_LOCAL_MODEL, local_files_only=True)
+pcs_model = Sam3Model.from_pretrained(HF_LOCAL_MODEL, local_files_only=True).to(device, dtype=dtype)
+pcs_proc = Sam3Processor.from_pretrained(HF_LOCAL_MODEL, local_files_only=True)
 
 # -------------------------
 # Load Tracker model/processor (points -> track identities)
@@ -95,36 +95,29 @@ tracks = {}  # frame_idx -> {"ball": [x,y] or None, "racket": [x,y] or None}
 # returns centroid or None
 # -------------------------
 def pcs_detect_one(frame_idx: int, text: str, pick_mode: str):
-    # Build a true single-frame "video" to do independent image-level prediction
-    # This avoids any temporal context overhead from the rest of the video.
-    single_frame = [video_frames[frame_idx]]
-    sess = pcs_proc.init_video_session(
-        video=single_frame,
-        inference_device=device,
-        processing_device="cpu",
-        video_storage_device="cpu",
-        dtype=dtype,
-    )
-    # The prompt is applied to the only frame, which is index 0
-    sess = pcs_proc.add_text_prompt(inference_session=sess, text=text, frame_idx=0)
-
-    out_frame = None
-    for out in pcs_model.propagate_in_video_iterator(inference_session=sess):
-        # We only have one frame
-        out_frame = pcs_proc.postprocess_outputs(sess, out)
-        break
+    image = video_frames[frame_idx]
     
-    if out_frame is None:
-        return None
+    inputs = pcs_proc(images=image, text=text, return_tensors="pt").to(device)
+    inputs["pixel_values"] = inputs["pixel_values"].to(dtype)
 
-    scores = out_frame["scores"]
-    boxes = out_frame["boxes"]
-    masks = out_frame["masks"]
+    with torch.no_grad():
+        outputs = pcs_model(**inputs)
+
+    results = pcs_proc.post_process_instance_segmentation(
+        outputs,
+        threshold=PCS_SCORE_TH,
+        mask_threshold=0.5,
+        target_sizes=inputs.get("original_sizes").tolist()
+    )[0]
+
+    scores = results["scores"]
+    boxes = results["boxes"]
+    masks = results["masks"]
 
     if scores.numel() == 0:
         return None
 
-    # filter by score threshold
+    # filter by score threshold (if any remain after postprocess)
     keep = scores >= PCS_SCORE_TH
     if keep.sum().item() == 0:
         return None
@@ -209,25 +202,18 @@ for out in trk_model.propagate_in_video_iterator(trk_session):
     ball_c = None
     racket_c = None
 
-    # masks is usually [num_obj, 1, H, W] but be tolerant
-    if have_ball:
+    # Match each mask to its correct object id from the tracker session
+    for i, obj_id in enumerate(trk_session.obj_ids):
         try:
-            m = masks[0]
+            m = masks[i]
             if m.dim() == 3:
                 m = m[0]
-            ball_c = mask_centroid(m)
+            if obj_id == BALL_ID:
+                ball_c = mask_centroid(m)
+            elif obj_id == RACKET_ID:
+                racket_c = mask_centroid(m)
         except Exception:
-            ball_c = None
-
-    if have_racket:
-        try:
-            j = 1 if have_ball else 0
-            m = masks[j]
-            if m.dim() == 3:
-                m = m[0]
-            racket_c = mask_centroid(m)
-        except Exception:
-            racket_c = None
+            pass
 
     # per-frame PCS detect (re-acquire when missing)
     if have_ball and ball_c is None:
