@@ -97,3 +97,49 @@ with open(OUT_JSON, "w") as f:
 
 print(f"Tracked frames: {len(tracks)}")
 print(f"Wrote to: {OUT_JSON}")
+
+# -------------------------
+# Visualization 
+# -------------------------
+import cv2
+
+OUT_MP4 = "/nfs/hpc/share/zhanhaoc/hpe/tempopeak/outputs/smoke_sam3_hf_video_pcs_vis.mp4"
+print(f"Generating visualization to {OUT_MP4}...")
+
+cap = cv2.VideoCapture(VIDEO_PATH)
+fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
+w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+out_vid = cv2.VideoWriter(OUT_MP4, fourcc, fps, (w, h))
+
+frame_idx = 0
+colors = [(0, 0, 255), (255, 0, 0), (0, 255, 0), (255, 255, 0)]
+
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
+        
+    pts = tracks.get(frame_idx, {})
+    color_idx = 0
+    
+    for obj_id, data in pts.items():
+        centroid = data.get("centroid")
+        if centroid is not None:
+            cx, cy = int(centroid[0]), int(centroid[1])
+            col = colors[color_idx % len(colors)]
+            cv2.circle(frame, (cx, cy), 8, col, -1) 
+            # Write Label and Score
+            scorestr = f"{data.get('score', 0):.2f}"
+            cv2.putText(frame, f"ID:{obj_id} s:{scorestr}", (cx+10, cy-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, col, 2)
+            color_idx += 1
+            
+    cv2.putText(frame, f"Frame: {frame_idx}", (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+    out_vid.write(frame)
+    frame_idx += 1
+
+cap.release()
+out_vid.release()
+print("Visualization saved successfully!")
