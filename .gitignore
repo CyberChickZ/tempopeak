@@ -224,6 +224,6 @@ work_dirs/
 checkpoints/
 logs/
 data/
-outputs/
+# outputs/
 models/models--facebook--sam3/
 models/.locks/
