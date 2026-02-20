@@ -148,7 +148,7 @@ def pcs_detect_one(frame_idx: int, text: str, pick_mode: str):
 init_start_frame = None
 for fi in range(min(SCAN_INIT_MAX_FRAMES, len(video_frames))):
     if not have_ball:
-        c = pcs_detect_one(fi, "tennis ball", pick_mode="small")
+        c = pcs_detect_one(fi, "ball", pick_mode="small")
         if c is not None:
             points = [[[[c[0], c[1]]]]]
             labels = [[[1]]]
@@ -164,7 +164,7 @@ for fi in range(min(SCAN_INIT_MAX_FRAMES, len(video_frames))):
             print("init acquire ball at frame", fi, "point", c)
 
     if not have_racket:
-        c = pcs_detect_one(fi, "tennis racket", pick_mode="large")
+        c = pcs_detect_one(fi, "racket", pick_mode="large")
         if c is not None:
             points = [[[[c[0], c[1]]]]]
             labels = [[[1]]]
@@ -231,7 +231,7 @@ for out in trk_model.propagate_in_video_iterator(trk_session):
 
     # per-frame PCS detect (re-acquire when missing)
     if have_ball and ball_c is None:
-        c = pcs_detect_one(fi, "tennis ball", pick_mode="small")
+        c = pcs_detect_one(fi, "ball", pick_mode="small")
         if c is not None:
             points = [[[[c[0], c[1]]]]]
             labels = [[[1]]]
@@ -247,7 +247,7 @@ for out in trk_model.propagate_in_video_iterator(trk_session):
             ball_c = c
 
     if have_racket and racket_c is None:
-        c = pcs_detect_one(fi, "tennis racket", pick_mode="large")
+        c = pcs_detect_one(fi, "racket", pick_mode="large")
         if c is not None:
             points = [[[[c[0], c[1]]]]]
             labels = [[[1]]]
