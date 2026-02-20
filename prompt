@@ -1,0 +1,75 @@
+from sam3.visualization_utils import (
+    load_frame,
+    prepare_masks_for_visualization,
+    visualize_formatted_frame_output,
+)
+
+# font size for axes titles
+plt.rcParams["axes.titlesize"] = 12
+plt.rcParams["figure.titlesize"] = 12
+
+
+def propagate_in_video(predictor, session_id):
+    # we will just propagate from frame 0 to the end of the video
+    outputs_per_frame = {}
+    for response in predictor.handle_stream_request(
+        request=dict(
+            type="propagate_in_video",
+            session_id=session_id,
+        )
+    ):
+        outputs_per_frame[response["frame_index"]] = response["outputs"]
+
+    return outputs_per_frame
+
+
+def abs_to_rel_coords(coords, IMG_WIDTH, IMG_HEIGHT, coord_type="point"):
+    """Convert absolute coordinates to relative coordinates (0-1 range)
+
+    Args:
+        coords: List of coordinates
+        coord_type: 'point' for [x, y] or 'box' for [x, y, w, h]
+    """
+    if coord_type == "point":
+        return [[x / IMG_WIDTH, y / IMG_HEIGHT] for x, y in coords]
+    elif coord_type == "box":
+        return [
+            [x / IMG_WIDTH, y / IMG_HEIGHT, w / IMG_WIDTH, h / IMG_HEIGHT]
+            for x, y, w, h in coords
+        ]
+    else:
+        raise ValueError(f"Unknown coord_type: {coord_type}")
+Loading an example video
+We assume that the video is stored as either a list of JPEG frames with filenames like <frame_index>.jpg or an MP4 video.
+
+Note that you can extract their JPEG frames using ffmpeg (https://ffmpeg.org/) as follows:
+
+ffmpeg -i <your_video>.mp4 -q:v 2 -start_number 0 <output_dir>/'%05d.jpg'
+where -q:v generates high-quality JPEG frames and -start_number 0 asks ffmpeg to start the JPEG file from 00000.jpg.
+
+# "video_path" needs to be either a JPEG folder or a MP4 video file
+video_path = f"{sam3_root}/assets/videos/0001"
+# load "video_frames_for_vis" for visualization purposes (they are not used by the model)
+if isinstance(video_path, str) and video_path.endswith(".mp4"):
+    cap = cv2.VideoCapture(video_path)
+    video_frames_for_vis = []
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+        video_frames_for_vis.append(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+    cap.release()
+else:
+    video_frames_for_vis = glob.glob(os.path.join(video_path, "*.jpg"))
+    try:
+        # integer sort instead of string sort (so that e.g. "2.jpg" is before "11.jpg")
+        video_frames_for_vis.sort(
+            key=lambda p: int(os.path.splitext(os.path.basename(p))[0])
+        )
+    except ValueError:
+        # fallback to lexicographic sort if the format is not "<frame_index>.jpg"
+        print(
+            f'frame names are not in "<frame_index>.jpg" format: {video_frames_for_vis[:5]=}, '
+            f"falling back to lexicographic sort."
+        )
+        video_frames_for_vis.sort()
