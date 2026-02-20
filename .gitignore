@@ -225,3 +225,5 @@ checkpoints/
 logs/
 data/
 outputs/
+models/models--facebook--sam3/
+models/.locks/
