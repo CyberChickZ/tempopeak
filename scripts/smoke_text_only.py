@@ -1,4 +1,5 @@
-# text_only_prompt.py — Text-Only Prompt (HF Sam3Model, single frame segmentation)
+# smoke_text_only.py — Text-Only Prompt (HF Sam3Model, single frame segmentation)
+# Ref: HF Doc "Text-Only Prompts" section
 import os
 import torch
 import numpy as np
@@ -21,22 +22,14 @@ processor = Sam3Processor.from_pretrained(HF_LOCAL_MODEL, local_files_only=True)
 print("Loading video...")
 video_frames, _ = load_video(VIDEO_PATH)
 
-<<<<<<<< HEAD:scripts/text_only_prompt.py
-# Test frames: [0, 5, 10, 15, 20]
+# Test frames
 sample_indices = [0, 5, 10, 15, 20]
-========
-# 只取一帧（比如视频开头，或者中间某帧，这里选第 10 帧作为测试）
-sample_indices = [0,5,10,15,20]
->>>>>>>> 216a5e4 (sam3_video_text_prompt_ball_track smoke output):scripts/smoke_text_only.py
 
 def overlay_masks(image, masks, color):
-    # image: PIL Image
-    # masks: [N, H, W] boolean/float
+    """Overlay N masks (2D bool tensors) onto a PIL image with semi-transparency."""
     image = image.convert("RGBA")
-    masks = masks.cpu().numpy()
-    
-    for mask in masks:
-        # Avoid issues where masks might be soft probabilities, we threshold it:
+    masks_np = masks.cpu().numpy()
+    for mask in masks_np:
         mask_bool = mask > 0.0
         mask_img = Image.fromarray((mask_bool * 255).astype(np.uint8))
         overlay = Image.new("RGBA", image.size, color + (0,))
@@ -49,44 +42,33 @@ print(f"Sampling {len(sample_indices)} frames: {sample_indices}")
 
 for idx in sample_indices:
     frame = video_frames[idx]
-    # Handle both np.ndarray and PIL inputs returned by load_video
-    if isinstance(frame, np.ndarray):
-        pil_img = Image.fromarray(frame)
-    else:
-        pil_img = frame
-        
+    pil_img = Image.fromarray(frame) if isinstance(frame, np.ndarray) else frame
+
     print(f"Processing frame {idx}...")
     vis_img = pil_img.copy()
 
-    # --- 移除了 Ball，只专属检测 Racket ---
-    print(f"Detecting 'racket' on frame {idx}...")
+    # Text-only prompt: racket
     inputs = processor(images=pil_img, text="racket", return_tensors="pt").to(device)
     inputs["pixel_values"] = inputs["pixel_values"].to(dtype)
-    
+
     with torch.no_grad():
         outputs = model(**inputs)
 
-    # 这里的 target_sizes 需要是 (height, width)
-    target_sizes = [pil_img.size[::-1]] 
+    # target_sizes must be (height, width)
+    target_sizes = [pil_img.size[::-1]]
 
-    # 恢复正常 threshold (比如 0.4) 观察真正的模型高置信度推荐
     res_racket = processor.post_process_instance_segmentation(
-        outputs, threshold=0.5, mask_threshowld=0.5, target_sizes=target_sizes
+        outputs, threshold=0.5, mask_threshold=0.5, target_sizes=target_sizes
     )[0]
 
     if len(res_racket["masks"]) > 0:
-        # blue for racket
         vis_img = overlay_masks(vis_img, res_racket["masks"], color=(0, 0, 255))
-        
-<<<<<<<< HEAD:scripts/text_only_prompt.py
-    out_path = os.path.join(OUT_DIR, f"text_only_frame_{idx:04d}_racket.jpg")
-========
+
     out_path = os.path.join(OUT_DIR, f"frame_{idx:04d}_text_only.jpg")
->>>>>>>> 216a5e4 (sam3_video_text_prompt_ball_track smoke output):scripts/smoke_text_only.py
     vis_img.save(out_path)
-    
+
     r_scores = [round(s, 3) for s in res_racket["scores"].tolist()] if len(res_racket["scores"]) > 0 else []
     print(f"  -> Saved {out_path}")
     print(f"     Racket scores: {r_scores}")
-    
+
 print("All frames processed successfully!")
