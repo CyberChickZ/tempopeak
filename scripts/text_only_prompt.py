@@ -1,3 +1,4 @@
+# text_only_prompt.py — Text-Only Prompt (HF Sam3Model, single frame segmentation)
 import os
 import torch
 import numpy as np
@@ -20,8 +21,8 @@ processor = Sam3Processor.from_pretrained(HF_LOCAL_MODEL, local_files_only=True)
 print("Loading video...")
 video_frames, _ = load_video(VIDEO_PATH)
 
-# 只取一帧（比如视频开头，或者中间某帧，这里选第 10 帧作为测试）
-sample_indices = [10]
+# Test frames: [0, 5, 10, 15, 20]
+sample_indices = [0, 5, 10, 15, 20]
 
 def overlay_masks(image, masks, color):
     # image: PIL Image
@@ -72,7 +73,7 @@ for idx in sample_indices:
         # blue for racket
         vis_img = overlay_masks(vis_img, res_racket["masks"], color=(0, 0, 255))
         
-    out_path = os.path.join(OUT_DIR, f"frame_{idx:04d}_racket_only.jpg")
+    out_path = os.path.join(OUT_DIR, f"text_only_frame_{idx:04d}_racket.jpg")
     vis_img.save(out_path)
     
     r_scores = [round(s, 3) for s in res_racket["scores"].tolist()] if len(res_racket["scores"]) > 0 else []
