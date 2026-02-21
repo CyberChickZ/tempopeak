@@ -227,3 +227,5 @@ data/
 # outputs/
 models/models--facebook--sam3/
 models/.locks/
+datasets/raw/Serve-Compilation-Slow-Motion-Alcaraz-Dj-proj.llc
+.gitignore
