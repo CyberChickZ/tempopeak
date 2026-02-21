@@ -68,7 +68,7 @@ inference_session = processor.add_text_prompt(
 # After this, processed["prompt_to_obj_ids"] will look like:
 #   {'ball': [0, 1, 2], 'racket': [3, 4]}
 
-# ── Helpers ────────────────────────────────────────────────────────────────────
+# ── Helper ────────────────────────────────────────────────────────────────────
 def mask_centroid(mask: torch.Tensor):
     """mask: 2D bool [H, W] → [cx, cy] float or None."""
     ys, xs = torch.where(mask)
@@ -77,30 +77,10 @@ def mask_centroid(mask: torch.Tensor):
     return [float(xs.float().mean()), float(ys.float().mean())]
 
 
-def top1_for_prompt(prompt_name, prompt_to_obj_ids, obj_ids_list, scores_list, masks_tensor):
-    """
-    Among all object IDs that belong to `prompt_name`, pick the one with
-    the highest score. Returns (centroid, score, box_idx) or (None, 0.0, None).
-    """
-    candidate_ids = prompt_to_obj_ids.get(prompt_name, [])
-    best_score    = -1.0
-    best_centroid = None
-
-    for obj_id in candidate_ids:
-        if obj_id not in obj_ids_list:
-            continue
-        i = obj_ids_list.index(obj_id)
-        score = scores_list[i]
-        if score > best_score:
-            best_score    = score
-            best_centroid = mask_centroid(masks_tensor[i])
-
-    return best_centroid, round(best_score, 4)
-
-
 # ── Propagate through whole video ─────────────────────────────────────────────
 print("Propagating through video...")
-tracks: dict = {}  # {frame_idx: {'ball': {centroid, score}, 'racket': {centroid, score}}}
+# tracks: {frame_idx: {str(obj_id): {prompt, centroid, score}}}
+tracks: dict = {}
 
 for model_outputs in model.propagate_in_video_iterator(
     inference_session=inference_session,
@@ -109,21 +89,30 @@ for model_outputs in model.propagate_in_video_iterator(
     frame_idx = model_outputs.frame_idx
     processed = processor.postprocess_outputs(inference_session, model_outputs)
 
-    obj_ids_list      = processed["object_ids"].tolist()      # list[int]
-    scores_list       = processed["scores"].tolist()          # list[float]
-    masks_tensor      = processed["masks"]                    # [N, H, W] bool, cuda
-    prompt_to_obj_ids = processed["prompt_to_obj_ids"]       # {'ball':[...], 'racket':[...]}
+    obj_ids_list      = processed["object_ids"].tolist()   # list[int]
+    scores_list       = processed["scores"].tolist()        # list[float]
+    masks_tensor      = processed["masks"]                  # [N, H, W] bool, cuda
+    prompt_to_obj_ids = processed["prompt_to_obj_ids"]     # {'ball':[...], 'racket':[...]}
 
-    ball_c,   ball_s   = top1_for_prompt("ball",   prompt_to_obj_ids, obj_ids_list, scores_list, masks_tensor)
-    racket_c, racket_s = top1_for_prompt("racket", prompt_to_obj_ids, obj_ids_list, scores_list, masks_tensor)
+    # Invert: obj_id → prompt label
+    id_to_prompt = {}
+    for label, ids in prompt_to_obj_ids.items():
+        for oid in ids:
+            id_to_prompt[oid] = label
 
-    tracks[frame_idx] = {
-        "ball":   {"centroid": ball_c,   "score": ball_s},
-        "racket": {"centroid": racket_c, "score": racket_s},
-    }
+    frame_data = {}
+    for i, obj_id in enumerate(obj_ids_list):
+        centroid = mask_centroid(masks_tensor[i])
+        frame_data[str(obj_id)] = {
+            "prompt":   id_to_prompt.get(obj_id, "unknown"),
+            "centroid": centroid,
+            "score":    round(scores_list[i], 4),
+        }
+
+    tracks[frame_idx] = frame_data
 
     if frame_idx % 30 == 0:
-        print(f"  frame {frame_idx:04d}  ball={ball_c}  s={ball_s}  |  racket={racket_c}  s={racket_s}")
+        print(f"  frame {frame_idx:04d}  objects={list(frame_data.keys())}")
 
 print(f"\nTotal tracked frames: {len(tracks)}")
 
@@ -144,9 +133,10 @@ h   = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 fourcc  = cv2.VideoWriter_fourcc(*"mp4v")
 out_vid = cv2.VideoWriter(OUT_MP4, fourcc, fps, (w, h))
 
-COLORS = {
-    "ball":   (0, 0, 255),    # red
-    "racket": (255, 64, 0),   # blue-orange
+LABEL_COLORS = {
+    "ball":    (0, 0, 255),    # red
+    "racket":  (255, 64, 0),   # orange-blue
+    "unknown": (0, 255, 255),  # yellow
 }
 
 frame_idx = 0
@@ -155,14 +145,14 @@ while True:
     if not ret:
         break
 
-    frame_data = tracks.get(frame_idx, {})
-    for label, col in COLORS.items():
-        info = frame_data.get(label, {})
-        c    = info.get("centroid")
+    for obj_id, info in tracks.get(frame_idx, {}).items():
+        c = info.get("centroid")
         if c is not None:
             cx, cy = int(c[0]), int(c[1])
+            label = info.get("prompt", "unknown")
+            col   = LABEL_COLORS.get(label, (200, 200, 200))
             cv2.circle(frame, (cx, cy), 8, col, -1)
-            cv2.putText(frame, f"{label} {info.get('score', 0):.2f}",
+            cv2.putText(frame, f"{label}#{obj_id} {info.get('score', 0):.2f}",
                         (cx + 10, cy - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, col, 2)
 
     cv2.putText(frame, f"Frame: {frame_idx}", (20, 40),
