@@ -1,12 +1,18 @@
-# sam3_video_text_prompt_ball_track.py — Full-Video Ball Tracking (HF Sam3VideoModel)
+# sam3_video_text_prompt_ball_track.py — Ball + Racket Tracking (HF Sam3VideoModel)
 # Ref: HF Doc "Pre-loaded Video Inference" section
 #
-# Key facts confirmed from HPC inspection:
-#   processed["masks"]    shape: [N, H, W]  dtype: bool  device: cuda
-#   processed["boxes"]    shape: [N, 4]     dtype: float  device: cuda
-#   processed["scores"]   shape: [N]        dtype: float  device: cpu
-#   processed["object_ids"] shape: [N]      dtype: int64  device: cpu
-#   processed["prompt_to_obj_ids"] = {'ball': [0, 1, 2]}
+# Key facts (confirmed from HPC inspection):
+#   processed["masks"]            shape: [N, H, W]  dtype: bool  device: cuda
+#   processed["boxes"]            shape: [N, 4]     dtype: float  device: cuda  (XYXY abs)
+#   processed["scores"]           shape: [N]        dtype: float  device: cpu
+#   processed["object_ids"]       shape: [N]        dtype: int64  device: cpu
+#   processed["prompt_to_obj_ids"]: {'ball': [0,1,2], 'racket': [3,4]}  etc.
+#
+# Design:
+#   - ONE session, TWO text prompts (ball + racket) → shared backbone + memory
+#   - Per prompt: keep only top-1 score instance
+#   - JSON stores per-frame centroids + scores keyed by prompt name
+#   - OpenCV MP4: ball = red, racket = blue
 #
 import os
 import json
@@ -36,7 +42,7 @@ print("Loading video frames...")
 video_frames, _ = load_video(VIDEO_PATH)
 print(f"  Total frames: {len(video_frames)}")
 
-# ── Initialize video session ───────────────────────────────────────────────────
+# ── Initialize a SINGLE video session ─────────────────────────────────────────
 print("Initializing video session...")
 inference_session = processor.init_video_session(
     video=video_frames,
@@ -46,77 +52,78 @@ inference_session = processor.init_video_session(
     dtype=dtype,
 )
 
-# ── Add text prompt: "ball" ────────────────────────────────────────────────────
+# ── Add BOTH prompts to the same session (shared backbone + memory bank) ───────
 print("Adding text prompt: 'ball'...")
 inference_session = processor.add_text_prompt(
     inference_session=inference_session,
     text="ball",
 )
 
-# ── Helper: mask centroid ──────────────────────────────────────────────────────
+print("Adding text prompt: 'racket'...")
+inference_session = processor.add_text_prompt(
+    inference_session=inference_session,
+    text="racket",
+)
+
+# After this, processed["prompt_to_obj_ids"] will look like:
+#   {'ball': [0, 1, 2], 'racket': [3, 4]}
+
+# ── Helpers ────────────────────────────────────────────────────────────────────
 def mask_centroid(mask: torch.Tensor):
-    """mask: 2D bool [H, W] → [cx, cy] or None."""
+    """mask: 2D bool [H, W] → [cx, cy] float or None."""
     ys, xs = torch.where(mask)
     if len(xs) == 0:
         return None
     return [float(xs.float().mean()), float(ys.float().mean())]
 
-def overlay_masks_on_pil(pil_img, masks_tensor, color):
-    """masks_tensor: [N, H, W] bool on any device."""
-    image = pil_img.convert("RGBA")
-    for mask in masks_tensor.cpu():
-        mask_np = mask.numpy().astype(np.uint8) * 255
-        mask_img = Image.fromarray(mask_np)
-        overlay = Image.new("RGBA", image.size, color + (0,))
-        overlay.putalpha(mask_img.point(lambda v: int(v * 0.5)))
-        image = Image.alpha_composite(image, overlay)
-    return image.convert("RGB")
 
-# ── Propagate ─────────────────────────────────────────────────────────────────
+def top1_for_prompt(prompt_name, prompt_to_obj_ids, obj_ids_list, scores_list, masks_tensor):
+    """
+    Among all object IDs that belong to `prompt_name`, pick the one with
+    the highest score. Returns (centroid, score, box_idx) or (None, 0.0, None).
+    """
+    candidate_ids = prompt_to_obj_ids.get(prompt_name, [])
+    best_score    = -1.0
+    best_centroid = None
+
+    for obj_id in candidate_ids:
+        if obj_id not in obj_ids_list:
+            continue
+        i = obj_ids_list.index(obj_id)
+        score = scores_list[i]
+        if score > best_score:
+            best_score    = score
+            best_centroid = mask_centroid(masks_tensor[i])
+
+    return best_centroid, round(best_score, 4)
+
+
+# ── Propagate through whole video ─────────────────────────────────────────────
 print("Propagating through video...")
-tracks: dict = {}
-meta_path = os.path.join(OUT_DIR, "per_frame_meta.txt")
+tracks: dict = {}  # {frame_idx: {'ball': {centroid, score}, 'racket': {centroid, score}}}
 
-with open(meta_path, "w") as meta_f:
-    for model_outputs in model.propagate_in_video_iterator(
-        inference_session=inference_session,
-        max_frame_num_to_track=len(video_frames),
-    ):
-        frame_idx = model_outputs.frame_idx
-        processed = processor.postprocess_outputs(inference_session, model_outputs)
+for model_outputs in model.propagate_in_video_iterator(
+    inference_session=inference_session,
+    max_frame_num_to_track=len(video_frames),
+):
+    frame_idx = model_outputs.frame_idx
+    processed = processor.postprocess_outputs(inference_session, model_outputs)
 
-        # All fields to cpu for safe indexing
-        obj_ids = processed["object_ids"].tolist()        # list[int]
-        scores  = processed["scores"].tolist()            # list[float]
-        masks   = processed["masks"]                      # [N, H, W] bool, cuda
-        boxes   = processed["boxes"].cpu().tolist()       # [N, 4] xyxy abs coords
+    obj_ids_list      = processed["object_ids"].tolist()      # list[int]
+    scores_list       = processed["scores"].tolist()          # list[float]
+    masks_tensor      = processed["masks"]                    # [N, H, W] bool, cuda
+    prompt_to_obj_ids = processed["prompt_to_obj_ids"]       # {'ball':[...], 'racket':[...]}
 
-        frame_data = {}
-        for i, obj_id in enumerate(obj_ids):
-            m = masks[i]          # [H, W] bool
-            centroid = mask_centroid(m)
-            score    = round(scores[i], 4) if i < len(scores) else 0.0
-            frame_data[str(obj_id)] = {
-                "centroid": centroid,
-                "score": score,
-                "box": boxes[i] if i < len(boxes) else None,
-            }
+    ball_c,   ball_s   = top1_for_prompt("ball",   prompt_to_obj_ids, obj_ids_list, scores_list, masks_tensor)
+    racket_c, racket_s = top1_for_prompt("racket", prompt_to_obj_ids, obj_ids_list, scores_list, masks_tensor)
 
-        tracks[frame_idx] = frame_data
+    tracks[frame_idx] = {
+        "ball":   {"centroid": ball_c,   "score": ball_s},
+        "racket": {"centroid": racket_c, "score": racket_s},
+    }
 
-        meta_f.write(
-            f"frame {frame_idx:04d}  n={len(obj_ids)}  "
-            f"ids={obj_ids}  scores={[round(s,3) for s in scores]}\n"
-        )
-
-        # Save mask overlay every 10th frame for visual check
-        if frame_idx % 10 == 0:
-            print(f"  frame {frame_idx:04d}: {frame_data}")
-            pil_frame = video_frames[frame_idx]
-            if isinstance(pil_frame, np.ndarray):
-                pil_frame = Image.fromarray(pil_frame)
-            vis = overlay_masks_on_pil(pil_frame, masks, color=(255, 0, 0))
-            vis.save(os.path.join(OUT_DIR, f"frame_{frame_idx:05d}.jpg"))
+    if frame_idx % 30 == 0:
+        print(f"  frame {frame_idx:04d}  ball={ball_c}  s={ball_s}  |  racket={racket_c}  s={racket_s}")
 
 print(f"\nTotal tracked frames: {len(tracks)}")
 
@@ -125,7 +132,7 @@ with open(OUT_JSON, "w") as f:
     json.dump(tracks, f, indent=2)
 print(f"Saved tracks → {OUT_JSON}")
 
-# ── OpenCV Visualization (MP4) ─────────────────────────────────────────────────
+# ── OpenCV MP4 Visualization ───────────────────────────────────────────────────
 import cv2
 
 print(f"Generating MP4 visualization → {OUT_MP4}...")
@@ -137,21 +144,27 @@ h   = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 fourcc  = cv2.VideoWriter_fourcc(*"mp4v")
 out_vid = cv2.VideoWriter(OUT_MP4, fourcc, fps, (w, h))
 
-colors = [(0, 0, 255), (0, 255, 0), (255, 128, 0)]   # up to 3 instances
+COLORS = {
+    "ball":   (0, 0, 255),    # red
+    "racket": (255, 64, 0),   # blue-orange
+}
 
 frame_idx = 0
 while True:
     ret, frame = cap.read()
     if not ret:
         break
-    for i, (obj_id, data) in enumerate(tracks.get(frame_idx, {}).items()):
-        c = data.get("centroid")
+
+    frame_data = tracks.get(frame_idx, {})
+    for label, col in COLORS.items():
+        info = frame_data.get(label, {})
+        c    = info.get("centroid")
         if c is not None:
             cx, cy = int(c[0]), int(c[1])
-            col = colors[i % len(colors)]
             cv2.circle(frame, (cx, cy), 8, col, -1)
-            cv2.putText(frame, f"ball#{obj_id} {data.get('score',0):.2f}",
+            cv2.putText(frame, f"{label} {info.get('score', 0):.2f}",
                         (cx + 10, cy - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, col, 2)
+
     cv2.putText(frame, f"Frame: {frame_idx}", (20, 40),
                 cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
     out_vid.write(frame)
