@@ -44,3 +44,23 @@
   - 预期输出：`output shape: [B, T]`，`sum over time: 1.0`
 - 运行合成数据训练测试：`python train.py`
   - 预期：Loss 快速下降，Acc 接近 1.0
+
+## SAM3 Mask 提取器
+- 提取 mask/centroid/box/score（仅 JSON）：
+  ```bash
+  python scripts/sam3_mask_extractor.py
+  ```
+- 同时渲染带标注 MP4：
+  ```bash
+  python scripts/sam3_mask_extractor.py --vis
+  ```
+- 输出目录：`outputs/sam3_mask_extractor/`
+  - `tracks.json`：每帧所有 object 的 `{prompt, score, centroid, box}`
+  - `vis.mp4`：带红/橙圆点标注的可视化视频（仅 `--vis` 时生成）
+
+## 单帧 PCS Text-Only 测试
+- 对帧 `[0,5,10,15,20]` 检测 racket：
+  ```bash
+  python scripts/smoke_text_only.py
+  ```
+- 输出：`outputs/pcs_samples/frame_XXXX_text_only.jpg`
