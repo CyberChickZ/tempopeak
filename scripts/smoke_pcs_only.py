@@ -63,9 +63,9 @@ for idx in sample_indices:
     # 这里的 target_sizes 需要是 (height, width)
     target_sizes = [pil_img.size[::-1]] 
 
-    # 将 threshold 设置为 0.05，看看除了高分还能召回哪些潜在的球拍
+    # 恢复正常 threshold (比如 0.4) 观察真正的模型高置信度推荐
     res_racket = processor.post_process_instance_segmentation(
-        outputs, threshold=0.05, mask_threshold=0.5, target_sizes=target_sizes
+        outputs, threshold=0.5, mask_threshold=0.5, target_sizes=target_sizes
     )[0]
 
     if len(res_racket["masks"]) > 0:
