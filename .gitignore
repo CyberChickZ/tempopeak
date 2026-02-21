@@ -228,4 +228,5 @@ data/
 models/models--facebook--sam3/
 models/.locks/
 datasets/raw/Serve-Compilation-Slow-Motion-Alcaraz-Dj-proj.llc
-.gitignore
+datasets/raw/Serve-Compilation-Slow-Motion-Alcaraz-Dj.mp4
+*.mp4
