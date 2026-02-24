@@ -3,14 +3,6 @@
 # Optional: --vis to render MP4
 
 import os
-# Force disable any HPC Slurm distributed environment variables 
-# to prevent transformers from automatically assigning device=1 on single-GPU nodes
-os.environ.pop("LOCAL_RANK", None)
-os.environ.pop("RANK", None)
-os.environ.pop("WORLD_SIZE", None)
-os.environ.pop("MASTER_ADDR", None)
-os.environ.pop("MASTER_PORT", None)
-
 import json
 import argparse
 import torch
@@ -39,14 +31,7 @@ OUT_MP4  = os.path.join(OUT_DIR, f"{VIDEO_NAME}_vis.mp4")
 
 os.makedirs(OUT_DIR, exist_ok=True)
 
-os.makedirs(OUT_DIR, exist_ok=True)
-
-if torch.cuda.is_available():
-    torch.cuda.set_device(0)
-    device = torch.device('cuda:0')
-else:
-    device = torch.device('cpu')
-
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 dtype  = torch.bfloat16
 
 # ───────────────────────────────────────────────
