@@ -104,6 +104,11 @@ for model_outputs in model.propagate_in_video_iterator(
     boxes        = processed["boxes"].cpu().tolist()
     p2o          = processed["prompt_to_obj_ids"]
 
+    # Read the dynamic tracking score from raw model outputs
+    tracker_scores_dict = getattr(model_outputs, "obj_id_to_tracker_score", {})
+    if not tracker_scores_dict and isinstance(model_outputs, dict):
+        tracker_scores_dict = model_outputs.get("obj_id_to_tracker_score", {})
+
     id_to_prompt = {}
     for label, ids in p2o.items():
         for oid in ids:
@@ -114,9 +119,14 @@ for model_outputs in model.propagate_in_video_iterator(
     for i, obj_id in enumerate(obj_ids):
         centroid = mask_centroid(masks_tensor[i])
 
+        # Use tracker score if available, otherwise fallback to static prompt score
+        dyn_score = tracker_scores_dict.get(obj_id, scores[i])
+        if hasattr(dyn_score, "item"):
+            dyn_score = dyn_score.item()
+
         frame_data[str(obj_id)] = {
             "prompt":   id_to_prompt.get(obj_id, "unknown"),
-            "score":    round(scores[i], 4),
+            "score":    round(float(dyn_score), 4),
             "centroid": centroid,
             "box":      boxes[i],
             "mask_idx": mask_counter
