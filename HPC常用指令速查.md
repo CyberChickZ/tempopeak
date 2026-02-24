@@ -58,6 +58,15 @@
   - `tracks.json`：每帧所有 object 的 `{prompt, score, centroid, box}`
   - `vis.mp4`：带红/橙圆点标注的可视化视频（仅 `--vis` 时生成）
 
+## SAM3 Web 标注工具
+- 启动无状态后端：
+  ```bash
+  cd /Users/harryzhang/git/tempopeak/sam3_annotator/backend
+  pip install -r requirements.txt
+  uvicorn main:app --host 0.0.0.0 --port 8080
+  ```
+- 访问：打开浏览器 `http://127.0.0.1:8080/`。支持按照视频名称自动加载 `00001.mp4`, `00001.json`, `00001.npz`，并提供拖拽式标注可视化和修改。
+
 ## 单帧 PCS Text-Only 测试
 - 对帧 `[0,5,10,15,20]` 检测 racket：
   ```bash
