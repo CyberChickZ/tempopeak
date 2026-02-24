@@ -124,6 +124,9 @@ for model_outputs in model.propagate_in_video_iterator(
         if hasattr(dyn_score, "item"):
             dyn_score = dyn_score.item()
 
+        if float(dyn_score) <= 0.1:
+            continue
+
         frame_data[str(obj_id)] = {
             "prompt":   id_to_prompt.get(obj_id, "unknown"),
             "score":    round(float(dyn_score), 4),
