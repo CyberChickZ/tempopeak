@@ -7,7 +7,6 @@ import json
 import argparse
 import torch
 import numpy as np
-from accelerate import Accelerator
 from transformers.video_utils import load_video
 from transformers import Sam3VideoModel, Sam3VideoProcessor
 
@@ -32,7 +31,7 @@ OUT_MP4  = os.path.join(OUT_DIR, f"{VIDEO_NAME}_vis.mp4")
 
 os.makedirs(OUT_DIR, exist_ok=True)
 
-device = Accelerator().device
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 dtype  = torch.bfloat16
 
 # ───────────────────────────────────────────────
