@@ -1,5 +1,5 @@
 # sam3_mask_extractor.py
-# ONE video → tracks.json + masks.npz
+# ONE video → [videoname].json + [videoname].npz
 # Optional: --vis to render MP4
 
 import os
@@ -22,12 +22,13 @@ args = parser.parse_args()
 # Config
 # ───────────────────────────────────────────────
 HF_LOCAL_MODEL = "/nfs/hpc/share/zhanhaoc/hpe/tempopeak/models/models--facebook--sam3/snapshots/3c879f39826c281e95690f02c7821c4de09afae7"
-VIDEO_PATH     = "/nfs/hpc/share/zhanhaoc/hpe/tempopeak/datasets/serve/00001.mp4"
-OUT_DIR        = "/nfs/hpc/share/zhanhaoc/hpe/tempopeak/outputs/sam3_mask_extractor"
+VIDEO_NAME     = "00001"
+VIDEO_PATH     = f"/nfs/hpc/share/zhanhaoc/hpe/tempopeak/datasets/serve/{VIDEO_NAME}.mp4"
+OUT_DIR        = f"/nfs/hpc/share/zhanhaoc/hpe/tempopeak/outputs/sam3_mask_extractor/"
 
-OUT_JSON = os.path.join(OUT_DIR, "tracks.json")
-OUT_MASK = os.path.join(OUT_DIR, "masks.npz")
-OUT_MP4  = os.path.join(OUT_DIR, "vis.mp4")
+OUT_JSON = os.path.join(OUT_DIR, f"{VIDEO_NAME}.json")
+OUT_MASK = os.path.join(OUT_DIR, f"{VIDEO_NAME}.npz")
+OUT_MP4  = os.path.join(OUT_DIR, f"{VIDEO_NAME}_vis.mp4")
 
 os.makedirs(OUT_DIR, exist_ok=True)
 
