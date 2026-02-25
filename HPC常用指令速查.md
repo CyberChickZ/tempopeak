@@ -45,18 +45,89 @@
 - 运行合成数据训练测试：`python train.py`
   - 预期：Loss 快速下降，Acc 接近 1.0
 
-## SAM3 Mask 提取器
-- 提取 mask/centroid/box/score（仅 JSON）：
-  ```bash
-  python scripts/sam3_mask_extractor.py
-  ```
-- 同时渲染带标注 MP4：
-  ```bash
-  python scripts/sam3_mask_extractor.py --vis
-  ```
-- 输出目录：`outputs/sam3_mask_extractor/`
-  - `tracks.json`：每帧所有 object 的 `{prompt, score, centroid, box}`
-  - `vis.mp4`：带红/橙圆点标注的可视化视频（仅 `--vis` 时生成）
+## SAM3 Mask 提取器（v2 — 全量重写）
+
+脚本：`scripts/sam3_mask_extractor.py`（完整 argparse CLI，无需改源码即可调参）
+
+### 最小运行（默认参数）
+```bash
+python scripts/sam3_mask_extractor.py
+```
+
+### 自定义视频 + 渲染可视化
+```bash
+python scripts/sam3_mask_extractor.py \
+  --video_name 00002 \
+  --video_path /nfs/hpc/share/zhanhaoc/hpe/tempopeak/datasets/serve/00002.mp4 \
+  --vis
+```
+
+### 指定 ID→Label 映射（推荐，避免歧义）
+```bash
+python scripts/sam3_mask_extractor.py \
+  --obj_id_to_label "0:ball,1:ball,2:racket" \
+  --vis
+```
+
+### 开启空间跳变拦截（抗 ID Switch）
+```bash
+python scripts/sam3_mask_extractor.py \
+  --max_jump_px 300 \
+  --ema_alpha 0.7 \
+  --predict_on_reject \
+  --max_lost 3 \
+  --vis
+```
+
+### 完整参数表
+
+| 参数 | 默认值 | 说明 |
+|---|---|---|
+| `--hf_local_model` | HPC Snapshots 路径 | SAM3 本地权重目录 |
+| `--video_name` | `00001` | 输出文件名前缀 |
+| `--video_path` | HPC serve/00001.mp4 | 输入视频 |
+| `--out_dir` | `outputs/sam3_mask_extractor/` | 输出目录 |
+| `--vis` | off | 是否渲染带标注 MP4 |
+| `--prompts` | `ball racket` | 传给 SAM3 PCS 的文字 prompt 列表 |
+| `--dtype` | `bf16` | 推理精度（bf16/fp16/fp32） |
+| `--max_frames` | `-1`（全视频）| 限制处理帧数，调试用 |
+| `--tracker_score_min` | `0.10` | 低于此 tracker score 的 mask 直接丢弃 |
+| `--mask_area_min` | `1` | mask 像素数低于此值的丢弃 |
+| `--obj_id_to_label` | `""` | 显式 ID→标签映射，如 `"0:ball,2:racket"` |
+| `--max_jump_px` | `-1`（关闭）| 相邻帧 centroid 欧氏距离超过此值则视为 ID Switch，丢弃 |
+| `--ema_alpha` | `1.0`（关闭 EMA）| centroid EMA 平滑系数（0.5~0.8 为典型值） |
+| `--max_lost` | `2` | 连续拒绝超过此次数则放弃预测该 obj |
+| `--predict_on_reject` | off | 拒绝帧时用上一帧速度外推 centroid 状态（不写 mask）|
+
+### 输出文件
+
+| 文件 | 内容 |
+|---|---|
+| `{video_name}.json` | 含 `_meta`（完整运行参数），及 `"0"~"N"` 帧数据 |
+| `{video_name}.npz` | `masks [M,H,W] bool` + `frame_indices [M] int32` + `object_ids [M] int32` |
+| `{video_name}_vis.mp4` | 带遮罩/BBox/ID/score OSD 的可视化视频（仅 `--vis` 时） |
+
+### JSON schema（单帧）
+```json
+{
+  "_meta": { "tracker_score_min": 0.1, "max_jump_px": 300, ... },
+  "42": {
+    "0": {
+      "label": "ball",
+      "tracker_score": 0.823,
+      "static_score": 0.911,
+      "centroid": [312.5, 204.1],
+      "box_xyxy": [298, 190, 327, 218],
+      "mask_idx": 77
+    }
+  }
+}
+```
+
+### Annotator 后端注意事项
+`io_sam3.py` 读取 JSON 时 key 兼容字符串帧号（`"0"~"N"`）。
+新版 JSON 里字段名从 `prompt/score/box` 改为 `label/tracker_score/box_xyxy`，
+如果用旧版 Annotator 打开新 JSON 会有字段不匹配，需同步更新 `io_sam3.py`（待做）。
 
 ## SAM3 Web 标注工具
 - 启动无状态后端：
