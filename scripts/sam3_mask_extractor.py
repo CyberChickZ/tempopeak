@@ -7,6 +7,7 @@ import json
 import argparse
 import torch
 import numpy as np
+from accelerate import Accelerator
 from transformers.video_utils import load_video
 from transformers import Sam3VideoModel, Sam3VideoProcessor
 
@@ -31,7 +32,7 @@ OUT_MP4  = os.path.join(OUT_DIR, f"{VIDEO_NAME}_vis.mp4")
 
 os.makedirs(OUT_DIR, exist_ok=True)
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = Accelerator().device
 dtype  = torch.bfloat16
 
 # ───────────────────────────────────────────────
@@ -83,12 +84,17 @@ def mask_centroid(mask):
 # ───────────────────────────────────────────────
 print("Propagating...")
 
+# Tunable thresholds
+SCORE_THRESHOLD = 0.1    # Drop masks with score <= this
+MAX_JUMP_PX     = 300    # Drop if centroid jumps more than this many pixels in one frame
+
 tracks = {}
 all_masks = []
 mask_frame_indices = []
 mask_object_ids = []
 
 mask_counter = 0
+prev_centroids = {}  # obj_id -> [cx, cy] from previous kept frame
 
 for model_outputs in model.propagate_in_video_iterator(
     inference_session=session,
@@ -122,13 +128,28 @@ for model_outputs in model.propagate_in_video_iterator(
         dyn_score = tracker_scores_dict.get(obj_id, scores[i])
         if hasattr(dyn_score, "item"):
             dyn_score = dyn_score.item()
+        dyn_score = float(dyn_score)
 
-        if float(dyn_score) <= 0.1:
+        # --- Gate 1: confidence threshold ---
+        if dyn_score <= SCORE_THRESHOLD:
             continue
+
+        # --- Gate 2: spatial jump detector ---
+        if centroid is not None and obj_id in prev_centroids:
+            px, py = prev_centroids[obj_id]
+            cx, cy = centroid
+            dist = ((cx - px) ** 2 + (cy - py) ** 2) ** 0.5
+            if dist > MAX_JUMP_PX:
+                print(f"[JUMP] frame {frame_idx:05d}  obj {obj_id}  dist={dist:.1f}px  score={dyn_score:.4f}  -- DROPPED")
+                continue
+
+        # Update centroid memory only for kept detections
+        if centroid is not None:
+            prev_centroids[obj_id] = centroid
 
         frame_data[str(obj_id)] = {
             "prompt":   id_to_prompt.get(obj_id, "unknown"),
-            "score":    round(float(dyn_score), 4),
+            "score":    round(dyn_score, 4),
             "centroid": centroid,
             "box":      boxes[i],
             "mask_idx": mask_counter
@@ -144,7 +165,7 @@ for model_outputs in model.propagate_in_video_iterator(
     tracks[frame_idx] = frame_data
 
     if frame_idx % 30 == 0:
-        print("frame", frame_idx)
+        print(f"frame {frame_idx:05d}  objects kept: {len(frame_data)}")
 
 print("Total masks:", len(all_masks))
 
