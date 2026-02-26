@@ -1,6 +1,10 @@
 # sam3_mask_extractor.py
 # ONE video -> [videoname].json + [videoname].npz (+ optional vis mp4)
-# Deterministic protocol: uses Sam3VideoSegmentationOutput fields only (no hasattr/getattr fallbacks).
+#
+# Deterministic protocol (PP-first):
+# - Geometry MUST come from processor.postprocess_outputs() (video-resolution boolean masks + boxes-from-masks).
+# - Scores MUST come from raw model_outputs metadata (obj_id_to_score + obj_id_to_tracker_score), but only for PP-kept obj_ids.
+# - No raw mask/logit geometry is used for filtering, tracking, or saving.
 #
 # Output JSON schema:
 #   {
@@ -16,8 +20,8 @@
 #   object_ids:    [M] int32
 #
 # Notes:
-# - Boxes are computed from masks (XYXY absolute pixel coords).
-# - Labels are provided explicitly via --obj_id_to_label (no black-box prompt mapping).
+# - Boxes are computed from PP masks (XYXY absolute pixel coords).
+# - Labels are provided explicitly via --obj_id_to_label (no prompt_to_obj_ids inference).
 # - Optional motion control layer: max_jump_px, ema_alpha, max_lost, predict_on_reject.
 
 import os
@@ -38,7 +42,11 @@ from contextlib import closing
 parser = argparse.ArgumentParser()
 
 # IO
-parser.add_argument("--hf_local_model", type=str, default="/nfs/hpc/share/zhanhaoc/hpe/tempopeak/models/models--facebook--sam3/snapshots/3c879f39826c281e95690f02c7821c4de09afae7")
+parser.add_argument(
+    "--hf_local_model",
+    type=str,
+    default="/nfs/hpc/share/zhanhaoc/hpe/tempopeak/models/models--facebook--sam3/snapshots/3c879f39826c281e95690f02c7821c4de09afae7",
+)
 parser.add_argument("--video_name", type=str, default="00001")
 parser.add_argument("--video_path", type=str, default="/nfs/hpc/share/zhanhaoc/hpe/tempopeak/datasets/serve/00001.mp4")
 parser.add_argument("--out_dir", type=str, default="/nfs/hpc/share/zhanhaoc/hpe/tempopeak/outputs/sam3_mask_extractor/")
@@ -53,15 +61,29 @@ parser.add_argument("--processing_device", type=str, default="cpu")
 parser.add_argument("--video_storage_device", type=str, default="cpu")
 parser.add_argument("--max_frames", type=int, default=-1, help="<=0 means full video")
 
-# Filtering thresholds
+# Filtering thresholds (applied on PP masks + raw scores metadata)
 parser.add_argument("--tracker_score_min", type=float, default=0.10, help="min obj_id_to_tracker_score to keep")
+parser.add_argument("--static_score_min", type=float, default=-1.0, help="<=0 disables; else min obj_id_to_score to keep")
 parser.add_argument("--mask_area_min", type=int, default=1, help="min number of true pixels in mask to keep")
 
 # Motion control (external tracking layer)
-parser.add_argument("--max_jump_px", type=float, default=-1.0, help="<=0 disables jump rejection")
+parser.add_argument("--max_jump_px", type=float, default=-1.0, help="<=0 disables jump rejection; else max centroid jump")
 parser.add_argument("--ema_alpha", type=float, default=1.0, help="1.0 disables smoothing; typical 0.5~0.8")
 parser.add_argument("--max_lost", type=int, default=2, help="how many consecutive rejects before we stop predicting")
-parser.add_argument("--predict_on_reject", action="store_true", help="if reject, advance centroid by last velocity (state only)")
+parser.add_argument(
+    "--predict_on_reject",
+    action="store_true",
+    help="if reject, advance centroid by last velocity (state only)",
+)
+
+# Score fusion for dataset confidence (optional)
+parser.add_argument(
+    "--quality_score_mode",
+    type=str,
+    choices=["none", "mul", "min"],
+    default="mul",
+    help='How to compute "quality_score" from (static_score, tracker_score): none|mul|min',
+)
 
 # Labeling (explicit protocol, no inference)
 parser.add_argument(
@@ -84,8 +106,8 @@ if not os.path.isfile(args.video_path):
 os.makedirs(args.out_dir, exist_ok=True)
 
 out_json = os.path.join(args.out_dir, f"{args.video_name}.json")
-out_npz  = os.path.join(args.out_dir, f"{args.video_name}.npz")
-out_mp4  = os.path.join(args.out_dir, f"{args.video_name}_vis.mp4")
+out_npz = os.path.join(args.out_dir, f"{args.video_name}.npz")
+out_mp4 = os.path.join(args.out_dir, f"{args.video_name}_vis.mp4")
 
 # -------------------------
 # Dtype
@@ -111,7 +133,9 @@ def parse_obj_id_to_label(s: str) -> dict:
         m[int(k.strip())] = v.strip()
     return m
 
+
 OBJ_ID_TO_LABEL = parse_obj_id_to_label(args.obj_id_to_label)
+
 
 def mask_centroid(mask_bool: torch.Tensor):
     # mask_bool: [H, W] bool
@@ -121,6 +145,7 @@ def mask_centroid(mask_bool: torch.Tensor):
     x = float(xs.float().mean().item())
     y = float(ys.float().mean().item())
     return (x, y)
+
 
 def mask_box_xyxy(mask_bool: torch.Tensor):
     ys, xs = torch.where(mask_bool)
@@ -132,10 +157,22 @@ def mask_box_xyxy(mask_bool: torch.Tensor):
     y1 = int(ys.max().item())
     return (x0, y0, x1, y1)
 
+
 def l2(a, b):
     dx = a[0] - b[0]
     dy = a[1] - b[1]
     return float((dx * dx + dy * dy) ** 0.5)
+
+
+def compute_quality_score(static_score: float, tracker_score: float, mode: str) -> float:
+    if mode == "none":
+        return -1.0
+    if mode == "mul":
+        return float(static_score * tracker_score)
+    if mode == "min":
+        return float(min(static_score, tracker_score))
+    raise ValueError(f"Unknown quality_score_mode: {mode}")
+
 
 # -------------------------
 # Load model + processor
@@ -216,20 +253,21 @@ iterator = model.propagate_in_video_iterator(
 
 with closing(iterator) as it:
     for model_outputs in it:
-        # Deterministic protocol: Sam3VideoSegmentationOutput fields
         frame_idx = int(model_outputs.frame_idx)
 
-        # STRICT PROTOCOL: Postprocess raw logits into video-resolution boolean masks
+        # PP FIRST: geometry comes from PP only
         pp = processor.postprocess_outputs(session, model_outputs)
 
         obj_ids = pp["object_ids"].tolist()  # List[int]
         masks = pp["masks"]                  # Tensor[N, H, W] bool
-        scores = pp["scores"]                # Tensor[N] float (static scores)
+        # NOTE: pp["scores"] exists, but we intentionally source scores from raw metadata for determinism/consistency.
+        # Use raw dictionaries keyed by obj_id.
+        obj_id_to_static_score = dict(model_outputs.obj_id_to_score)
+        obj_id_to_tracker_score = dict(model_outputs.obj_id_to_tracker_score)
 
-        # Retain sets for filtering from raw outputs
-        removed = set(model_outputs.removed_obj_ids)
-        suppressed = set(model_outputs.suppressed_obj_ids)
-        tracker_scores = dict(model_outputs.obj_id_to_tracker_score)
+        # raw filter sets (semantic: removed/suppressed during tracking)
+        removed = set(model_outputs.removed_obj_ids) if model_outputs.removed_obj_ids is not None else set()
+        suppressed = set(model_outputs.suppressed_obj_ids) if model_outputs.suppressed_obj_ids is not None else set()
 
         frame_data = {}
 
@@ -241,6 +279,7 @@ with closing(iterator) as it:
 
             mask = masks[i]  # Tensor[H,W] bool on device
 
+            # PP geometry filters
             area = int(mask.sum().item())
             if area < args.mask_area_min:
                 continue
@@ -253,74 +292,47 @@ with closing(iterator) as it:
             if box is None:
                 continue
 
-            tracker_score = float(tracker_scores.get(obj_id, 0.0))
-            static_score = float(scores[i])
+            # RAW metadata scores (aligned by obj_id)
+            static_score = float(obj_id_to_static_score.get(obj_id, 0.0))
+            tracker_score = float(obj_id_to_tracker_score.get(obj_id, 0.0))
 
             if tracker_score < args.tracker_score_min:
                 continue
+            if args.static_score_min > 0.0 and static_score < args.static_score_min:
+                continue
+
+            quality_score = compute_quality_score(static_score, tracker_score, args.quality_score_mode)
 
             label = OBJ_ID_TO_LABEL.get(obj_id, "unknown")
 
             # ======================================================
             # Motion gating / smoothing (rule-based, sequential)
-            # Add new rules here. Each rule can `continue` to reject.
             # ======================================================
             prev_state = state.get(obj_id)
 
-            # -------------------------------------------------------
-            # Rule 1: Distance gating
-            #   Sequential sub-rules applied in order.
-            #   A rejection anywhere skips to the next obj_id.
-            # -------------------------------------------------------
-
-            # Rule 1 • ALL: max centroid displacement between frames
-            DIST_MAX_ALL_PX = 100.0
-            if prev_state is not None:
+            # Rule 1: centroid jump gating (optional, uses args.max_jump_px)
+            if args.max_jump_px > 0.0 and prev_state is not None:
                 dist = l2(centroid, prev_state["last_centroid"])
-                if dist > DIST_MAX_ALL_PX:
-                    # advance lost counter + optional prediction
+                if dist > float(args.max_jump_px):
                     prev_state["lost_count"] += 1
                     if args.predict_on_reject and prev_state["lost_count"] <= args.max_lost:
                         vx, vy = prev_state["last_velocity"]
                         pc = prev_state["last_centroid"]
                         prev_state["last_centroid"] = (pc[0] + vx, pc[1] + vy)
-                    continue  # DROP
+                    continue
 
-            # Rule 1 • BALL:  placeholder for ball-specific distance rules
-            # if label == "ball":
-            #     pass  # e.g. max speed from physics
-
-            # Rule 1 • RACKET: placeholder for racket-specific distance rules
-            # if label == "racket":
-            #     pass
-
-            # -------------------------------------------------------
-            # Rule 2: Area gating
-            #   Sequential sub-rules applied in order.
-            # -------------------------------------------------------
-
-            # Rule 2 • ALL: placeholder for global area constraints
-            # e.g. if area < AREA_GLOBAL_MIN: continue
-
-            # Rule 2 • BALL: reject if area exceeds avg accepted racket area
+            # Rule 2: BALL area sanity vs accepted racket area
             if label == "ball" and len(racket_area_stats) > 0:
                 avg_racket_area = sum(racket_area_stats) / len(racket_area_stats)
                 if area > avg_racket_area:
-                    print(f"Frame {frame_idx} [Obj {obj_id}] DROP: area {area} > avg_racket_area {avg_racket_area:.1f}")
-                    continue  # DROP: ball bigger than average racket -> likely wrong object
+                    # too big to be ball given racket stats
+                    continue
 
-            # Rule 2 • RACKET: placeholder for racket-specific area rules
-            # if label == "racket":
-            #     pass
-
-            # -------------------------------------------------------
-            # All rules passed  →  accept detection, update state
-            # -------------------------------------------------------
-
-            # Update racket area stats for the ball area gate
+            # Accept -> update racket stats
             if label == "racket":
                 racket_area_stats.append(area)
 
+            # Accept -> update state
             if prev_state is None:
                 state[obj_id] = {
                     "last_centroid": centroid,
@@ -331,11 +343,10 @@ with closing(iterator) as it:
                 prev_state["lost_count"] = 0
                 pc = prev_state["last_centroid"]
 
-                # EMA smoothing on centroid
+                # EMA smoothing on centroid (optional)
                 if args.ema_alpha < 1.0:
                     a = float(args.ema_alpha)
-                    centroid = (a * centroid[0] + (1.0 - a) * pc[0],
-                                a * centroid[1] + (1.0 - a) * pc[1])
+                    centroid = (a * centroid[0] + (1.0 - a) * pc[0], a * centroid[1] + (1.0 - a) * pc[1])
 
                 prev_state["last_velocity"] = (centroid[0] - pc[0], centroid[1] - pc[1])
                 prev_state["last_centroid"] = centroid
@@ -344,9 +355,11 @@ with closing(iterator) as it:
                 "label": label,
                 "tracker_score": round(tracker_score, 6),
                 "static_score": round(static_score, 6),
+                "quality_score": round(float(quality_score), 6) if quality_score >= 0 else -1.0,
                 "centroid": [round(float(centroid[0]), 3), round(float(centroid[1]), 3)],
                 "box_xyxy": [int(box[0]), int(box[1]), int(box[2]), int(box[3])],
                 "mask_idx": int(mask_counter),
+                "mask_area": int(area),
             }
 
             all_masks.append(mask.detach().to("cpu").numpy().astype(np.bool_))
@@ -364,7 +377,7 @@ print("Total masks:", len(all_masks))
 print("Time (s):", round(t1 - t0, 2))
 
 # -------------------------
-# Save JSON (with exported params)
+# Save JSON
 # -------------------------
 meta = {
     "time_unix": time.time(),
@@ -386,11 +399,13 @@ meta = {
     "prompts": list(args.prompts),
     "obj_id_to_label": OBJ_ID_TO_LABEL,
     "tracker_score_min": float(args.tracker_score_min),
+    "static_score_min": float(args.static_score_min),
     "mask_area_min": int(args.mask_area_min),
     "max_jump_px": float(args.max_jump_px),
     "ema_alpha": float(args.ema_alpha),
     "max_lost": int(args.max_lost),
     "predict_on_reject": bool(args.predict_on_reject),
+    "quality_score_mode": str(args.quality_score_mode),
     "processing_device": args.processing_device,
     "video_storage_device": args.video_storage_device,
 }
@@ -464,14 +479,23 @@ if args.vis:
             overlay[mask] = color
             frame = cv2.addWeighted(frame, 1.0, overlay, 0.4, 0)
 
-            # box
             x0, y0, x1, y1 = info["box_xyxy"]
             cv2.rectangle(frame, (x0, y0), (x1, y1), color, 2)
 
-            # text
-            txt = f"id={obj_id_str} {label} ts={info['tracker_score']:.3f}"
-            cv2.putText(frame, txt, (x0, max(0, y0 - 6)),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, cv2.LINE_AA)
+            qs = info.get("quality_score", -1.0)
+            ts = info.get("tracker_score", 0.0)
+            ss = info.get("static_score", 0.0)
+            txt = f"id={obj_id_str} {label} q={qs:.3f} ts={ts:.3f} ss={ss:.3f}"
+            cv2.putText(
+                frame,
+                txt,
+                (x0, max(0, y0 - 6)),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.5,
+                color,
+                1,
+                cv2.LINE_AA,
+            )
 
         out.write(frame)
         frame_idx += 1
