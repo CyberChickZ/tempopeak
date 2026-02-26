@@ -235,7 +235,7 @@ with closing(iterator) as it:
             if obj_id in suppressed:
                 continue
 
-            mask = obj_id_to_mask[obj_id].squeeze()  # Tensor[1,H,W] <BOOL> on device 
+            mask = obj_id_to_mask[obj_id].squeeze()  # Tensor[1,H,W] <BOOL> on device
 
             area = int(mask.sum().item())
             if area < args.mask_area_min:
@@ -254,6 +254,8 @@ with closing(iterator) as it:
 
             if tracker_score < args.tracker_score_min:
                 continue
+
+            label = OBJ_ID_TO_LABEL.get(obj_id, "unknown")
 
             # ======================================================
             # Motion gating / smoothing (rule-based, sequential)
@@ -332,8 +334,6 @@ with closing(iterator) as it:
 
                 prev_state["last_velocity"] = (centroid[0] - pc[0], centroid[1] - pc[1])
                 prev_state["last_centroid"] = centroid
-
-            label = OBJ_ID_TO_LABEL.get(obj_id, "unknown")
 
             frame_data[str(obj_id)] = {
                 "label": label,
