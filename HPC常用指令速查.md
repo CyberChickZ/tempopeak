@@ -8,6 +8,11 @@
 - 初始化 conda：`source /nfs/stak/users/zhanhaoc/hpc-share/conda/bin/activate`
 - 激活环境：`conda activate sam_3d_body`
 - 当前环境名：`sam_3d_body`
+- 复制：
+```bash
+source /nfs/stak/users/zhanhaoc/hpc-share/conda/bin/activate
+conda activate sam_3d_body
+```
 
 ## 检查命令（版本/设备）
 - 检查 mamba-ssm 版本：`python -c "import mamba_ssm; print(mamba_ssm.__version__)"`
@@ -95,11 +100,12 @@ python scripts/sam3_mask_extractor.py \
 | `--static_score_min` | `-1.0`（关闭） | 低于此 static score 的 mask 丢弃 |
 | `--quality_score_mode` | `mul` | `quality_score` 的计算方式 (`none`/`mul`/`min`) |
 | `--mask_area_min` | `1` | mask 像素数低于此值的丢弃 |
-| `--obj_id_to_label` | `""` | 显式 ID→标签映射，如 `"0:ball,2:racket"` |
 | `--max_jump_px` | `-1`（关闭）| 相邻帧 centroid 欧氏距离超过此值则视为 ID Switch，丢弃 |
 | `--ema_alpha` | `1.0`（关闭 EMA）| centroid EMA 平滑系数（0.5~0.8 为典型值） |
-| `--max_lost` | `2` | 连续拒绝超过此次数则放弃预测该 obj |
-| `--predict_on_reject` | off | 拒绝帧时用上一帧速度外推 centroid 状态（不写 mask）|
+| `--max_lost` | `0` | 若为 0，则纯静态丢弃；若 >0 则允许在连续丢失 N 帧内通过速度外推状态 |
+| `--predict_on_reject` | off | 当拒绝当前帧且 `max_lost>0` 时，利用上一帧的速度 (vx, vy) 外推 centroid |
+| `--print_every` | `30` | 提取过程中每 N 帧打印一次进度和保留 mask 数量 |
+| `--debug_first_frames` | `1` | 打印前 K 帧的 PP `prompt_to_obj_ids` 映射信息供调试 |
 
 ### 输出文件
 
