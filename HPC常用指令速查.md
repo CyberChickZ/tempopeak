@@ -125,9 +125,14 @@ python scripts/sam3_mask_extractor.py \
 ```
 
 ### Annotator 后端注意事项
-`io_sam3.py` 读取 JSON 时 key 兼容字符串帧号（`"0"~"N"`）。
-新版 JSON 里字段名从 `prompt/score/box` 改为 `label/tracker_score/box_xyxy`，
-如果用旧版 Annotator 打开新 JSON 会有字段不匹配，需同步更新 `io_sam3.py`（待做）。
+`io_sam3.py` 已同步支持 v2 schema（`_meta` 跳过，`label`/`tracker_score`/`box_xyxy` 字段读写），同时向后兼容 v1 的 `prompt`/`score`/`box`。
+
+### 已知 Bugfix（已入库）
+- **`torch.where unpack error`**：模型输出的 `obj_id_to_mask[obj_id]` 实际 shape 为 `[1, H, W]`（带 batch 维），直接解包到 `ys, xs` 会 crash。
+  修法：取 mask 时调用 `.squeeze()` 内联处理：
+  ```python
+  mask = obj_id_to_mask[obj_id].squeeze()  # Tensor[1,H,W] <BOOL> -> [H,W]
+  ```
 
 ## SAM3 Web 标注工具
 - 启动无状态后端：
