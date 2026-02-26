@@ -192,6 +192,10 @@ for p in args.prompts:
 # }
 state = {}
 
+# Running stats for area rules (populated during propagation)
+# racket_area_stats = list of accepted racket pixel-areas so far
+racket_area_stats = []
+
 # -------------------------
 # Main loop
 # -------------------------
@@ -253,49 +257,83 @@ with closing(iterator) as it:
             if tracker_score < args.tracker_score_min:
                 continue
 
-            # ---- motion gating / smoothing (external control) ----
-            rejected_by_jump = False
+            # ======================================================
+            # Motion gating / smoothing (rule-based, sequential)
+            # Add new rules here. Each rule can `continue` to reject.
+            # ======================================================
+            prev_state = state.get(obj_id)
 
-            if args.max_jump_px > 0 and obj_id in state:
-                prev_c = state[obj_id]["last_centroid"]
-                dist = l2(centroid, prev_c)
+            # -------------------------------------------------------
+            # Rule 1: Distance gating
+            #   Sequential sub-rules applied in order.
+            #   A rejection anywhere skips to the next obj_id.
+            # -------------------------------------------------------
 
-                if dist > args.max_jump_px:
-                    rejected_by_jump = True
-                    state[obj_id]["lost_count"] += 1
+            # Rule 1 • ALL: max centroid displacement between frames
+            DIST_MAX_ALL_PX = 100.0
+            if prev_state is not None:
+                dist = l2(centroid, prev_state["last_centroid"])
+                if dist > DIST_MAX_ALL_PX:
+                    # advance lost counter + optional prediction
+                    prev_state["lost_count"] += 1
+                    if args.predict_on_reject and prev_state["lost_count"] <= args.max_lost:
+                        vx, vy = prev_state["last_velocity"]
+                        pc = prev_state["last_centroid"]
+                        prev_state["last_centroid"] = (pc[0] + vx, pc[1] + vy)
+                    continue  # DROP
 
-                    if args.predict_on_reject and state[obj_id]["lost_count"] <= args.max_lost:
-                        vx, vy = state[obj_id]["last_velocity"]
-                        centroid_pred = (prev_c[0] + vx, prev_c[1] + vy)
-                        state[obj_id]["last_centroid"] = centroid_pred
-                    # Do NOT save mask when rejected
-                    continue
+            # Rule 1 • BALL:  placeholder for ball-specific distance rules
+            # if label == "ball":
+            #     pass  # e.g. max speed from physics
 
-            # accepted detection -> reset lost count
-            if obj_id not in state:
+            # Rule 1 • RACKET: placeholder for racket-specific distance rules
+            # if label == "racket":
+            #     pass
+
+            # -------------------------------------------------------
+            # Rule 2: Area gating
+            #   Sequential sub-rules applied in order.
+            # -------------------------------------------------------
+
+            # Rule 2 • ALL: placeholder for global area constraints
+            # e.g. if area < AREA_GLOBAL_MIN: continue
+
+            # Rule 2 • BALL: reject if area exceeds avg accepted racket area
+            if label == "ball" and len(racket_area_stats) > 0:
+                avg_racket_area = sum(racket_area_stats) / len(racket_area_stats)
+                if area > avg_racket_area:
+                    continue  # DROP: ball bigger than average racket -> likely wrong object
+
+            # Rule 2 • RACKET: placeholder for racket-specific area rules
+            # if label == "racket":
+            #     pass
+
+            # -------------------------------------------------------
+            # All rules passed  →  accept detection, update state
+            # -------------------------------------------------------
+
+            # Update racket area stats for the ball area gate
+            if label == "racket":
+                racket_area_stats.append(area)
+
+            if prev_state is None:
                 state[obj_id] = {
                     "last_centroid": centroid,
                     "last_velocity": (0.0, 0.0),
                     "lost_count": 0,
                 }
             else:
-                state[obj_id]["lost_count"] = 0
-
-                prev_c = state[obj_id]["last_centroid"]
+                prev_state["lost_count"] = 0
+                pc = prev_state["last_centroid"]
 
                 # EMA smoothing on centroid
                 if args.ema_alpha < 1.0:
                     a = float(args.ema_alpha)
-                    centroid_s = (a * centroid[0] + (1.0 - a) * prev_c[0],
-                                  a * centroid[1] + (1.0 - a) * prev_c[1])
-                else:
-                    centroid_s = centroid
+                    centroid = (a * centroid[0] + (1.0 - a) * pc[0],
+                                a * centroid[1] + (1.0 - a) * pc[1])
 
-                vx = centroid_s[0] - prev_c[0]
-                vy = centroid_s[1] - prev_c[1]
-                state[obj_id]["last_velocity"] = (vx, vy)
-                state[obj_id]["last_centroid"] = centroid_s
-                centroid = centroid_s
+                prev_state["last_velocity"] = (centroid[0] - pc[0], centroid[1] - pc[1])
+                prev_state["last_centroid"] = centroid
 
             label = OBJ_ID_TO_LABEL.get(obj_id, "unknown")
 
