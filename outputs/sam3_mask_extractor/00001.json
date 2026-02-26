@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "time_unix": 1772086524.8349965,
+    "time_unix": 1772087792.090236,
     "hostname": "dgxh-1.hpc.engr.oregonstate.edu",
     "platform": "Linux-5.14.0-570.58.1.el9_6.x86_64-x86_64-with-glibc2.34",
     "python": "3.11.14",
@@ -23,7 +23,7 @@
     "tracker_score_min": 0.25,
     "static_score_min": 0.25,
     "mask_area_min": 200,
-    "max_jump_px": 80.0,
+    "max_jump_px": 160.0,
     "ema_alpha": 1.0,
     "max_lost": 0,
     "predict_on_reject": false,
@@ -2542,6 +2542,24 @@
     }
   },
   "67": {
+    "3": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.816406,
+      "quality_score": 0.816406,
+      "centroid": [
+        1265.765,
+        155.29
+      ],
+      "box_xyxy": [
+        1249,
+        110,
+        1282,
+        208
+      ],
+      "mask_idx": 132,
+      "mask_area": 2370
+    },
     "7": {
       "label": "ball",
       "tracker_score": 1.0,
@@ -2557,11 +2575,29 @@
         1237,
         122
       ],
-      "mask_idx": 132,
+      "mask_idx": 133,
       "mask_area": 318
     }
   },
   "68": {
+    "3": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.816406,
+      "quality_score": 0.816406,
+      "centroid": [
+        1235.008,
+        140.409
+      ],
+      "box_xyxy": [
+        1199,
+        88,
+        1274,
+        227
+      ],
+      "mask_idx": 134,
+      "mask_area": 4746
+    },
     "7": {
       "label": "ball",
       "tracker_score": 0.996094,
@@ -2577,11 +2613,48 @@
         1233,
         133
       ],
-      "mask_idx": 133,
+      "mask_idx": 135,
       "mask_area": 345
     }
   },
-  "69": {},
+  "69": {
+    "3": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.816406,
+      "quality_score": 0.816406,
+      "centroid": [
+        1246.955,
+        181.036
+      ],
+      "box_xyxy": [
+        1220,
+        136,
+        1272,
+        250
+      ],
+      "mask_idx": 136,
+      "mask_area": 3098
+    },
+    "7": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.847656,
+      "quality_score": 0.847656,
+      "centroid": [
+        1161.004,
+        175.274
+      ],
+      "box_xyxy": [
+        1153,
+        167,
+        1169,
+        183
+      ],
+      "mask_idx": 137,
+      "mask_area": 241
+    }
+  },
   "70": {
     "3": {
       "label": "racket",
@@ -2598,12 +2671,86 @@
         1291,
         285
       ],
-      "mask_idx": 134,
+      "mask_idx": 138,
       "mask_area": 2496
+    },
+    "7": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.847656,
+      "quality_score": 0.847656,
+      "centroid": [
+        1109.085,
+        216.976
+      ],
+      "box_xyxy": [
+        1102,
+        209,
+        1116,
+        225
+      ],
+      "mask_idx": 139,
+      "mask_area": 211
     }
   },
-  "71": {},
-  "72": {},
+  "71": {
+    "3": {
+      "label": "racket",
+      "tracker_score": 0.9375,
+      "static_score": 0.816406,
+      "quality_score": 0.765381,
+      "centroid": [
+        1272.911,
+        326.376
+      ],
+      "box_xyxy": [
+        1247,
+        317,
+        1300,
+        340
+      ],
+      "mask_idx": 140,
+      "mask_area": 529
+    },
+    "7": {
+      "label": "ball",
+      "tracker_score": 0.988281,
+      "static_score": 0.847656,
+      "quality_score": 0.837723,
+      "centroid": [
+        1065.237,
+        253.543
+      ],
+      "box_xyxy": [
+        1056,
+        244,
+        1074,
+        261
+      ],
+      "mask_idx": 141,
+      "mask_area": 245
+    }
+  },
+  "72": {
+    "3": {
+      "label": "racket",
+      "tracker_score": 0.914062,
+      "static_score": 0.816406,
+      "quality_score": 0.746246,
+      "centroid": [
+        1260.293,
+        382.955
+      ],
+      "box_xyxy": [
+        1255,
+        370,
+        1265,
+        395
+      ],
+      "mask_idx": 142,
+      "mask_area": 201
+    }
+  },
   "73": {},
   "74": {},
   "75": {},
@@ -2673,7 +2820,7 @@
         348,
         600
       ],
-      "mask_idx": 135,
+      "mask_idx": 143,
       "mask_area": 588
     }
   },
@@ -2693,7 +2840,7 @@
         348,
         599
       ],
-      "mask_idx": 136,
+      "mask_idx": 144,
       "mask_area": 619
     }
   },
@@ -2713,7 +2860,7 @@
         348,
         598
       ],
-      "mask_idx": 137,
+      "mask_idx": 145,
       "mask_area": 629
     }
   },
@@ -2733,7 +2880,7 @@
         348,
         599
       ],
-      "mask_idx": 138,
+      "mask_idx": 146,
       "mask_area": 664
     }
   }
