@@ -168,6 +168,7 @@ async function loadVideoData(videoName) {
         const dlRes = await fetch('/api/download_json');
         const jsonText = await dlRes.text();
         parsedTracks = JSON.parse(jsonText);
+        delete parsedTracks["_meta"];  // Prevent NaN issues during loop processing
         buildTimelineData();
 
         videoEl.onloadedmetadata = () => {
