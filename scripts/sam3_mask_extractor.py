@@ -231,28 +231,34 @@ with closing(iterator) as it:
 
         for obj_id in obj_ids:
             if obj_id in removed:
+                print(f"Frame {frame_idx} [Obj {obj_id}] DROP: removed")
                 continue
             if obj_id in suppressed:
+                print(f"Frame {frame_idx} [Obj {obj_id}] DROP: suppressed")
                 continue
 
             mask = obj_id_to_mask[obj_id].squeeze()  # Tensor[1,H,W] <BOOL> on device
 
             area = int(mask.sum().item())
             if area < args.mask_area_min:
+                print(f"Frame {frame_idx} [Obj {obj_id}] DROP: area {area} < mask_area_min {args.mask_area_min}")
                 continue
 
             centroid = mask_centroid(mask)
             if centroid is None:
+                print(f"Frame {frame_idx} [Obj {obj_id}] DROP: centroid is None")
                 continue
 
             box = mask_box_xyxy(mask)
             if box is None:
+                print(f"Frame {frame_idx} [Obj {obj_id}] DROP: box is None")
                 continue
 
             tracker_score = float(obj_id_to_tracker_score[obj_id])
             static_score = float(obj_id_to_score[obj_id])
 
             if tracker_score < args.tracker_score_min:
+                print(f"Frame {frame_idx} [Obj {obj_id}] DROP: tracker_score {tracker_score:.3f} < {args.tracker_score_min}")
                 continue
 
             label = OBJ_ID_TO_LABEL.get(obj_id, "unknown")
@@ -302,6 +308,7 @@ with closing(iterator) as it:
             if label == "ball" and len(racket_area_stats) > 0:
                 avg_racket_area = sum(racket_area_stats) / len(racket_area_stats)
                 if area > avg_racket_area:
+                    print(f"Frame {frame_idx} [Obj {obj_id}] DROP: area {area} > avg_racket_area {avg_racket_area:.1f}")
                     continue  # DROP: ball bigger than average racket -> likely wrong object
 
             # Rule 2 • RACKET: placeholder for racket-specific area rules
