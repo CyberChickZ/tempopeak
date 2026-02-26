@@ -104,6 +104,9 @@ python scripts/sam3_mask_extractor.py \
 | `--ema_alpha` | `1.0`（关闭 EMA）| centroid EMA 平滑系数（0.5~0.8 为典型值） |
 | `--max_lost` | `0` | 若为 0，则纯静态丢弃；若 >0 则允许在连续丢失 N 帧内通过速度外推状态 |
 | `--predict_on_reject` | off | 当拒绝当前帧且 `max_lost>0` 时，利用上一帧的速度 (vx, vy) 外推 centroid |
+| `--force_memory_update` | off | 启用强制记忆刷新 hook（需配合 HF 源码 patch），利用 last_low_res_mask 强制维持轨迹记忆 |
+| `--force_memory_update_on_lost_only` | on | 仅针对处于丢失状态 `lost_count > 0` 的目标触发记忆刷新 |
+| `--force_memory_update_max_lost` | `-1` | 最大触发刷新所需的丢失帧数，默认自动使用 `--max_lost` 的值 |
 | `--print_every` | `30` | 提取过程中每 N 帧打印一次进度和保留 mask 数量 |
 | `--debug_first_frames` | `1` | 打印前 K 帧的 PP `prompt_to_obj_ids` 映射信息供调试 |
 
