@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "time_unix": 1772082903.3410606,
+    "time_unix": 1772086524.8349965,
     "hostname": "dgxh-1.hpc.engr.oregonstate.edu",
     "platform": "Linux-5.14.0-570.58.1.el9_6.x86_64-x86_64-with-glibc2.34",
     "python": "3.11.14",
@@ -20,7 +20,6 @@
       "ball",
       "racket"
     ],
-    "obj_id_to_label": {},
     "tracker_score_min": 0.25,
     "static_score_min": 0.25,
     "mask_area_min": 200,
@@ -34,7 +33,7 @@
   },
   "0": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 0.75,
       "static_score": 0.75,
       "quality_score": 0.5625,
@@ -52,7 +51,7 @@
       "mask_area": 249
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 0.816406,
       "static_score": 0.816406,
       "quality_score": 0.666519,
@@ -72,7 +71,7 @@
   },
   "1": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -90,7 +89,7 @@
       "mask_area": 325
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -110,7 +109,7 @@
   },
   "2": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -128,7 +127,7 @@
       "mask_area": 326
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -148,7 +147,7 @@
   },
   "3": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -166,7 +165,7 @@
       "mask_area": 336
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -186,7 +185,7 @@
   },
   "4": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -204,7 +203,7 @@
       "mask_area": 271
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -224,7 +223,7 @@
   },
   "5": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 0.925781,
       "static_score": 0.75,
       "quality_score": 0.694336,
@@ -242,7 +241,7 @@
       "mask_area": 201
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -262,7 +261,7 @@
   },
   "6": {
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -282,7 +281,7 @@
   },
   "7": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 0.648438,
       "static_score": 0.75,
       "quality_score": 0.486328,
@@ -300,7 +299,7 @@
       "mask_area": 266
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -320,7 +319,7 @@
   },
   "8": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -338,7 +337,7 @@
       "mask_area": 260
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -358,7 +357,7 @@
   },
   "9": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -376,7 +375,7 @@
       "mask_area": 319
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -396,7 +395,7 @@
   },
   "10": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -414,7 +413,7 @@
       "mask_area": 299
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -434,7 +433,7 @@
   },
   "11": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -452,7 +451,7 @@
       "mask_area": 346
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -472,7 +471,7 @@
   },
   "12": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -492,7 +491,7 @@
   },
   "13": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -510,7 +509,7 @@
       "mask_area": 315
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -530,7 +529,7 @@
   },
   "14": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -548,7 +547,7 @@
       "mask_area": 300
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -568,7 +567,7 @@
   },
   "15": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -586,7 +585,7 @@
       "mask_area": 292
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -606,7 +605,7 @@
   },
   "16": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -624,7 +623,7 @@
       "mask_area": 336
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -644,7 +643,7 @@
   },
   "17": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -662,7 +661,7 @@
       "mask_area": 327
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -682,7 +681,7 @@
   },
   "18": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -700,7 +699,7 @@
       "mask_area": 309
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -720,7 +719,7 @@
   },
   "19": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -738,7 +737,7 @@
       "mask_area": 341
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -758,7 +757,7 @@
   },
   "20": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -776,7 +775,7 @@
       "mask_area": 341
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -796,7 +795,7 @@
   },
   "21": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -814,7 +813,7 @@
       "mask_area": 301
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -834,7 +833,7 @@
   },
   "22": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -852,7 +851,7 @@
       "mask_area": 316
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -872,7 +871,7 @@
   },
   "23": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -890,7 +889,7 @@
       "mask_area": 328
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -910,7 +909,7 @@
   },
   "24": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -928,7 +927,7 @@
       "mask_area": 323
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -948,7 +947,7 @@
   },
   "25": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -966,7 +965,7 @@
       "mask_area": 300
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -986,7 +985,7 @@
   },
   "26": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -1004,7 +1003,7 @@
       "mask_area": 319
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -1024,7 +1023,7 @@
   },
   "27": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -1042,7 +1041,7 @@
       "mask_area": 296
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -1062,7 +1061,7 @@
   },
   "28": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -1080,7 +1079,7 @@
       "mask_area": 268
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -1100,7 +1099,7 @@
   },
   "29": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -1118,7 +1117,7 @@
       "mask_area": 221
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -1138,7 +1137,7 @@
   },
   "30": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -1156,7 +1155,7 @@
       "mask_area": 280
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -1176,7 +1175,7 @@
   },
   "31": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -1194,7 +1193,7 @@
       "mask_area": 258
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -1214,7 +1213,7 @@
   },
   "32": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -1232,7 +1231,7 @@
       "mask_area": 295
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -1252,7 +1251,7 @@
   },
   "33": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -1270,7 +1269,7 @@
       "mask_area": 253
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -1290,7 +1289,7 @@
   },
   "34": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -1308,7 +1307,7 @@
       "mask_area": 267
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -1328,7 +1327,7 @@
   },
   "35": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -1346,7 +1345,7 @@
       "mask_area": 267
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -1366,7 +1365,7 @@
   },
   "36": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -1384,7 +1383,7 @@
       "mask_area": 286
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -1404,7 +1403,7 @@
   },
   "37": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -1422,7 +1421,7 @@
       "mask_area": 270
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -1442,7 +1441,7 @@
   },
   "38": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -1460,7 +1459,7 @@
       "mask_area": 304
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -1480,7 +1479,7 @@
   },
   "39": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -1498,7 +1497,7 @@
       "mask_area": 288
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -1518,7 +1517,7 @@
   },
   "40": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -1536,7 +1535,7 @@
       "mask_area": 259
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -1556,7 +1555,7 @@
   },
   "41": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -1574,7 +1573,7 @@
       "mask_area": 253
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -1594,7 +1593,7 @@
   },
   "42": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -1612,7 +1611,7 @@
       "mask_area": 229
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -1632,7 +1631,7 @@
   },
   "43": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -1650,7 +1649,7 @@
       "mask_area": 238
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -1670,7 +1669,7 @@
   },
   "44": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -1688,7 +1687,7 @@
       "mask_area": 271
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -1708,7 +1707,7 @@
   },
   "45": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -1726,7 +1725,7 @@
       "mask_area": 268
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -1746,7 +1745,7 @@
   },
   "46": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -1764,7 +1763,7 @@
       "mask_area": 241
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -1784,7 +1783,7 @@
   },
   "47": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -1802,7 +1801,7 @@
       "mask_area": 251
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -1822,7 +1821,7 @@
   },
   "48": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -1840,7 +1839,7 @@
       "mask_area": 259
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -1860,7 +1859,7 @@
   },
   "49": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.75,
       "quality_score": 0.75,
@@ -1878,7 +1877,7 @@
       "mask_area": 239
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -1898,7 +1897,7 @@
   },
   "50": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 0.992188,
       "static_score": 0.75,
       "quality_score": 0.744141,
@@ -1916,7 +1915,7 @@
       "mask_area": 249
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -1936,7 +1935,7 @@
   },
   "51": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 0.992188,
       "static_score": 0.75,
       "quality_score": 0.744141,
@@ -1954,7 +1953,7 @@
       "mask_area": 249
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -1974,7 +1973,7 @@
   },
   "52": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 0.992188,
       "static_score": 0.75,
       "quality_score": 0.744141,
@@ -1992,7 +1991,7 @@
       "mask_area": 251
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -2012,7 +2011,7 @@
   },
   "53": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 0.988281,
       "static_score": 0.75,
       "quality_score": 0.741211,
@@ -2030,7 +2029,7 @@
       "mask_area": 257
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -2050,7 +2049,7 @@
   },
   "54": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 0.988281,
       "static_score": 0.75,
       "quality_score": 0.741211,
@@ -2068,7 +2067,7 @@
       "mask_area": 256
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -2088,7 +2087,7 @@
   },
   "55": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 0.992188,
       "static_score": 0.75,
       "quality_score": 0.744141,
@@ -2106,7 +2105,7 @@
       "mask_area": 271
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 0.996094,
       "static_score": 0.816406,
       "quality_score": 0.813217,
@@ -2126,7 +2125,7 @@
   },
   "56": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 0.992188,
       "static_score": 0.75,
       "quality_score": 0.744141,
@@ -2144,7 +2143,7 @@
       "mask_area": 276
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -2164,7 +2163,7 @@
   },
   "57": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 0.992188,
       "static_score": 0.75,
       "quality_score": 0.744141,
@@ -2182,7 +2181,7 @@
       "mask_area": 254
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -2202,7 +2201,7 @@
   },
   "58": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 0.992188,
       "static_score": 0.75,
       "quality_score": 0.744141,
@@ -2220,7 +2219,7 @@
       "mask_area": 266
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -2240,7 +2239,7 @@
   },
   "59": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 0.988281,
       "static_score": 0.75,
       "quality_score": 0.741211,
@@ -2258,7 +2257,7 @@
       "mask_area": 250
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -2278,7 +2277,7 @@
   },
   "60": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 0.984375,
       "static_score": 0.75,
       "quality_score": 0.738281,
@@ -2296,7 +2295,7 @@
       "mask_area": 236
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -2316,7 +2315,7 @@
   },
   "61": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 0.984375,
       "static_score": 0.75,
       "quality_score": 0.738281,
@@ -2334,7 +2333,7 @@
       "mask_area": 246
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -2354,7 +2353,7 @@
   },
   "62": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 0.988281,
       "static_score": 0.75,
       "quality_score": 0.741211,
@@ -2372,7 +2371,7 @@
       "mask_area": 274
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -2392,7 +2391,7 @@
   },
   "63": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 0.988281,
       "static_score": 0.75,
       "quality_score": 0.741211,
@@ -2410,7 +2409,7 @@
       "mask_area": 286
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -2430,7 +2429,7 @@
   },
   "64": {
     "0": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 0.988281,
       "static_score": 0.75,
       "quality_score": 0.741211,
@@ -2448,7 +2447,7 @@
       "mask_area": 297
     },
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -2468,7 +2467,7 @@
   },
   "65": {
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -2486,7 +2485,7 @@
       "mask_area": 3124
     },
     "7": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 0.847656,
       "static_score": 0.847656,
       "quality_score": 0.718521,
@@ -2506,7 +2505,7 @@
   },
   "66": {
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -2524,7 +2523,7 @@
       "mask_area": 2711
     },
     "7": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.847656,
       "quality_score": 0.847656,
@@ -2544,7 +2543,7 @@
   },
   "67": {
     "7": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 1.0,
       "static_score": 0.847656,
       "quality_score": 0.847656,
@@ -2564,7 +2563,7 @@
   },
   "68": {
     "7": {
-      "label": "unknown",
+      "label": "ball",
       "tracker_score": 0.996094,
       "static_score": 0.847656,
       "quality_score": 0.844345,
@@ -2585,7 +2584,7 @@
   "69": {},
   "70": {
     "3": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.816406,
       "quality_score": 0.816406,
@@ -2660,7 +2659,7 @@
   "125": {},
   "126": {
     "8": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 0.71875,
       "static_score": 0.71875,
       "quality_score": 0.516602,
@@ -2680,7 +2679,7 @@
   },
   "127": {
     "8": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.71875,
       "quality_score": 0.71875,
@@ -2700,7 +2699,7 @@
   },
   "128": {
     "8": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.71875,
       "quality_score": 0.71875,
@@ -2720,7 +2719,7 @@
   },
   "129": {
     "8": {
-      "label": "unknown",
+      "label": "racket",
       "tracker_score": 1.0,
       "static_score": 0.71875,
       "quality_score": 0.71875,
