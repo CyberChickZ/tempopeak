@@ -91,7 +91,9 @@ python scripts/sam3_mask_extractor.py \
 | `--prompts` | `ball racket` | 传给 SAM3 PCS 的文字 prompt 列表 |
 | `--dtype` | `bf16` | 推理精度（bf16/fp16/fp32） |
 | `--max_frames` | `-1`（全视频）| 限制处理帧数，调试用 |
-| `--tracker_score_min` | `0.10` | 低于此 tracker score 的 mask 直接丢弃 |
+| `--tracker_score_min` | `0.10` | 低于此 tracker score 的 mask 丢弃 |
+| `--static_score_min` | `-1.0`（关闭） | 低于此 static score 的 mask 丢弃 |
+| `--quality_score_mode` | `mul` | `quality_score` 的计算方式 (`none`/`mul`/`min`) |
 | `--mask_area_min` | `1` | mask 像素数低于此值的丢弃 |
 | `--obj_id_to_label` | `""` | 显式 ID→标签映射，如 `"0:ball,2:racket"` |
 | `--max_jump_px` | `-1`（关闭）| 相邻帧 centroid 欧氏距离超过此值则视为 ID Switch，丢弃 |
@@ -116,6 +118,7 @@ python scripts/sam3_mask_extractor.py \
       "label": "ball",
       "tracker_score": 0.823,
       "static_score": 0.911,
+      "quality_score": 0.749753,
       "centroid": [312.5, 204.1],
       "box_xyxy": [298, 190, 327, 218],
       "mask_idx": 77
