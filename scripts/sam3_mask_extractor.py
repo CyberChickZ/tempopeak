@@ -219,46 +219,44 @@ with closing(iterator) as it:
         # Deterministic protocol: Sam3VideoSegmentationOutput fields
         frame_idx = int(model_outputs.frame_idx)
 
-        obj_ids = list(model_outputs.object_ids)  # List[int]
-        removed = set(model_outputs.removed_obj_ids)  # Set[int]
-        suppressed = set(model_outputs.suppressed_obj_ids)  # Set[int]
+        # STRICT PROTOCOL: Postprocess raw logits into video-resolution boolean masks
+        pp = processor.postprocess_outputs(session, model_outputs)
 
-        obj_id_to_mask = dict(model_outputs.obj_id_to_mask)  # Dict[int -> Tensor[H,W]]
-        obj_id_to_score = dict(model_outputs.obj_id_to_score)  # Dict[int -> float]
-        obj_id_to_tracker_score = dict(model_outputs.obj_id_to_tracker_score)  # Dict[int -> float]
+        obj_ids = pp["object_ids"].tolist()  # List[int]
+        masks = pp["masks"]                  # Tensor[N, H, W] bool
+        scores = pp["scores"]                # Tensor[N] float (static scores)
+
+        # Retain sets for filtering from raw outputs
+        removed = set(model_outputs.removed_obj_ids)
+        suppressed = set(model_outputs.suppressed_obj_ids)
+        tracker_scores = dict(model_outputs.obj_id_to_tracker_score)
 
         frame_data = {}
 
-        for obj_id in obj_ids:
+        for i, obj_id in enumerate(obj_ids):
             if obj_id in removed:
-                print(f"Frame {frame_idx} [Obj {obj_id}] DROP: removed")
                 continue
             if obj_id in suppressed:
-                print(f"Frame {frame_idx} [Obj {obj_id}] DROP: suppressed")
                 continue
 
-            mask = obj_id_to_mask[obj_id].squeeze()  # Tensor[1,H,W] <BOOL> on device
+            mask = masks[i]  # Tensor[H,W] bool on device
 
             area = int(mask.sum().item())
             if area < args.mask_area_min:
-                print(f"Frame {frame_idx} [Obj {obj_id}] DROP: area {area} < mask_area_min {args.mask_area_min}")
                 continue
 
             centroid = mask_centroid(mask)
             if centroid is None:
-                print(f"Frame {frame_idx} [Obj {obj_id}] DROP: centroid is None")
                 continue
 
             box = mask_box_xyxy(mask)
             if box is None:
-                print(f"Frame {frame_idx} [Obj {obj_id}] DROP: box is None")
                 continue
 
-            tracker_score = float(obj_id_to_tracker_score[obj_id])
-            static_score = float(obj_id_to_score[obj_id])
+            tracker_score = float(tracker_scores.get(obj_id, 0.0))
+            static_score = float(scores[i])
 
             if tracker_score < args.tracker_score_min:
-                print(f"Frame {frame_idx} [Obj {obj_id}] DROP: tracker_score {tracker_score:.3f} < {args.tracker_score_min}")
                 continue
 
             label = OBJ_ID_TO_LABEL.get(obj_id, "unknown")
