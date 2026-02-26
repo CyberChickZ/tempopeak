@@ -1,4 +1,9 @@
 // State
+window.onerror = function (msg, url, line, col, error) {
+    alert("JS Error: " + msg + "\nLine: " + line);
+    return false;
+};
+
 let videoFile = null;
 let jsonFile = null;
 let npzFile = null;
