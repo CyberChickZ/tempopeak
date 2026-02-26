@@ -235,9 +235,12 @@ with closing(iterator) as it:
             if obj_id in suppressed:
                 continue
 
-            mask = obj_id_to_mask[obj_id]  # Tensor[H,W] on device
+            mask = obj_id_to_mask[obj_id]  # Tensor[H,W] on device (may arrive as [1,H,W])
             if mask.dtype != torch.bool:
                 mask = mask.bool()
+            # Normalize to exactly [H, W] regardless of leading batch/channel dims
+            if mask.ndim > 2:
+                mask = mask.squeeze()
 
             area = int(mask.sum().item())
             if area < args.mask_area_min:
