@@ -8,6 +8,11 @@
 # - Labels come from PP "prompt_to_obj_ids" (no explicit obj_id_to_label protocol).
 # - If an obj_id is not mapped to any prompt, label="unknown" (for manual review).
 #
+# Optional forced memory update (requires HF source patch):
+# - When enabled, before running model() on frame t, we may call:
+#     session.set_force_memory_update(t, obj_id, last_low_res_mask[1,1,H_low,W_low])
+#   This is only triggered for lost/reject objects by default, so normal behavior is unchanged.
+#
 # Output JSON schema:
 #   {
 #     "_meta": {...},
@@ -31,7 +36,6 @@ import torch
 from accelerate import Accelerator
 from transformers.video_utils import load_video
 from transformers import Sam3VideoModel, Sam3VideoProcessor
-from contextlib import closing
 
 
 # -------------------------
@@ -46,8 +50,16 @@ parser.add_argument(
     default="/nfs/hpc/share/zhanhaoc/hpe/tempopeak/models/models--facebook--sam3/snapshots/3c879f39826c281e95690f02c7821c4de09afae7",
 )
 parser.add_argument("--video_name", type=str, default="00001")
-parser.add_argument("--video_path", type=str, default="/nfs/hpc/share/zhanhaoc/hpe/tempopeak/datasets/serve/00001.mp4")
-parser.add_argument("--out_dir", type=str, default="/nfs/hpc/share/zhanhaoc/hpe/tempopeak/outputs/sam3_mask_extractor/")
+parser.add_argument(
+    "--video_path",
+    type=str,
+    default="/nfs/hpc/share/zhanhaoc/hpe/tempopeak/datasets/serve/00001.mp4",
+)
+parser.add_argument(
+    "--out_dir",
+    type=str,
+    default="/nfs/hpc/share/zhanhaoc/hpe/tempopeak/outputs/sam3_mask_extractor/",
+)
 parser.add_argument("--vis", action="store_true")
 
 # Prompts (session initialization; labels come from PP prompt_to_obj_ids)
@@ -69,6 +81,20 @@ parser.add_argument("--max_jump_px", type=float, default=-1.0, help="<=0 disable
 parser.add_argument("--ema_alpha", type=float, default=1.0, help="1.0 disables smoothing; typical 0.5~0.8")
 parser.add_argument("--max_lost", type=int, default=0, help="reject-only mode if 0 (no prediction state carry)")
 parser.add_argument("--predict_on_reject", action="store_true", help="if reject and max_lost>0, advance centroid by velocity")
+
+# Forced memory update (requires patched HF source)
+parser.add_argument("--force_memory_update", action="store_true", help="enable forced memory update hook (requires HF patch)")
+parser.add_argument(
+    "--force_memory_update_on_lost_only",
+    action="store_true",
+    help="only force-update memory for objects with lost_count>0 (recommended)",
+)
+parser.add_argument(
+    "--force_memory_update_max_lost",
+    type=int,
+    default=-1,
+    help="only force-update when lost_count <= this; <0 means use --max_lost",
+)
 
 # Score fusion for dataset confidence (optional)
 parser.add_argument(
@@ -166,6 +192,32 @@ def build_obj_id_to_label_from_pp(prompt_to_obj_ids: dict, prompt_order: list):
     return obj_id_to_label
 
 
+def _ensure_low_res_mask_1x1(mask_any: torch.Tensor) -> torch.Tensor:
+    """
+    Normalize to [1,1,H,W] float tensor.
+    Accepts:
+      - [H,W]
+      - [1,H,W]
+      - [1,1,H,W]
+    """
+    if not isinstance(mask_any, torch.Tensor):
+        raise ValueError("mask must be a torch.Tensor")
+
+    if mask_any.ndim == 2:
+        mask_any = mask_any.unsqueeze(0).unsqueeze(0)
+    elif mask_any.ndim == 3:
+        mask_any = mask_any.unsqueeze(0)
+    elif mask_any.ndim == 4:
+        pass
+    else:
+        raise ValueError(f"unsupported mask ndim: {mask_any.ndim}")
+
+    if mask_any.shape[0] != 1 or mask_any.shape[1] != 1:
+        raise ValueError(f"mask must have shape [1,1,H,W], got {tuple(mask_any.shape)}")
+
+    return mask_any.float()
+
+
 # -------------------------
 # Load model + processor
 # -------------------------
@@ -182,7 +234,6 @@ processor = Sam3VideoProcessor.from_pretrained(
     args.hf_local_model,
     local_files_only=True,
 )
-
 
 # -------------------------
 # Load video
@@ -215,13 +266,35 @@ for p in args.prompts:
 
 
 # -------------------------
+# Forced memory update capability check
+# -------------------------
+if args.force_memory_update:
+    if not hasattr(session, "set_force_memory_update") or not hasattr(session, "pop_force_memory_update"):
+        raise RuntimeError(
+            "force_memory_update is enabled, but Sam3VideoInferenceSession has no set_force_memory_update/pop_force_memory_update. "
+            "You must apply the HF source patch in modeling_sam3_video.py first."
+        )
+
+force_max_lost = args.force_memory_update_max_lost
+if force_max_lost < 0:
+    force_max_lost = int(args.max_lost)
+
+
+# -------------------------
 # Tracking state (external gating only)
 # -------------------------
-state = {}  # state[obj_id] = {"last_centroid": (x,y), "last_velocity": (vx,vy), "lost_count": int}
+# state[obj_id] =
+#   {
+#     "last_centroid": (x,y),
+#     "last_velocity": (vx,vy),
+#     "lost_count": int,
+#     "last_low_res_mask": Tensor[1,1,H_low,W_low] (for forced memory update)
+#   }
+state = {}
 
 
 # -------------------------
-# Main loop
+# Main loop (frame-by-frame, so we can set forced memory update BEFORE forward)
 # -------------------------
 tracks = {}
 
@@ -233,125 +306,157 @@ mask_counter = 0
 t0 = time.time()
 print("Propagating...")
 
-iterator = model.propagate_in_video_iterator(
-    inference_session=session,
-    max_frame_num_to_track=num_track_frames,
-)
+for frame_idx in range(num_track_frames):
 
-with closing(iterator) as it:
-    for model_outputs in it:
-        frame_idx = int(model_outputs.frame_idx)
-
-        # PP FIRST: geometry + prompt_to_obj_ids come from PP only
-        pp = processor.postprocess_outputs(session, model_outputs)
-
-        obj_ids = pp["object_ids"].tolist()  # List[int]
-        masks = pp["masks"]                  # Tensor[N, H, W] bool (device)
-        prompt_to_obj_ids = pp.get("prompt_to_obj_ids", {})  # dict[str, list[int]]  (PP-maintained)
-
-        obj_id_to_label = build_obj_id_to_label_from_pp(prompt_to_obj_ids, args.prompts)
-
-        if frame_idx < args.debug_first_frames:
-            print(f"[debug] frame={frame_idx} prompt_to_obj_ids={prompt_to_obj_ids}")
-            print(f"[debug] frame={frame_idx} obj_ids={obj_ids}")
-
-        # Scores from raw metadata (dict keyed by obj_id)
-        obj_id_to_static_score = dict(model_outputs.obj_id_to_score)
-        obj_id_to_tracker_score = dict(model_outputs.obj_id_to_tracker_score)
-
-        # Removed / suppressed (raw semantics)
-        removed = set(model_outputs.removed_obj_ids) if model_outputs.removed_obj_ids is not None else set()
-        suppressed = set(model_outputs.suppressed_obj_ids) if model_outputs.suppressed_obj_ids is not None else set()
-
-        frame_data = {}
-
-        for i, obj_id in enumerate(obj_ids):
-            if obj_id in removed:
+    # --------------------------------------
+    # Optional: before forward(frame_idx), force memory update for some objects
+    # --------------------------------------
+    if args.force_memory_update and args.force_memory_update_on_lost_only:
+        for obj_id, st in state.items():
+            if st["lost_count"] <= 0:
                 continue
-            if obj_id in suppressed:
+            if force_max_lost > 0 and st["lost_count"] > force_max_lost:
+                continue
+            if "last_low_res_mask" not in st or st["last_low_res_mask"] is None:
+                continue
+            # IMPORTANT: this must be [1,1,H_low,W_low]
+            session.set_force_memory_update(frame_idx, int(obj_id), st["last_low_res_mask"])
+
+    # --------------------------------------
+    # Forward one frame
+    # --------------------------------------
+    model_outputs = model(
+        inference_session=session,
+        frame_idx=int(frame_idx),
+        reverse=False,
+    )
+
+    # PP FIRST: geometry + prompt_to_obj_ids come from PP only
+    pp = processor.postprocess_outputs(session, model_outputs)
+
+    obj_ids = pp["object_ids"].tolist()  # List[int]
+    masks = pp["masks"]                  # Tensor[N, H, W] bool (device)
+    prompt_to_obj_ids = pp.get("prompt_to_obj_ids", {})  # dict[str, list[int]]  (PP-maintained)
+
+    obj_id_to_label = build_obj_id_to_label_from_pp(prompt_to_obj_ids, args.prompts)
+
+    if frame_idx < args.debug_first_frames:
+        print(f"[debug] frame={frame_idx} prompt_to_obj_ids={prompt_to_obj_ids}")
+        print(f"[debug] frame={frame_idx} obj_ids={obj_ids}")
+
+    # Scores from raw metadata (dict keyed by obj_id)
+    obj_id_to_static_score = dict(model_outputs.obj_id_to_score) if model_outputs.obj_id_to_score is not None else {}
+    obj_id_to_tracker_score = (
+        dict(model_outputs.obj_id_to_tracker_score) if model_outputs.obj_id_to_tracker_score is not None else {}
+    )
+
+    # Removed / suppressed (raw semantics)
+    removed = set(model_outputs.removed_obj_ids) if model_outputs.removed_obj_ids is not None else set()
+    suppressed = set(model_outputs.suppressed_obj_ids) if model_outputs.suppressed_obj_ids is not None else set()
+
+    # Low-res masks dict (for saving last_low_res_mask)
+    # Sam3VideoSegmentationOutput defines obj_id_to_mask as dict[int, Tensor(1,H_low,W_low)]
+    raw_obj_id_to_low_res_mask = model_outputs.obj_id_to_mask if model_outputs.obj_id_to_mask is not None else {}
+
+    frame_data = {}
+
+    for i, obj_id in enumerate(obj_ids):
+        if obj_id in removed:
+            continue
+        if obj_id in suppressed:
+            continue
+
+        mask = masks[i]
+
+        # PP geometry filters
+        area = int(mask.sum().item())
+        if area < args.mask_area_min:
+            continue
+
+        centroid = mask_centroid(mask)
+        if centroid is None:
+            continue
+
+        box = mask_box_xyxy(mask)
+        if box is None:
+            continue
+
+        # Raw scores
+        static_score = float(obj_id_to_static_score.get(obj_id, 0.0))
+        tracker_score = float(obj_id_to_tracker_score.get(obj_id, 0.0))
+
+        if tracker_score < args.tracker_score_min:
+            continue
+        if args.static_score_min > 0.0 and static_score < args.static_score_min:
+            continue
+
+        quality_score = compute_quality_score(static_score, tracker_score, args.quality_score_mode)
+
+        # Label from PP mapping
+        label = obj_id_to_label.get(obj_id, "unknown")
+
+        # Optional motion gating (no EMA or lost prediction unless you enable them)
+        prev_state = state.get(obj_id)
+
+        if args.max_jump_px > 0.0 and prev_state is not None:
+            dist = l2(centroid, prev_state["last_centroid"])
+            if dist > float(args.max_jump_px):
+                prev_state["lost_count"] += 1
+                if args.predict_on_reject and args.max_lost > 0 and prev_state["lost_count"] <= args.max_lost:
+                    vx, vy = prev_state["last_velocity"]
+                    pc = prev_state["last_centroid"]
+                    prev_state["last_centroid"] = (pc[0] + vx, pc[1] + vy)
                 continue
 
-            mask = masks[i]
-
-            # PP geometry filters
-            area = int(mask.sum().item())
-            if area < args.mask_area_min:
-                continue
-
-            centroid = mask_centroid(mask)
-            if centroid is None:
-                continue
-
-            box = mask_box_xyxy(mask)
-            if box is None:
-                continue
-
-            # Raw scores
-            static_score = float(obj_id_to_static_score.get(obj_id, 0.0))
-            tracker_score = float(obj_id_to_tracker_score.get(obj_id, 0.0))
-
-            if tracker_score < args.tracker_score_min:
-                continue
-            if args.static_score_min > 0.0 and static_score < args.static_score_min:
-                continue
-
-            quality_score = compute_quality_score(static_score, tracker_score, args.quality_score_mode)
-
-            # Label from PP mapping
-            label = obj_id_to_label.get(obj_id, "unknown")
-
-            # Optional motion gating (no EMA or lost prediction unless you enable them)
-            prev_state = state.get(obj_id)
-
-            if args.max_jump_px > 0.0 and prev_state is not None:
-                dist = l2(centroid, prev_state["last_centroid"])
-                if dist > float(args.max_jump_px):
-                    prev_state["lost_count"] += 1
-                    if args.predict_on_reject and args.max_lost > 0 and prev_state["lost_count"] <= args.max_lost:
-                        vx, vy = prev_state["last_velocity"]
-                        pc = prev_state["last_centroid"]
-                        prev_state["last_centroid"] = (pc[0] + vx, pc[1] + vy)
-                    continue
-
-            # Accept -> update state
-            if prev_state is None:
-                state[obj_id] = {
-                    "last_centroid": centroid,
-                    "last_velocity": (0.0, 0.0),
-                    "lost_count": 0,
-                }
-            else:
-                prev_state["lost_count"] = 0
-                pc = prev_state["last_centroid"]
-
-                if args.ema_alpha < 1.0:
-                    a = float(args.ema_alpha)
-                    centroid = (a * centroid[0] + (1.0 - a) * pc[0], a * centroid[1] + (1.0 - a) * pc[1])
-
-                prev_state["last_velocity"] = (centroid[0] - pc[0], centroid[1] - pc[1])
-                prev_state["last_centroid"] = centroid
-
-            frame_data[str(obj_id)] = {
-                "label": label,
-                "tracker_score": round(tracker_score, 6),
-                "static_score": round(static_score, 6),
-                "quality_score": round(float(quality_score), 6) if quality_score >= 0 else -1.0,
-                "centroid": [round(float(centroid[0]), 3), round(float(centroid[1]), 3)],
-                "box_xyxy": [int(box[0]), int(box[1]), int(box[2]), int(box[3])],
-                "mask_idx": int(mask_counter),
-                "mask_area": int(area),
+        # Accept -> update state
+        if prev_state is None:
+            state[obj_id] = {
+                "last_centroid": centroid,
+                "last_velocity": (0.0, 0.0),
+                "lost_count": 0,
+                "last_low_res_mask": None,
             }
+            prev_state = state[obj_id]
+        else:
+            prev_state["lost_count"] = 0
+            pc = prev_state["last_centroid"]
 
-            # Save mask
-            all_masks.append(mask.detach().to("cpu").numpy().astype(np.bool_))
-            mask_frame_indices.append(frame_idx)
-            mask_object_ids.append(int(obj_id))
-            mask_counter += 1
+            if args.ema_alpha < 1.0:
+                a = float(args.ema_alpha)
+                centroid = (a * centroid[0] + (1.0 - a) * pc[0], a * centroid[1] + (1.0 - a) * pc[1])
 
-        tracks[str(frame_idx)] = frame_data
+            prev_state["last_velocity"] = (centroid[0] - pc[0], centroid[1] - pc[1])
+            prev_state["last_centroid"] = centroid
 
-        if args.print_every > 0 and (frame_idx % args.print_every == 0):
-            print("frame", frame_idx, "kept_masks", mask_counter, "kept_objs_this_frame", len(frame_data))
+        # Save last low-res mask for optional forced memory update on future frames
+        # Prefer raw low-res mask from model_outputs (already in tracker resolution).
+        if obj_id in raw_obj_id_to_low_res_mask:
+            lr = raw_obj_id_to_low_res_mask[obj_id]  # expected [1,H_low,W_low]
+            lr = _ensure_low_res_mask_1x1(lr)         # -> [1,1,H_low,W_low]
+            # store on inference_device for fast set_force_memory_update
+            prev_state["last_low_res_mask"] = lr.to(device=device, non_blocking=True)
+
+        frame_data[str(obj_id)] = {
+            "label": label,
+            "tracker_score": round(tracker_score, 6),
+            "static_score": round(static_score, 6),
+            "quality_score": round(float(quality_score), 6) if quality_score >= 0 else -1.0,
+            "centroid": [round(float(centroid[0]), 3), round(float(centroid[1]), 3)],
+            "box_xyxy": [int(box[0]), int(box[1]), int(box[2]), int(box[3])],
+            "mask_idx": int(mask_counter),
+            "mask_area": int(area),
+        }
+
+        # Save PP mask (video resolution) into NPZ
+        all_masks.append(mask.detach().to("cpu").numpy().astype(np.bool_))
+        mask_frame_indices.append(int(frame_idx))
+        mask_object_ids.append(int(obj_id))
+        mask_counter += 1
+
+    tracks[str(frame_idx)] = frame_data
+
+    if args.print_every > 0 and (frame_idx % args.print_every == 0):
+        print("frame", frame_idx, "kept_masks", mask_counter, "kept_objs_this_frame", len(frame_data))
 
 t1 = time.time()
 print("Total kept masks:", len(all_masks))
@@ -389,6 +494,9 @@ meta = {
     "quality_score_mode": str(args.quality_score_mode),
     "processing_device": args.processing_device,
     "video_storage_device": args.video_storage_device,
+    "force_memory_update": bool(args.force_memory_update),
+    "force_memory_update_on_lost_only": bool(args.force_memory_update_on_lost_only),
+    "force_memory_update_max_lost": int(force_max_lost),
 }
 
 json_payload = {"_meta": meta}
