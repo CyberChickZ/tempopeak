@@ -256,7 +256,7 @@ function buildTimelineData() {
         // Find first label
         for (let f of frames) {
             if (parsedTracks[f][oid]) {
-                trackBounds[oid].defaultLabel = parsedTracks[f][oid].prompt;
+                trackBounds[oid].defaultLabel = parsedTracks[f][oid].label || parsedTracks[f][oid].prompt;
                 break;
             }
         }
@@ -505,11 +505,11 @@ function renderSidebar(instances) {
             </div>
             <div class="obj-body">
                 <select class="label-select">
-                    <option value="ball" ${info.prompt === 'ball' ? 'selected' : ''}>Ball</option>
-                    <option value="racket" ${info.prompt === 'racket' ? 'selected' : ''}>Racket</option>
-                    <option value="unknown" ${info.prompt === 'unknown' || (!['ball', 'racket'].includes(info.prompt)) ? 'selected' : ''}>Unknown</option>
+                    <option value="ball" ${(info.label || info.prompt) === 'ball' ? 'selected' : ''}>Ball</option>
+                    <option value="racket" ${(info.label || info.prompt) === 'racket' ? 'selected' : ''}>Racket</option>
+                    <option value="unknown" ${(info.label || info.prompt) === 'unknown' || (!['ball', 'racket'].includes(info.label || info.prompt)) ? 'selected' : ''}>Unknown</option>
                 </select>
-                <div style="font-size: 0.8rem; color: #64748b; margin-top: 4px;">Score: ${info.score.toFixed(3)}</div>
+                <div style="font-size: 0.8rem; color: #64748b; margin-top: 4px;">Score: ${(info.tracker_score ?? info.score ?? 0).toFixed(3)}</div>
             </div>
         `;
 
@@ -527,21 +527,22 @@ function renderSidebar(instances) {
 
         const select = card.querySelector('.label-select');
         select.addEventListener('change', async (e) => {
-            const newPrompt = e.target.value;
+            const newLabel = e.target.value;
             // Optimistic rendering
-            info.prompt = newPrompt;
+            if ('label' in info) info.label = newLabel; else info.prompt = newLabel;
             drawMasks(instances);
 
             // Backend update
             await fetch('/api/edit', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ frame_idx: currentFrame, object_id: objId, prompt: newPrompt })
+                body: JSON.stringify({ frame_idx: currentFrame, object_id: objId, prompt: newLabel })
             });
-            // Update local timeline cache so re-renders of timeline (if implemented) reflect label changes
-            parsedTracks[currentFrame][objId].prompt = newPrompt;
+            // Update local timeline cache so re-renders of timeline reflect label changes
+            const tracked = parsedTracks[currentFrame][objId];
+            if ('label' in tracked) tracked.label = newLabel; else tracked.prompt = newLabel;
             const trackLabel = container.querySelector(`.track-label[data-oid="${objId}"]`);
-            if (trackLabel) trackLabel.innerText = `Obj ${objId} (${newPrompt})`;
+            if (trackLabel) trackLabel.innerText = `Obj ${objId} (${newLabel})`;
 
             hasUnsavedChanges = true;
         });

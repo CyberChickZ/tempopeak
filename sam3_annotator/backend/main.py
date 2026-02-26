@@ -97,7 +97,8 @@ async def upload_files(
 @app.get("/api/frame/{frame_idx}")
 def get_frame(frame_idx: int):
     # Returns exactly what's in track.json for that frame
-    # e.g. {"0": {"prompt": "ball", ...}, "3": {"prompt": "racket", ...}}
+    # v2 schema: {"0": {"label": "ball", "tracker_score": ..., "box_xyxy": ...}, ...}
+    # v1 schema: {"0": {"prompt": "ball", "score": ..., "box": ...}, ...}
     instances = data_store.get_frame_instances(frame_idx)
     return {"frame_idx": frame_idx, "instances": instances}
 
