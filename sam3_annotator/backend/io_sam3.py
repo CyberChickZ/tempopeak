@@ -55,7 +55,8 @@ class SAM3DataStore:
         
         with open(self.current_json_path, 'r', encoding='utf-8') as f:
             raw_tracks = json.load(f)
-            self.tracks = {int(k): v for k, v in raw_tracks.items()}
+            # Skip top-level _meta key (extractor v2)
+            self.tracks = {int(k): v for k, v in raw_tracks.items() if k != '_meta'}
             
         with open(self.current_npz_path, 'rb') as f:
             data = np.load(f)
@@ -65,7 +66,8 @@ class SAM3DataStore:
 
     def load_from_bytes(self, json_bytes: bytes, npz_bytes: bytes):
         raw_tracks = json.loads(json_bytes.decode('utf-8'))
-        self.tracks = {int(k): v for k, v in raw_tracks.items()}
+        # Skip top-level _meta key (extractor v2)
+        self.tracks = {int(k): v for k, v in raw_tracks.items() if k != '_meta'}
         
         with io.BytesIO(npz_bytes) as f:
             data = np.load(f)
@@ -90,9 +92,14 @@ class SAM3DataStore:
         img.save(buf, format='PNG')
         return buf.getvalue()
 
-    def edit_label(self, frame_idx: int, obj_id: str, new_prompt: str):
+    def edit_label(self, frame_idx: int, obj_id: str, new_label: str):
         if frame_idx in self.tracks and obj_id in self.tracks[frame_idx]:
-            self.tracks[frame_idx][obj_id]['prompt'] = new_prompt
+            obj = self.tracks[frame_idx][obj_id]
+            # Support both v2 schema (label) and v1 schema (prompt)
+            if 'label' in obj:
+                obj['label'] = new_label
+            else:
+                obj['prompt'] = new_label
             return True
         return False
         
