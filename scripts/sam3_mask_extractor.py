@@ -9,10 +9,17 @@
 # - If an obj_id is not mapped to any prompt, label="unknown" (for manual review).
 #
 # Plan A (hard object removal on reject):
-# - If a mask is rejected by motion gating (e.g., large jump or lost handling),
-#   we immediately call session.remove_object(obj_id) in the SAME frame after PP.
-# - This ensures the object (including its maskmem_features/maskmem_pos_enc) is removed from
-#   the inference session, so it will NOT participate in future attention/memory.
+# - If a mask is rejected by motion gating (large jump, lost handling),
+#   we call session.remove_object(obj_id) in the SAME frame after PP.
+# - This ensures the object (including memory) is removed from the inference session,
+#   so it will NOT participate in future attention/memory.
+#
+# Post-processing (JSON+NPZ consistent):
+# - delete: remove track entries from JSON, and remove all corresponding masks from NPZ.
+# - fusion: merge tracks with the same label if separated by < max_gap frames.
+#          "Other" tracks are fused into the first (base) track.
+#          If fusion causes collisions in the same frame, keep the better one and drop the other
+#          (and also drop its NPZ mask).
 #
 # Output JSON schema:
 #   {
@@ -32,6 +39,8 @@ import json
 import argparse
 import time
 import platform
+from collections import defaultdict
+
 import numpy as np
 import torch
 from accelerate import Accelerator
@@ -45,22 +54,10 @@ from transformers import Sam3VideoModel, Sam3VideoProcessor
 parser = argparse.ArgumentParser()
 
 # IO
-parser.add_argument(
-    "--hf_local_model",
-    type=str,
-    required=True,
-)
+parser.add_argument("--hf_local_model", type=str, required=True)
 parser.add_argument("--video_name", type=str, required=True)
-parser.add_argument(
-    "--video_path",
-    type=str,
-    required=True,
-)
-parser.add_argument(
-    "--out_dir",
-    type=str,
-    required=True,
-)
+parser.add_argument("--video_path", type=str, required=True)
+parser.add_argument("--out_dir", type=str, required=True)
 parser.add_argument("--vis", action="store_true")
 
 # Prompts (session initialization; labels come from PP prompt_to_obj_ids)
@@ -74,12 +71,17 @@ parser.add_argument("--max_frames", type=int, default=-1, help="<=0 means full v
 
 # Filtering thresholds (PP masks + raw scores metadata)
 parser.add_argument("--tracker_score_min", type=float, default=0.10, help="min obj_id_to_tracker_score to keep")
-parser.add_argument("--static_score_min", type=float, default=-1.0, help="<=0 disables; else min obj_id_to_score to keep")
+parser.add_argument(
+    "--static_score_min",
+    type=float,
+    default=-1.0,
+    help="<=0 disables; else min obj_id_to_score to keep",
+)
 parser.add_argument("--mask_area_min", type=int, default=1, help="min number of true pixels in mask to keep")
 
 # Motion control (Plan A: reject => hard remove object from session)
 parser.add_argument("--max_jump_px", type=float, default=-1.0, help="<=0 disables; else max centroid jump allowed")
-parser.add_argument("--max_lost", type=int, default=0, help="number of allowed consecutive rejects before removal")
+parser.add_argument("--max_lost", type=int, default=0, help="allowed consecutive rejects before removal")
 parser.add_argument("--ema_alpha", type=float, default=1.0, help="1.0 disables smoothing; typical 0.5~0.8")
 
 # Score fusion for dataset confidence (optional)
@@ -91,9 +93,23 @@ parser.add_argument(
     help='How to compute "quality_score" from (static_score, tracker_score): none|mul|min',
 )
 
-# Post-processing
-parser.add_argument("--post_process_rm", action="store_true", help="Remove tracks that are too short (<15 frames) or static (<= 5px average movement).")
-parser.add_argument("--post_process_fusion", action="store_true", help="Fuse tracks with the same label if they are separated by < 5 frames.")
+# Post-processing switches
+parser.add_argument(
+    "--post_process_rm",
+    action="store_true",
+    help="Delete tracks that are too short (< rm_min_len) or static (<= rm_static_px avg move).",
+)
+parser.add_argument(
+    "--post_process_fusion",
+    action="store_true",
+    help="Fuse tracks with the same label if separated by < fusion_max_gap frames.",
+)
+
+# Post-processing params (explicit, stable defaults)
+parser.add_argument("--rm_min_len", type=int, default=15)
+parser.add_argument("--rm_static_px", type=float, default=5.0)
+parser.add_argument("--fusion_max_gap", type=int, default=5)
+parser.add_argument("--fusion_skip_unknown", action="store_true", help="Do not fuse label=unknown tracks.")
 
 # Debug
 parser.add_argument("--print_every", type=int, default=30, help="print progress every N frames (<=0 disables)")
@@ -111,7 +127,6 @@ if not os.path.isfile(args.video_path):
     raise FileNotFoundError(f"video_path not found: {args.video_path}")
 
 os.makedirs(args.out_dir, exist_ok=True)
-
 out_json = os.path.join(args.out_dir, f"{args.video_name}.json")
 out_npz = os.path.join(args.out_dir, f"{args.video_name}.npz")
 out_mp4 = os.path.join(args.out_dir, f"{args.video_name}_vis.mp4")
@@ -182,6 +197,213 @@ def build_obj_id_to_label_from_pp(prompt_to_obj_ids: dict, prompt_order: list):
     return obj_id_to_label
 
 
+def _score_tuple(info: dict):
+    """
+    Higher is better. Used to resolve fusion collisions within the same frame.
+    Priority:
+      1) quality_score
+      2) tracker_score
+      3) static_score
+      4) mask_area
+    """
+    q = float(info.get("quality_score", -1.0))
+    ts = float(info.get("tracker_score", 0.0))
+    ss = float(info.get("static_score", 0.0))
+    area = int(info.get("mask_area", 0))
+    return (q, ts, ss, area)
+
+
+def build_track_history(tracks_dict: dict):
+    """
+    Returns:
+      history[obj_id_str] = list of (frame_idx, centroid_xy, label)
+      plus quick stats: start, end, len
+    """
+    history = defaultdict(list)
+    for frame_idx_str, frame_data in tracks_dict.items():
+        f = int(frame_idx_str)
+        for oid_str, info in frame_data.items():
+            history[oid_str].append((f, info["centroid"], info["label"]))
+    for oid_str in history:
+        history[oid_str].sort(key=lambda x: x[0])
+    return history
+
+
+def compute_track_stats(history_list):
+    frames = [x[0] for x in history_list]
+    start_f = frames[0]
+    end_f = frames[-1]
+    n = len(frames)
+    total_move = 0.0
+    for i in range(1, n):
+        c1 = history_list[i - 1][1]
+        c2 = history_list[i][1]
+        total_move += float(((c1[0] - c2[0]) ** 2 + (c1[1] - c2[1]) ** 2) ** 0.5)
+    avg_move = total_move / (n - 1) if n > 1 else 0.0
+    label = history_list[0][2] if n > 0 else "unknown"
+    return {
+        "start": int(start_f),
+        "end": int(end_f),
+        "len": int(n),
+        "avg_move": float(avg_move),
+        "label": str(label),
+    }
+
+
+def plan_deletions(track_history: dict, rm_min_len: int, rm_static_px: float):
+    delete_set = set()
+    for oid_str, hist in track_history.items():
+        st = compute_track_stats(hist)
+        if st["len"] < int(rm_min_len):
+            delete_set.add(oid_str)
+            continue
+        if st["avg_move"] <= float(rm_static_px):
+            delete_set.add(oid_str)
+            continue
+    return delete_set
+
+
+def plan_fusions(track_history: dict, delete_set: set, max_gap: int, skip_unknown: bool):
+    """
+    Greedy fusions per label.
+    If same label and 0 < next.start - prev.end < max_gap, fuse next into prev base.
+    Returns fusion_map: old_id_str -> base_id_str
+    """
+    label_to_tracks = defaultdict(list)
+    for oid_str, hist in track_history.items():
+        if oid_str in delete_set:
+            continue
+        st = compute_track_stats(hist)
+        if skip_unknown and st["label"] == "unknown":
+            continue
+        label_to_tracks[st["label"]].append(
+            {"id": oid_str, "start": st["start"], "end": st["end"], "label": st["label"]}
+        )
+
+    fusion_map = {}
+    for label, items in label_to_tracks.items():
+        items.sort(key=lambda x: x["start"])
+        if len(items) <= 1:
+            continue
+
+        base = items[0]
+        for j in range(1, len(items)):
+            cur = items[j]
+            gap = int(cur["start"] - base["end"])
+            if 0 < gap < int(max_gap):
+                fusion_map[cur["id"]] = base["id"]
+                base = {"id": base["id"], "start": base["start"], "end": max(base["end"], cur["end"]), "label": label}
+            else:
+                base = cur
+
+    return fusion_map
+
+
+def apply_delete_and_fusion(tracks_dict: dict, delete_set: set, fusion_map: dict):
+    """
+    Applies delete and fusion to tracks_dict (JSON layer), preserving labels.
+    Also resolves same-frame collisions by keeping the better entry and dropping the other.
+    Returns:
+      new_tracks
+      dropped_old_mask_indices: set[int]
+    """
+    new_tracks = {}
+    dropped_old_mask_indices = set()
+
+    for frame_idx_str, frame_data in tracks_dict.items():
+        out_frame = {}
+        for oid_str, info in frame_data.items():
+            if oid_str in delete_set:
+                dropped_old_mask_indices.add(int(info["mask_idx"]))
+                continue
+
+            final_id = fusion_map.get(oid_str, oid_str)
+
+            if final_id not in out_frame:
+                out_frame[final_id] = info
+                continue
+
+            # Collision: same final_id in same frame.
+            # Keep the better one, drop the other (and drop its NPZ mask).
+            keep = out_frame[final_id]
+            cand = info
+
+            if _score_tuple(cand) > _score_tuple(keep):
+                dropped_old_mask_indices.add(int(keep["mask_idx"]))
+                out_frame[final_id] = cand
+            else:
+                dropped_old_mask_indices.add(int(cand["mask_idx"]))
+
+        new_tracks[frame_idx_str] = out_frame
+
+    return new_tracks, dropped_old_mask_indices
+
+
+def rebuild_npz_and_reindex(tracks_dict: dict, all_masks_list, mask_frame_indices_list, mask_object_ids_list, dropped_old_mask_indices: set):
+    """
+    Rebuild NPZ arrays from the final tracks_dict.
+    Ensures:
+      - deleted masks are removed
+      - fused ids are reflected in NPZ object_ids
+      - mask_idx values in JSON are reindexed to [0..M-1] consistent with new NPZ
+    """
+    keep_old_indices = []
+    # Deterministic order: by frame, then by object id numeric if possible, else string
+    frame_keys = sorted(tracks_dict.keys(), key=lambda x: int(x))
+    for fkey in frame_keys:
+        frame_data = tracks_dict[fkey]
+        obj_keys = sorted(frame_data.keys(), key=lambda s: int(s) if s.isdigit() else s)
+        for oid_str in obj_keys:
+            info = frame_data[oid_str]
+            old_idx = int(info["mask_idx"])
+            if old_idx in dropped_old_mask_indices:
+                # This should not happen, but fail fast if it does.
+                raise RuntimeError(f"mask_idx {old_idx} is marked dropped but still referenced in tracks (frame {fkey}, id {oid_str}).")
+            keep_old_indices.append(old_idx)
+
+    # Unique and stable: there should be no duplicates. If there are, something is wrong.
+    if len(set(keep_old_indices)) != len(keep_old_indices):
+        raise RuntimeError("Duplicate mask_idx detected in final tracks. This indicates fusion collision was not resolved correctly.")
+
+    old_to_new = {}
+    for new_i, old_i in enumerate(keep_old_indices):
+        old_to_new[int(old_i)] = int(new_i)
+
+    new_masks = []
+    new_frame_indices = []
+    new_object_ids = []
+
+    for old_i in keep_old_indices:
+        new_masks.append(all_masks_list[old_i])
+        new_frame_indices.append(mask_frame_indices_list[old_i])
+        # object id must match final tracks: we will overwrite from tracks below to be safe
+        new_object_ids.append(mask_object_ids_list[old_i])
+
+    # Now overwrite object_ids and mask_idx from tracks (single source of truth).
+    # Build a lookup: old_idx -> final_obj_id
+    old_idx_to_final_obj = {}
+    for fkey in frame_keys:
+        frame_data = tracks_dict[fkey]
+        for oid_str, info in frame_data.items():
+            old_idx = int(info["mask_idx"])
+            old_idx_to_final_obj[old_idx] = int(oid_str)
+
+    for old_i in keep_old_indices:
+        final_oid = old_idx_to_final_obj.get(int(old_i), None)
+        if final_oid is None:
+            raise RuntimeError(f"Kept mask_idx {old_i} not found in tracks during NPZ rebuild.")
+        new_object_ids[old_to_new[int(old_i)]] = int(final_oid)
+
+    # Update mask_idx in tracks to new indices
+    for fkey in frame_keys:
+        frame_data = tracks_dict[fkey]
+        for oid_str, info in frame_data.items():
+            old_idx = int(info["mask_idx"])
+            info["mask_idx"] = int(old_to_new[old_idx])
+
+    return tracks_dict, new_masks, new_frame_indices, new_object_ids
+
+
 # -------------------------
 # Load model + processor
 # -------------------------
@@ -189,15 +411,8 @@ accelerator = Accelerator()
 device = accelerator.device
 
 print("Loading model...")
-model = Sam3VideoModel.from_pretrained(
-    args.hf_local_model,
-    local_files_only=True,
-).to(device, dtype=torch_dtype)
-
-processor = Sam3VideoProcessor.from_pretrained(
-    args.hf_local_model,
-    local_files_only=True,
-)
+model = Sam3VideoModel.from_pretrained(args.hf_local_model, local_files_only=True).to(device, dtype=torch_dtype)
+processor = Sam3VideoProcessor.from_pretrained(args.hf_local_model, local_files_only=True)
 
 # -------------------------
 # Load video
@@ -213,7 +428,6 @@ else:
 
 print("Total frames:", num_frames, "Tracking frames:", num_track_frames)
 
-
 # -------------------------
 # Init session
 # -------------------------
@@ -224,10 +438,8 @@ session = processor.init_video_session(
     video_storage_device=args.video_storage_device,
     dtype=torch_dtype,
 )
-
 for p in args.prompts:
     session = processor.add_text_prompt(inference_session=session, text=p)
-
 
 # -------------------------
 # Tracking state (external gating)
@@ -239,7 +451,6 @@ for p in args.prompts:
 #     "last_velocity": (vx, vy),
 #   }
 state = {}
-
 
 # -------------------------
 # Main loop
@@ -255,20 +466,14 @@ t0 = time.time()
 print("Propagating...")
 
 for frame_idx in range(num_track_frames):
-
-    # Forward one frame
-    model_outputs = model(
-        inference_session=session,
-        frame_idx=int(frame_idx),
-        reverse=False,
-    )
+    model_outputs = model(inference_session=session, frame_idx=int(frame_idx), reverse=False)
 
     # PP FIRST: geometry + prompt_to_obj_ids come from PP only
     pp = processor.postprocess_outputs(session, model_outputs)
 
-    obj_ids = pp["object_ids"].tolist()  # List[int]
-    masks = pp["masks"]                  # Tensor[N, H, W] bool
-    prompt_to_obj_ids = pp.get("prompt_to_obj_ids", {})  # dict[str, list[int]]
+    obj_ids = pp["object_ids"].tolist()
+    masks = pp["masks"]  # Tensor[N, H, W] bool
+    prompt_to_obj_ids = pp.get("prompt_to_obj_ids", {})
 
     obj_id_to_label = build_obj_id_to_label_from_pp(prompt_to_obj_ids, args.prompts)
 
@@ -276,20 +481,13 @@ for frame_idx in range(num_track_frames):
         print(f"[debug] frame={frame_idx} prompt_to_obj_ids={prompt_to_obj_ids}")
         print(f"[debug] frame={frame_idx} obj_ids={obj_ids}")
 
-    # Scores from raw metadata (dict keyed by obj_id)
     obj_id_to_static_score = dict(model_outputs.obj_id_to_score) if model_outputs.obj_id_to_score is not None else {}
-    obj_id_to_tracker_score = (
-        dict(model_outputs.obj_id_to_tracker_score) if model_outputs.obj_id_to_tracker_score is not None else {}
-    )
+    obj_id_to_tracker_score = dict(model_outputs.obj_id_to_tracker_score) if model_outputs.obj_id_to_tracker_score is not None else {}
 
-    # Removed / suppressed (raw semantics)
     removed = set(model_outputs.removed_obj_ids) if model_outputs.removed_obj_ids is not None else set()
     suppressed = set(model_outputs.suppressed_obj_ids) if model_outputs.suppressed_obj_ids is not None else set()
 
     frame_data = {}
-
-    # Collect obj_ids to hard-remove from session after we decide
-    # (safe to call remove_object during the same frame after PP)
     hard_remove_obj_ids = []
 
     for i, obj_id in enumerate(obj_ids):
@@ -300,7 +498,6 @@ for frame_idx in range(num_track_frames):
 
         mask = masks[i]
 
-        # PP geometry filters
         area = int(mask.sum().item())
         if area < args.mask_area_min:
             continue
@@ -313,7 +510,6 @@ for frame_idx in range(num_track_frames):
         if box is None:
             continue
 
-        # Raw scores
         static_score = float(obj_id_to_static_score.get(obj_id, 0.0))
         tracker_score = float(obj_id_to_tracker_score.get(obj_id, 0.0))
 
@@ -322,28 +518,18 @@ for frame_idx in range(num_track_frames):
         if args.static_score_min > 0.0 and static_score < args.static_score_min:
             continue
 
-        # Motion gating: Plan A => reject => hard-remove object from session
         prev = state.get(obj_id)
-
         if args.max_jump_px > 0.0 and prev is not None:
             dist = l2(centroid, prev["last_centroid"])
             if dist > float(args.max_jump_px):
                 prev["lost_count"] += 1
-
-                # If max_lost == 0, remove immediately on first reject.
-                # If max_lost > 0, allow a few consecutive rejects then remove.
                 if args.max_lost <= 0 or prev["lost_count"] > int(args.max_lost):
                     hard_remove_obj_ids.append(int(obj_id))
-                # Do not save this mask
                 continue
 
         # Accept -> update state
         if prev is None:
-            state[obj_id] = {
-                "last_centroid": centroid,
-                "lost_count": 0,
-                "last_velocity": (0.0, 0.0),
-            }
+            state[obj_id] = {"last_centroid": centroid, "lost_count": 0, "last_velocity": (0.0, 0.0)}
             prev = state[obj_id]
         else:
             prev["lost_count"] = 0
@@ -357,7 +543,6 @@ for frame_idx in range(num_track_frames):
             prev["last_centroid"] = centroid
 
         quality_score = compute_quality_score(static_score, tracker_score, args.quality_score_mode)
-
         label = obj_id_to_label.get(obj_id, "unknown")
 
         frame_data[str(obj_id)] = {
@@ -371,23 +556,19 @@ for frame_idx in range(num_track_frames):
             "mask_area": int(area),
         }
 
-        # Save PP mask (video resolution) into NPZ
         all_masks.append(mask.detach().to("cpu").numpy().astype(np.bool_))
         mask_frame_indices.append(int(frame_idx))
         mask_object_ids.append(int(obj_id))
         mask_counter += 1
 
-    # Apply hard removals now (after iterating current PP outputs)
-    if len(hard_remove_obj_ids) > 0:
+    # Hard removals after PP
+    if hard_remove_obj_ids:
         for oid in hard_remove_obj_ids:
             try:
                 session.remove_object(int(oid))
             except Exception as e:
-                # Fail fast: if remove fails, we cannot guarantee memory purity.
                 raise RuntimeError(f"session.remove_object({oid}) failed at frame {frame_idx}: {e}") from e
-            # Drop external state too
-            if oid in state:
-                state.pop(oid, None)
+            state.pop(int(oid), None)
 
     tracks[str(frame_idx)] = frame_data
 
@@ -395,142 +576,40 @@ for frame_idx in range(num_track_frames):
         print("frame", frame_idx, "kept_masks", mask_counter, "kept_objs_this_frame", len(frame_data))
 
 t1 = time.time()
-print("Total kept masks before filtering:", len(all_masks))
+print("Total kept masks before post-processing:", len(all_masks))
 print("Time (s):", round(t1 - t0, 2))
 
 
 # -------------------------
-# Post-processing: Filter and Fuse tracks
+# Post-processing: delete and fuse (JSON + NPZ consistent)
 # -------------------------
 if args.post_process_rm or args.post_process_fusion:
     print("Post-processing tracks...")
-    track_history = {} # obj_id -> list of (frame_idx, centroid, label)
-    for frame_idx_str, frame_data in tracks.items():
-        f_idx = int(frame_idx_str)
-        for obj_id_str, info in frame_data.items():
-            if obj_id_str not in track_history:
-                track_history[obj_id_str] = []
-            track_history[obj_id_str].append((f_idx, info["centroid"], info["label"]))
+    track_history = build_track_history(tracks)
 
-    obj_ids_to_delete = set()
-    
+    delete_set = set()
     if args.post_process_rm:
-        for obj_id_str, history in track_history.items():
-            history.sort(key=lambda x: x[0])
-            num_frames_in_track = len(history)
-            
-            # Condition 1: total length < 15 frames
-            if num_frames_in_track < 15:
-                obj_ids_to_delete.add(obj_id_str)
-                continue
-            
-            # Condition 2: average movement <= 5px
-            total_movement = 0.0
-            for i in range(1, len(history)):
-                c1 = history[i-1][1]
-                c2 = history[i][1]
-                dist = ((c1[0] - c2[0])**2 + (c1[1] - c2[1])**2)**0.5
-                total_movement += dist
-            
-            avg_movement = total_movement / (num_frames_in_track - 1) if num_frames_in_track > 1 else 0
-            if avg_movement <= 5.0:
-                obj_ids_to_delete.add(obj_id_str)
+        delete_set = plan_deletions(track_history, args.rm_min_len, args.rm_static_px)
+        if delete_set:
+            print("Delete tracks:", len(delete_set))
 
-        if obj_ids_to_delete:
-            print(f"Filtering out {len(obj_ids_to_delete)} tracks based on short/static criteria.")
-            # We don't delete them from `tracks` just yet, as we need a unified deletion pass to remap masks
-
-    fusion_mapping = {}  # old_obj_id -> merged_obj_id
+    fusion_map = {}
     if args.post_process_fusion:
-        # Sort surviving tracks by their start frame
-        surviving_tracks = []
-        for obj_id_str, history in track_history.items():
-            if obj_id_str not in obj_ids_to_delete:
-                history.sort(key=lambda x: x[0])
-                start_frame = history[0][0]
-                end_frame = history[-1][0]
-                # Assuming label is mostly consistent, grab the first one
-                label = history[0][2]
-                surviving_tracks.append({
-                    "id": obj_id_str,
-                    "start": start_frame,
-                    "end": end_frame,
-                    "label": label
-                })
-        
-        # Sort by start frame
-        surviving_tracks.sort(key=lambda x: x["start"])
-        
-        merged_groups = [] # list of lists of obj_id_strs
-        
-        # Greedy merging: 
-        # For each track, check if it can be appended to an existing merged_group
-        for track_info in surviving_tracks:
-            appended = False
-            if track_info["label"] != "unknown": # Do not automatically merge unknowns
-                for group in merged_groups:
-                    last_track_in_group = [t for t in surviving_tracks if t["id"] == group[-1]][0]
-                    # Check conditions:
-                    # 1. Same label
-                    # 2. End of last track to start of current track is < 5 frames
-                    # 3. Must be strictly after (start > last end), but we allow some overlap implicitly if needed, or strictly strictly check:
-                    if last_track_in_group["label"] == track_info["label"] and \
-                       0 < (track_info["start"] - last_track_in_group["end"]) < 5:
-                        # Merge!
-                        group.append(track_info["id"])
-                        appended = True
-                        break
-            if not appended:
-                merged_groups.append([track_info["id"]])
-                
-        for group in merged_groups:
-            if len(group) > 1:
-                base_id = group[0]
-                for other_id in group[1:]:
-                    fusion_mapping[other_id] = base_id
-        
-        if fusion_mapping:
-            print(f"Fusing {len(fusion_mapping)} tracks.")
+        fusion_map = plan_fusions(track_history, delete_set, args.fusion_max_gap, args.fusion_skip_unknown)
+        if fusion_map:
+            print("Fuse tracks:", len(fusion_map))
 
-    if obj_ids_to_delete or fusion_mapping:
-        # Apply deletions and fusions to `tracks`
-        new_tracks = {}
-        for frame_idx_str, frame_data in tracks.items():
-            new_tracks[frame_idx_str] = {}
-            for obj_id_str, info in frame_data.items():
-                if obj_id_str in obj_ids_to_delete:
-                    continue
-                
-                final_obj_id = fusion_mapping.get(obj_id_str, obj_id_str)
-                # Keep the same info but we will place it under final_obj_id
-                # Note: if there is an overlap in the same frame after fusion, 
-                # we just overwrite (the latter one is kept). Usually they shouldn't overlap if they were separate tracks.
-                new_tracks[frame_idx_str][final_obj_id] = info
-                
-        tracks = new_tracks
-        
-        # Remap masks arrays
-        valid_mask_indices = []
-        old_to_new_mask_idx = {}
-        for i, oid in enumerate(mask_object_ids):
-            oid_str = str(oid)
-            if oid_str not in obj_ids_to_delete:
-                final_oid_str = fusion_mapping.get(oid_str, oid_str)
-                old_to_new_mask_idx[i] = len(valid_mask_indices)
-                valid_mask_indices.append(i)
-                # update the mask_object_ids array to the fused id!
-                mask_object_ids[i] = int(final_oid_str)
-                
-        all_masks = [all_masks[i] for i in valid_mask_indices]
-        mask_frame_indices = [mask_frame_indices[i] for i in valid_mask_indices]
-        mask_object_ids = [mask_object_ids[i] for i in valid_mask_indices]
-        
-        # update mask_idx in `tracks`
-        for frame_idx_str, frame_data in tracks.items():
-            for obj_id_str, info in frame_data.items():
-                old_idx = info["mask_idx"]
-                if old_idx in old_to_new_mask_idx:
-                    info["mask_idx"] = old_to_new_mask_idx[old_idx]
+    if delete_set or fusion_map:
+        tracks, dropped_old_mask_indices = apply_delete_and_fusion(tracks, delete_set, fusion_map)
+
+        # Rebuild NPZ from final JSON
+        tracks, all_masks, mask_frame_indices, mask_object_ids = rebuild_npz_and_reindex(
+            tracks,
+            all_masks,
+            mask_frame_indices,
+            mask_object_ids,
+            dropped_old_mask_indices,
+        )
 
     print("Total kept masks after post-processing:", len(all_masks))
 
@@ -568,6 +647,10 @@ meta = {
     "plan": "A_hard_remove_on_reject",
     "post_process_rm": bool(args.post_process_rm),
     "post_process_fusion": bool(args.post_process_fusion),
+    "rm_min_len": int(args.rm_min_len),
+    "rm_static_px": float(args.rm_static_px),
+    "fusion_max_gap": int(args.fusion_max_gap),
+    "fusion_skip_unknown": bool(args.fusion_skip_unknown),
 }
 
 json_payload = {"_meta": meta}
@@ -577,7 +660,6 @@ with open(out_json, "w") as f:
     json.dump(json_payload, f, indent=2)
 
 print("Saved:", out_json)
-
 
 # -------------------------
 # Save NPZ
@@ -590,7 +672,6 @@ np.savez_compressed(
 )
 
 print("Saved:", out_npz)
-
 
 # -------------------------
 # Visualization (optional)
@@ -608,12 +689,7 @@ if args.vis:
     w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-    out = cv2.VideoWriter(
-        out_mp4,
-        cv2.VideoWriter_fourcc(*"mp4v"),
-        fps,
-        (w, h),
-    )
+    out = cv2.VideoWriter(out_mp4, cv2.VideoWriter_fourcc(*"mp4v"), fps, (w, h))
 
     LABEL_COLORS = {
         "ball": (0, 0, 255),
@@ -650,16 +726,7 @@ if args.vis:
             ts = float(info.get("tracker_score", 0.0))
             ss = float(info.get("static_score", 0.0))
             txt = f"id={obj_id_str} {label} q={qs:.3f} ts={ts:.3f} ss={ss:.3f}"
-            cv2.putText(
-                frame,
-                txt,
-                (x0, max(0, y0 - 6)),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.5,
-                color,
-                1,
-                cv2.LINE_AA,
-            )
+            cv2.putText(frame, txt, (x0, max(0, y0 - 6)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, cv2.LINE_AA)
 
         out.write(frame)
         frame_idx += 1
