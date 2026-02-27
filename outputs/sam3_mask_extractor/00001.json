@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "time_unix": 1772100285.6085405,
+    "time_unix": 1772101613.9067466,
     "hostname": "dgxh-1.hpc.engr.oregonstate.edu",
     "platform": "Linux-5.14.0-570.58.1.el9_6.x86_64-x86_64-with-glibc2.34",
     "python": "3.11.14",
@@ -20,9 +20,9 @@
       "ball",
       "racket"
     ],
-    "tracker_score_min": 0.15,
-    "static_score_min": 0.15,
-    "mask_area_min": 20,
+    "tracker_score_min": 0.25,
+    "static_score_min": 0.25,
+    "mask_area_min": 110,
     "max_jump_px": 200.0,
     "ema_alpha": 1.0,
     "max_lost": 0,
@@ -53,24 +53,6 @@
       "mask_idx": 0,
       "mask_area": 249
     },
-    "1": {
-      "label": "ball",
-      "tracker_score": 0.5625,
-      "static_score": 0.5625,
-      "quality_score": 0.316406,
-      "centroid": [
-        656.0,
-        575.5
-      ],
-      "box_xyxy": [
-        653,
-        572,
-        659,
-        579
-      ],
-      "mask_idx": 1,
-      "mask_area": 40
-    },
     "2": {
       "label": "ball",
       "tracker_score": 0.78125,
@@ -86,7 +68,7 @@
         303,
         701
       ],
-      "mask_idx": 2,
+      "mask_idx": 1,
       "mask_area": 124
     },
     "3": {
@@ -104,7 +86,7 @@
         1394,
         757
       ],
-      "mask_idx": 3,
+      "mask_idx": 2,
       "mask_area": 1800
     },
     "4": {
@@ -122,7 +104,7 @@
         793,
         549
       ],
-      "mask_idx": 4,
+      "mask_idx": 3,
       "mask_area": 167
     }
   },
@@ -142,26 +124,8 @@
         1381,
         692
       ],
-      "mask_idx": 5,
+      "mask_idx": 4,
       "mask_area": 325
-    },
-    "1": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.5625,
-      "quality_score": 0.5625,
-      "centroid": [
-        654.913,
-        573.913
-      ],
-      "box_xyxy": [
-        652,
-        571,
-        657,
-        576
-      ],
-      "mask_idx": 6,
-      "mask_area": 23
     },
     "2": {
       "label": "ball",
@@ -178,7 +142,7 @@
         304,
         701
       ],
-      "mask_idx": 7,
+      "mask_idx": 5,
       "mask_area": 131
     },
     "3": {
@@ -196,7 +160,7 @@
         1396,
         762
       ],
-      "mask_idx": 8,
+      "mask_idx": 6,
       "mask_area": 2108
     },
     "4": {
@@ -214,7 +178,7 @@
         792,
         549
       ],
-      "mask_idx": 9,
+      "mask_idx": 7,
       "mask_area": 169
     }
   },
@@ -234,26 +198,8 @@
         1381,
         692
       ],
-      "mask_idx": 10,
+      "mask_idx": 8,
       "mask_area": 326
-    },
-    "1": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.5625,
-      "quality_score": 0.5625,
-      "centroid": [
-        654.759,
-        573.793
-      ],
-      "box_xyxy": [
-        651,
-        571,
-        657,
-        576
-      ],
-      "mask_idx": 11,
-      "mask_area": 29
     },
     "2": {
       "label": "ball",
@@ -270,7 +216,7 @@
         304,
         701
       ],
-      "mask_idx": 12,
+      "mask_idx": 9,
       "mask_area": 134
     },
     "3": {
@@ -288,7 +234,7 @@
         1397,
         762
       ],
-      "mask_idx": 13,
+      "mask_idx": 10,
       "mask_area": 2117
     },
     "4": {
@@ -306,7 +252,7 @@
         792,
         549
       ],
-      "mask_idx": 14,
+      "mask_idx": 11,
       "mask_area": 172
     }
   },
@@ -326,26 +272,8 @@
         1385,
         691
       ],
-      "mask_idx": 15,
+      "mask_idx": 12,
       "mask_area": 336
-    },
-    "1": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.5625,
-      "quality_score": 0.5625,
-      "centroid": [
-        652.71,
-        572.129
-      ],
-      "box_xyxy": [
-        650,
-        570,
-        656,
-        574
-      ],
-      "mask_idx": 16,
-      "mask_area": 31
     },
     "2": {
       "label": "ball",
@@ -362,7 +290,7 @@
         304,
         701
       ],
-      "mask_idx": 17,
+      "mask_idx": 13,
       "mask_area": 133
     },
     "3": {
@@ -380,7 +308,7 @@
         1399,
         764
       ],
-      "mask_idx": 18,
+      "mask_idx": 14,
       "mask_area": 2269
     },
     "4": {
@@ -398,7 +326,7 @@
         792,
         549
       ],
-      "mask_idx": 19,
+      "mask_idx": 15,
       "mask_area": 174
     }
   },
@@ -418,7 +346,7 @@
         1395,
         684
       ],
-      "mask_idx": 20,
+      "mask_idx": 16,
       "mask_area": 271
     },
     "2": {
@@ -436,7 +364,7 @@
         302,
         701
       ],
-      "mask_idx": 21,
+      "mask_idx": 17,
       "mask_area": 128
     },
     "3": {
@@ -454,7 +382,7 @@
         1406,
         768
       ],
-      "mask_idx": 22,
+      "mask_idx": 18,
       "mask_area": 2643
     },
     "4": {
@@ -472,7 +400,7 @@
         792,
         549
       ],
-      "mask_idx": 23,
+      "mask_idx": 19,
       "mask_area": 164
     }
   },
@@ -492,7 +420,7 @@
         1400,
         686
       ],
-      "mask_idx": 24,
+      "mask_idx": 20,
       "mask_area": 201
     },
     "2": {
@@ -510,7 +438,7 @@
         301,
         701
       ],
-      "mask_idx": 25,
+      "mask_idx": 21,
       "mask_area": 129
     },
     "3": {
@@ -528,7 +456,7 @@
         1413,
         773
       ],
-      "mask_idx": 26,
+      "mask_idx": 22,
       "mask_area": 2907
     },
     "4": {
@@ -546,29 +474,11 @@
         791,
         549
       ],
-      "mask_idx": 27,
+      "mask_idx": 23,
       "mask_area": 163
     }
   },
   "6": {
-    "1": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.5625,
-      "quality_score": 0.5625,
-      "centroid": [
-        646.385,
-        563.692
-      ],
-      "box_xyxy": [
-        643,
-        562,
-        650,
-        565
-      ],
-      "mask_idx": 28,
-      "mask_area": 26
-    },
     "2": {
       "label": "ball",
       "tracker_score": 1.0,
@@ -584,7 +494,7 @@
         301,
         701
       ],
-      "mask_idx": 29,
+      "mask_idx": 24,
       "mask_area": 130
     },
     "3": {
@@ -602,7 +512,7 @@
         1421,
         777
       ],
-      "mask_idx": 30,
+      "mask_idx": 25,
       "mask_area": 3086
     },
     "4": {
@@ -620,7 +530,7 @@
         791,
         549
       ],
-      "mask_idx": 31,
+      "mask_idx": 26,
       "mask_area": 160
     }
   },
@@ -640,7 +550,7 @@
         1425,
         661
       ],
-      "mask_idx": 32,
+      "mask_idx": 27,
       "mask_area": 266
     },
     "2": {
@@ -658,7 +568,7 @@
         299,
         701
       ],
-      "mask_idx": 33,
+      "mask_idx": 28,
       "mask_area": 122
     },
     "3": {
@@ -676,7 +586,7 @@
         1429,
         782
       ],
-      "mask_idx": 34,
+      "mask_idx": 29,
       "mask_area": 3671
     },
     "4": {
@@ -694,7 +604,7 @@
         791,
         549
       ],
-      "mask_idx": 35,
+      "mask_idx": 30,
       "mask_area": 163
     }
   },
@@ -714,7 +624,7 @@
         1438,
         652
       ],
-      "mask_idx": 36,
+      "mask_idx": 31,
       "mask_area": 260
     },
     "2": {
@@ -732,7 +642,7 @@
         299,
         701
       ],
-      "mask_idx": 37,
+      "mask_idx": 32,
       "mask_area": 127
     },
     "3": {
@@ -750,7 +660,7 @@
         1437,
         786
       ],
-      "mask_idx": 38,
+      "mask_idx": 33,
       "mask_area": 3976
     },
     "4": {
@@ -768,7 +678,7 @@
         791,
         549
       ],
-      "mask_idx": 39,
+      "mask_idx": 34,
       "mask_area": 162
     }
   },
@@ -788,26 +698,8 @@
         1447,
         638
       ],
-      "mask_idx": 40,
+      "mask_idx": 35,
       "mask_area": 319
-    },
-    "1": {
-      "label": "ball",
-      "tracker_score": 0.878906,
-      "static_score": 0.5625,
-      "quality_score": 0.494385,
-      "centroid": [
-        643.886,
-        567.457
-      ],
-      "box_xyxy": [
-        642,
-        564,
-        646,
-        572
-      ],
-      "mask_idx": 41,
-      "mask_area": 35
     },
     "2": {
       "label": "ball",
@@ -824,7 +716,7 @@
         298,
         701
       ],
-      "mask_idx": 42,
+      "mask_idx": 36,
       "mask_area": 131
     },
     "3": {
@@ -842,7 +734,7 @@
         1445,
         790
       ],
-      "mask_idx": 43,
+      "mask_idx": 37,
       "mask_area": 4316
     },
     "4": {
@@ -860,7 +752,7 @@
         791,
         549
       ],
-      "mask_idx": 44,
+      "mask_idx": 38,
       "mask_area": 156
     }
   },
@@ -880,26 +772,8 @@
         1457,
         623
       ],
-      "mask_idx": 45,
+      "mask_idx": 39,
       "mask_area": 299
-    },
-    "1": {
-      "label": "ball",
-      "tracker_score": 0.671875,
-      "static_score": 0.5625,
-      "quality_score": 0.37793,
-      "centroid": [
-        644.493,
-        572.64
-      ],
-      "box_xyxy": [
-        639,
-        569,
-        651,
-        576
-      ],
-      "mask_idx": 46,
-      "mask_area": 75
     },
     "2": {
       "label": "ball",
@@ -916,7 +790,7 @@
         297,
         702
       ],
-      "mask_idx": 47,
+      "mask_idx": 40,
       "mask_area": 130
     },
     "3": {
@@ -934,7 +808,7 @@
         1454,
         794
       ],
-      "mask_idx": 48,
+      "mask_idx": 41,
       "mask_area": 4737
     },
     "4": {
@@ -952,7 +826,7 @@
         792,
         549
       ],
-      "mask_idx": 49,
+      "mask_idx": 42,
       "mask_area": 148
     }
   },
@@ -972,26 +846,8 @@
         1467,
         607
       ],
-      "mask_idx": 50,
+      "mask_idx": 43,
       "mask_area": 346
-    },
-    "1": {
-      "label": "ball",
-      "tracker_score": 0.613281,
-      "static_score": 0.5625,
-      "quality_score": 0.344971,
-      "centroid": [
-        643.855,
-        572.681
-      ],
-      "box_xyxy": [
-        638,
-        569,
-        650,
-        576
-      ],
-      "mask_idx": 51,
-      "mask_area": 69
     },
     "2": {
       "label": "ball",
@@ -1008,7 +864,7 @@
         296,
         702
       ],
-      "mask_idx": 52,
+      "mask_idx": 44,
       "mask_area": 128
     },
     "3": {
@@ -1026,7 +882,7 @@
         1459,
         798
       ],
-      "mask_idx": 53,
+      "mask_idx": 45,
       "mask_area": 4968
     },
     "4": {
@@ -1044,26 +900,8 @@
         792,
         549
       ],
-      "mask_idx": 54,
+      "mask_idx": 46,
       "mask_area": 149
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 0.722656,
-      "static_score": 0.722656,
-      "quality_score": 0.522232,
-      "centroid": [
-        1261.711,
-        675.244
-      ],
-      "box_xyxy": [
-        1257,
-        669,
-        1266,
-        680
-      ],
-      "mask_idx": 55,
-      "mask_area": 90
     }
   },
   "12": {
@@ -1082,8 +920,26 @@
         1474,
         588
       ],
-      "mask_idx": 56,
+      "mask_idx": 47,
       "mask_area": 272
+    },
+    "5": {
+      "label": "ball",
+      "tracker_score": 0.96875,
+      "static_score": 0.722656,
+      "quality_score": 0.700073,
+      "centroid": [
+        787.353,
+        540.255
+      ],
+      "box_xyxy": [
+        783,
+        529,
+        791,
+        549
+      ],
+      "mask_idx": 48,
+      "mask_area": 153
     }
   },
   "13": {
@@ -1102,7 +958,7 @@
         1482,
         567
       ],
-      "mask_idx": 57,
+      "mask_idx": 49,
       "mask_area": 315
     },
     "2": {
@@ -1120,7 +976,7 @@
         295,
         701
       ],
-      "mask_idx": 58,
+      "mask_idx": 50,
       "mask_area": 122
     },
     "3": {
@@ -1138,8 +994,26 @@
         1475,
         804
       ],
-      "mask_idx": 59,
+      "mask_idx": 51,
       "mask_area": 5665
+    },
+    "5": {
+      "label": "ball",
+      "tracker_score": 0.953125,
+      "static_score": 0.722656,
+      "quality_score": 0.688782,
+      "centroid": [
+        787.378,
+        540.338
+      ],
+      "box_xyxy": [
+        783,
+        529,
+        791,
+        549
+      ],
+      "mask_idx": 52,
+      "mask_area": 151
     }
   },
   "14": {
@@ -1158,7 +1032,7 @@
         1486,
         543
       ],
-      "mask_idx": 60,
+      "mask_idx": 53,
       "mask_area": 300
     },
     "2": {
@@ -1176,7 +1050,7 @@
         294,
         701
       ],
-      "mask_idx": 61,
+      "mask_idx": 54,
       "mask_area": 124
     },
     "3": {
@@ -1194,26 +1068,8 @@
         1481,
         805
       ],
-      "mask_idx": 62,
+      "mask_idx": 55,
       "mask_area": 5684
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.667,
-        675.447
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1269,
-        681
-      ],
-      "mask_idx": 63,
-      "mask_area": 114
     }
   },
   "15": {
@@ -1232,7 +1088,7 @@
         1489,
         519
       ],
-      "mask_idx": 64,
+      "mask_idx": 56,
       "mask_area": 292
     },
     "2": {
@@ -1250,7 +1106,7 @@
         293,
         701
       ],
-      "mask_idx": 65,
+      "mask_idx": 57,
       "mask_area": 124
     },
     "3": {
@@ -1268,26 +1124,8 @@
         1487,
         808
       ],
-      "mask_idx": 66,
+      "mask_idx": 58,
       "mask_area": 6246
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.611,
-        675.451
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 67,
-      "mask_area": 113
     }
   },
   "16": {
@@ -1306,7 +1144,7 @@
         1490,
         497
       ],
-      "mask_idx": 68,
+      "mask_idx": 59,
       "mask_area": 336
     },
     "2": {
@@ -1324,7 +1162,7 @@
         292,
         701
       ],
-      "mask_idx": 69,
+      "mask_idx": 60,
       "mask_area": 122
     },
     "3": {
@@ -1342,26 +1180,8 @@
         1494,
         810
       ],
-      "mask_idx": 70,
+      "mask_idx": 61,
       "mask_area": 6370
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.6,
-        675.513
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 71,
-      "mask_area": 115
     }
   },
   "17": {
@@ -1380,7 +1200,7 @@
         1488,
         470
       ],
-      "mask_idx": 72,
+      "mask_idx": 62,
       "mask_area": 327
     },
     "2": {
@@ -1398,7 +1218,7 @@
         291,
         702
       ],
-      "mask_idx": 73,
+      "mask_idx": 63,
       "mask_area": 117
     },
     "3": {
@@ -1416,26 +1236,8 @@
         1502,
         810
       ],
-      "mask_idx": 74,
+      "mask_idx": 64,
       "mask_area": 6631
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.549,
-        675.425
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 75,
-      "mask_area": 113
     }
   },
   "18": {
@@ -1454,7 +1256,7 @@
         1484,
         446
       ],
-      "mask_idx": 76,
+      "mask_idx": 65,
       "mask_area": 309
     },
     "2": {
@@ -1472,7 +1274,7 @@
         291,
         702
       ],
-      "mask_idx": 77,
+      "mask_idx": 66,
       "mask_area": 119
     },
     "3": {
@@ -1490,26 +1292,8 @@
         1509,
         810
       ],
-      "mask_idx": 78,
+      "mask_idx": 67,
       "mask_area": 6766
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.856,
-        675.415
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1269,
-        681
-      ],
-      "mask_idx": 79,
-      "mask_area": 118
     }
   },
   "19": {
@@ -1528,7 +1312,7 @@
         1477,
         423
       ],
-      "mask_idx": 80,
+      "mask_idx": 68,
       "mask_area": 341
     },
     "2": {
@@ -1546,7 +1330,7 @@
         290,
         702
       ],
-      "mask_idx": 81,
+      "mask_idx": 69,
       "mask_area": 123
     },
     "3": {
@@ -1564,26 +1348,8 @@
         1517,
         811
       ],
-      "mask_idx": 82,
+      "mask_idx": 70,
       "mask_area": 7360
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.588,
-        675.465
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 83,
-      "mask_area": 114
     }
   },
   "20": {
@@ -1602,7 +1368,7 @@
         1471,
         399
       ],
-      "mask_idx": 84,
+      "mask_idx": 71,
       "mask_area": 341
     },
     "2": {
@@ -1620,7 +1386,7 @@
         289,
         702
       ],
-      "mask_idx": 85,
+      "mask_idx": 72,
       "mask_area": 118
     },
     "3": {
@@ -1638,26 +1404,8 @@
         1524,
         809
       ],
-      "mask_idx": 86,
+      "mask_idx": 73,
       "mask_area": 7544
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.647,
-        675.543
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 87,
-      "mask_area": 116
     }
   },
   "21": {
@@ -1676,7 +1424,7 @@
         1466,
         376
       ],
-      "mask_idx": 88,
+      "mask_idx": 74,
       "mask_area": 301
     },
     "2": {
@@ -1694,7 +1442,7 @@
         288,
         702
       ],
-      "mask_idx": 89,
+      "mask_idx": 75,
       "mask_area": 124
     },
     "3": {
@@ -1712,26 +1460,8 @@
         1530,
         807
       ],
-      "mask_idx": 90,
+      "mask_idx": 76,
       "mask_area": 7363
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.684,
-        675.474
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 91,
-      "mask_area": 114
     }
   },
   "22": {
@@ -1750,7 +1480,7 @@
         1461,
         353
       ],
-      "mask_idx": 92,
+      "mask_idx": 77,
       "mask_area": 316
     },
     "2": {
@@ -1768,7 +1498,7 @@
         288,
         702
       ],
-      "mask_idx": 93,
+      "mask_idx": 78,
       "mask_area": 130
     },
     "3": {
@@ -1786,26 +1516,8 @@
         1537,
         804
       ],
-      "mask_idx": 94,
+      "mask_idx": 79,
       "mask_area": 7509
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.588,
-        675.465
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 95,
-      "mask_area": 114
     }
   },
   "23": {
@@ -1824,7 +1536,7 @@
         1455,
         331
       ],
-      "mask_idx": 96,
+      "mask_idx": 80,
       "mask_area": 328
     },
     "2": {
@@ -1842,7 +1554,7 @@
         287,
         702
       ],
-      "mask_idx": 97,
+      "mask_idx": 81,
       "mask_area": 127
     },
     "3": {
@@ -1860,26 +1572,8 @@
         1544,
         801
       ],
-      "mask_idx": 98,
+      "mask_idx": 82,
       "mask_area": 7715
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.6,
-        675.513
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 99,
-      "mask_area": 115
     }
   },
   "24": {
@@ -1898,7 +1592,7 @@
         1449,
         310
       ],
-      "mask_idx": 100,
+      "mask_idx": 83,
       "mask_area": 323
     },
     "2": {
@@ -1916,7 +1610,7 @@
         287,
         702
       ],
-      "mask_idx": 101,
+      "mask_idx": 84,
       "mask_area": 131
     },
     "3": {
@@ -1934,26 +1628,8 @@
         1552,
         797
       ],
-      "mask_idx": 102,
+      "mask_idx": 85,
       "mask_area": 8247
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.588,
-        675.465
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 103,
-      "mask_area": 114
     }
   },
   "25": {
@@ -1972,7 +1648,7 @@
         1443,
         289
       ],
-      "mask_idx": 104,
+      "mask_idx": 86,
       "mask_area": 300
     },
     "2": {
@@ -1990,7 +1666,7 @@
         286,
         702
       ],
-      "mask_idx": 105,
+      "mask_idx": 87,
       "mask_area": 126
     },
     "3": {
@@ -2008,26 +1684,8 @@
         1558,
         791
       ],
-      "mask_idx": 106,
+      "mask_idx": 88,
       "mask_area": 7996
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.6,
-        675.513
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 107,
-      "mask_area": 115
     }
   },
   "26": {
@@ -2046,7 +1704,7 @@
         1438,
         271
       ],
-      "mask_idx": 108,
+      "mask_idx": 89,
       "mask_area": 319
     },
     "2": {
@@ -2064,7 +1722,7 @@
         286,
         702
       ],
-      "mask_idx": 109,
+      "mask_idx": 90,
       "mask_area": 132
     },
     "3": {
@@ -2082,26 +1740,8 @@
         1565,
         785
       ],
-      "mask_idx": 110,
+      "mask_idx": 91,
       "mask_area": 8470
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.549,
-        675.425
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 111,
-      "mask_area": 113
     }
   },
   "27": {
@@ -2120,7 +1760,7 @@
         1432,
         252
       ],
-      "mask_idx": 112,
+      "mask_idx": 92,
       "mask_area": 296
     },
     "2": {
@@ -2138,7 +1778,7 @@
         285,
         702
       ],
-      "mask_idx": 113,
+      "mask_idx": 93,
       "mask_area": 131
     },
     "3": {
@@ -2156,26 +1796,8 @@
         1572,
         777
       ],
-      "mask_idx": 114,
+      "mask_idx": 94,
       "mask_area": 8521
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.746,
-        675.535
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 115,
-      "mask_area": 114
     }
   },
   "28": {
@@ -2194,7 +1816,7 @@
         1425,
         235
       ],
-      "mask_idx": 116,
+      "mask_idx": 95,
       "mask_area": 268
     },
     "2": {
@@ -2212,7 +1834,7 @@
         284,
         702
       ],
-      "mask_idx": 117,
+      "mask_idx": 96,
       "mask_area": 124
     },
     "3": {
@@ -2230,26 +1852,8 @@
         1578,
         767
       ],
-      "mask_idx": 118,
+      "mask_idx": 97,
       "mask_area": 8745
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.649,
-        675.414
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 119,
-      "mask_area": 111
     }
   },
   "29": {
@@ -2268,7 +1872,7 @@
         1420,
         217
       ],
-      "mask_idx": 120,
+      "mask_idx": 98,
       "mask_area": 221
     },
     "2": {
@@ -2286,7 +1890,7 @@
         283,
         702
       ],
-      "mask_idx": 121,
+      "mask_idx": 99,
       "mask_area": 119
     },
     "3": {
@@ -2304,26 +1908,8 @@
         1584,
         757
       ],
-      "mask_idx": 122,
+      "mask_idx": 100,
       "mask_area": 8546
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.649,
-        675.414
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 123,
-      "mask_area": 111
     }
   },
   "30": {
@@ -2342,7 +1928,7 @@
         1415,
         203
       ],
-      "mask_idx": 124,
+      "mask_idx": 101,
       "mask_area": 280
     },
     "2": {
@@ -2360,7 +1946,7 @@
         282,
         702
       ],
-      "mask_idx": 125,
+      "mask_idx": 102,
       "mask_area": 116
     },
     "3": {
@@ -2378,26 +1964,8 @@
         1591,
         744
       ],
-      "mask_idx": 126,
+      "mask_idx": 103,
       "mask_area": 8550
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.598,
-        675.402
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 127,
-      "mask_area": 112
     }
   },
   "31": {
@@ -2416,7 +1984,7 @@
         1408,
         187
       ],
-      "mask_idx": 128,
+      "mask_idx": 104,
       "mask_area": 258
     },
     "2": {
@@ -2434,7 +2002,7 @@
         282,
         702
       ],
-      "mask_idx": 129,
+      "mask_idx": 105,
       "mask_area": 114
     },
     "3": {
@@ -2452,26 +2020,8 @@
         1596,
         729
       ],
-      "mask_idx": 130,
+      "mask_idx": 106,
       "mask_area": 8423
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.649,
-        675.414
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 131,
-      "mask_area": 111
     }
   },
   "32": {
@@ -2490,7 +2040,7 @@
         1405,
         174
       ],
-      "mask_idx": 132,
+      "mask_idx": 107,
       "mask_area": 295
     },
     "2": {
@@ -2508,7 +2058,7 @@
         281,
         702
       ],
-      "mask_idx": 133,
+      "mask_idx": 108,
       "mask_area": 118
     },
     "3": {
@@ -2526,26 +2076,8 @@
         1599,
         714
       ],
-      "mask_idx": 134,
+      "mask_idx": 109,
       "mask_area": 8380
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.613,
-        675.487
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 135,
-      "mask_area": 111
     }
   },
   "33": {
@@ -2564,7 +2096,7 @@
         1399,
         159
       ],
-      "mask_idx": 136,
+      "mask_idx": 110,
       "mask_area": 253
     },
     "2": {
@@ -2582,7 +2114,7 @@
         280,
         702
       ],
-      "mask_idx": 137,
+      "mask_idx": 111,
       "mask_area": 118
     },
     "3": {
@@ -2600,26 +2132,8 @@
         1604,
         696
       ],
-      "mask_idx": 138,
+      "mask_idx": 112,
       "mask_area": 8318
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.45,
-        675.423
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 139,
-      "mask_area": 111
     }
   },
   "34": {
@@ -2638,7 +2152,7 @@
         1394,
         146
       ],
-      "mask_idx": 140,
+      "mask_idx": 113,
       "mask_area": 267
     },
     "2": {
@@ -2656,7 +2170,7 @@
         280,
         702
       ],
-      "mask_idx": 141,
+      "mask_idx": 114,
       "mask_area": 118
     },
     "3": {
@@ -2674,26 +2188,8 @@
         1607,
         677
       ],
-      "mask_idx": 142,
+      "mask_idx": 115,
       "mask_area": 8234
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.919,
-        675.263
-      ],
-      "box_xyxy": [
-        1258,
-        670,
-        1268,
-        680
-      ],
-      "mask_idx": 143,
-      "mask_area": 99
     }
   },
   "35": {
@@ -2712,7 +2208,7 @@
         1388,
         135
       ],
-      "mask_idx": 144,
+      "mask_idx": 116,
       "mask_area": 267
     },
     "2": {
@@ -2730,7 +2226,7 @@
         279,
         702
       ],
-      "mask_idx": 145,
+      "mask_idx": 117,
       "mask_area": 125
     },
     "3": {
@@ -2748,26 +2244,8 @@
         1607,
         656
       ],
-      "mask_idx": 146,
+      "mask_idx": 118,
       "mask_area": 8011
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.412,
-        675.465
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 147,
-      "mask_area": 114
     }
   },
   "36": {
@@ -2786,7 +2264,7 @@
         1383,
         123
       ],
-      "mask_idx": 148,
+      "mask_idx": 119,
       "mask_area": 286
     },
     "2": {
@@ -2804,7 +2282,7 @@
         279,
         702
       ],
-      "mask_idx": 149,
+      "mask_idx": 120,
       "mask_area": 132
     },
     "3": {
@@ -2822,26 +2300,8 @@
         1607,
         634
       ],
-      "mask_idx": 150,
+      "mask_idx": 121,
       "mask_area": 7897
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.5,
-        675.446
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 151,
-      "mask_area": 112
     }
   },
   "37": {
@@ -2860,7 +2320,7 @@
         1377,
         112
       ],
-      "mask_idx": 152,
+      "mask_idx": 122,
       "mask_area": 270
     },
     "2": {
@@ -2878,7 +2338,7 @@
         278,
         702
       ],
-      "mask_idx": 153,
+      "mask_idx": 123,
       "mask_area": 127
     },
     "3": {
@@ -2896,26 +2356,8 @@
         1605,
         613
       ],
-      "mask_idx": 154,
+      "mask_idx": 124,
       "mask_area": 7747
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.363,
-        675.443
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 155,
-      "mask_area": 113
     }
   },
   "38": {
@@ -2934,7 +2376,7 @@
         1374,
         102
       ],
-      "mask_idx": 156,
+      "mask_idx": 125,
       "mask_area": 304
     },
     "2": {
@@ -2952,7 +2394,7 @@
         278,
         702
       ],
-      "mask_idx": 157,
+      "mask_idx": 126,
       "mask_area": 125
     },
     "3": {
@@ -2970,26 +2412,8 @@
         1601,
         589
       ],
-      "mask_idx": 158,
+      "mask_idx": 127,
       "mask_area": 7864
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.45,
-        675.423
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 159,
-      "mask_area": 111
     }
   },
   "39": {
@@ -3008,7 +2432,7 @@
         1368,
         93
       ],
-      "mask_idx": 160,
+      "mask_idx": 128,
       "mask_area": 288
     },
     "2": {
@@ -3026,7 +2450,7 @@
         277,
         702
       ],
-      "mask_idx": 161,
+      "mask_idx": 129,
       "mask_area": 128
     },
     "3": {
@@ -3044,26 +2468,8 @@
         1595,
         569
       ],
-      "mask_idx": 162,
+      "mask_idx": 130,
       "mask_area": 7801
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.45,
-        675.423
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 163,
-      "mask_area": 111
     }
   },
   "40": {
@@ -3082,7 +2488,7 @@
         1363,
         84
       ],
-      "mask_idx": 164,
+      "mask_idx": 131,
       "mask_area": 259
     },
     "2": {
@@ -3100,7 +2506,7 @@
         276,
         702
       ],
-      "mask_idx": 165,
+      "mask_idx": 132,
       "mask_area": 120
     },
     "3": {
@@ -3118,26 +2524,8 @@
         1578,
         554
       ],
-      "mask_idx": 166,
+      "mask_idx": 133,
       "mask_area": 6837
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.45,
-        675.423
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 167,
-      "mask_area": 111
     }
   },
   "41": {
@@ -3156,7 +2544,7 @@
         1357,
         77
       ],
-      "mask_idx": 168,
+      "mask_idx": 134,
       "mask_area": 253
     },
     "2": {
@@ -3174,7 +2562,7 @@
         275,
         702
       ],
-      "mask_idx": 169,
+      "mask_idx": 135,
       "mask_area": 115
     },
     "3": {
@@ -3192,26 +2580,8 @@
         1571,
         545
       ],
-      "mask_idx": 170,
+      "mask_idx": 136,
       "mask_area": 7257
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.5,
-        675.307
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 171,
-      "mask_area": 114
     }
   },
   "42": {
@@ -3230,7 +2600,7 @@
         1352,
         69
       ],
-      "mask_idx": 172,
+      "mask_idx": 137,
       "mask_area": 229
     },
     "2": {
@@ -3248,7 +2618,7 @@
         275,
         702
       ],
-      "mask_idx": 173,
+      "mask_idx": 138,
       "mask_area": 116
     },
     "3": {
@@ -3266,26 +2636,8 @@
         1557,
         532
       ],
-      "mask_idx": 174,
+      "mask_idx": 139,
       "mask_area": 7303
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.504,
-        675.257
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 175,
-      "mask_area": 113
     }
   },
   "43": {
@@ -3304,7 +2656,7 @@
         1347,
         63
       ],
-      "mask_idx": 176,
+      "mask_idx": 140,
       "mask_area": 238
     },
     "2": {
@@ -3322,7 +2674,7 @@
         274,
         702
       ],
-      "mask_idx": 177,
+      "mask_idx": 141,
       "mask_area": 116
     },
     "3": {
@@ -3340,26 +2692,8 @@
         1539,
         522
       ],
-      "mask_idx": 178,
+      "mask_idx": 142,
       "mask_area": 7725
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.5,
-        675.307
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 179,
-      "mask_area": 114
     }
   },
   "44": {
@@ -3378,7 +2712,7 @@
         1342,
         58
       ],
-      "mask_idx": 180,
+      "mask_idx": 143,
       "mask_area": 271
     },
     "2": {
@@ -3396,7 +2730,7 @@
         274,
         702
       ],
-      "mask_idx": 181,
+      "mask_idx": 144,
       "mask_area": 116
     },
     "3": {
@@ -3414,26 +2748,8 @@
         1518,
         508
       ],
-      "mask_idx": 182,
+      "mask_idx": 145,
       "mask_area": 7687
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.861,
-        675.168
-      ],
-      "box_xyxy": [
-        1258,
-        670,
-        1268,
-        680
-      ],
-      "mask_idx": 183,
-      "mask_area": 101
     }
   },
   "45": {
@@ -3452,7 +2768,7 @@
         1337,
         53
       ],
-      "mask_idx": 184,
+      "mask_idx": 146,
       "mask_area": 268
     },
     "2": {
@@ -3470,7 +2786,7 @@
         273,
         702
       ],
-      "mask_idx": 185,
+      "mask_idx": 147,
       "mask_area": 120
     },
     "3": {
@@ -3488,26 +2804,8 @@
         1495,
         498
       ],
-      "mask_idx": 186,
+      "mask_idx": 148,
       "mask_area": 7445
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.5,
-        675.307
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 187,
-      "mask_area": 114
     }
   },
   "46": {
@@ -3526,7 +2824,7 @@
         1332,
         49
       ],
-      "mask_idx": 188,
+      "mask_idx": 149,
       "mask_area": 241
     },
     "2": {
@@ -3544,7 +2842,7 @@
         272,
         702
       ],
-      "mask_idx": 189,
+      "mask_idx": 150,
       "mask_area": 124
     },
     "3": {
@@ -3562,26 +2860,8 @@
         1470,
         490
       ],
-      "mask_idx": 190,
+      "mask_idx": 151,
       "mask_area": 7663
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.452,
-        675.287
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 191,
-      "mask_area": 115
     }
   },
   "47": {
@@ -3600,7 +2880,7 @@
         1327,
         45
       ],
-      "mask_idx": 192,
+      "mask_idx": 152,
       "mask_area": 251
     },
     "2": {
@@ -3618,7 +2898,7 @@
         272,
         702
       ],
-      "mask_idx": 193,
+      "mask_idx": 153,
       "mask_area": 124
     },
     "3": {
@@ -3636,26 +2916,8 @@
         1442,
         477
       ],
-      "mask_idx": 194,
+      "mask_idx": 154,
       "mask_area": 7125
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.5,
-        675.31
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 195,
-      "mask_area": 116
     }
   },
   "48": {
@@ -3674,7 +2936,7 @@
         1322,
         43
       ],
-      "mask_idx": 196,
+      "mask_idx": 155,
       "mask_area": 259
     },
     "2": {
@@ -3692,7 +2954,7 @@
         272,
         702
       ],
-      "mask_idx": 197,
+      "mask_idx": 156,
       "mask_area": 128
     },
     "3": {
@@ -3710,26 +2972,8 @@
         1416,
         465
       ],
-      "mask_idx": 198,
+      "mask_idx": 157,
       "mask_area": 6823
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.5,
-        675.31
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 199,
-      "mask_area": 116
     }
   },
   "49": {
@@ -3748,7 +2992,7 @@
         1317,
         41
       ],
-      "mask_idx": 200,
+      "mask_idx": 158,
       "mask_area": 239
     },
     "2": {
@@ -3766,7 +3010,7 @@
         271,
         702
       ],
-      "mask_idx": 201,
+      "mask_idx": 159,
       "mask_area": 127
     },
     "3": {
@@ -3784,26 +3028,8 @@
         1381,
         453
       ],
-      "mask_idx": 202,
+      "mask_idx": 160,
       "mask_area": 6362
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.456,
-        675.237
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 203,
-      "mask_area": 114
     }
   },
   "50": {
@@ -3822,7 +3048,7 @@
         1312,
         40
       ],
-      "mask_idx": 204,
+      "mask_idx": 161,
       "mask_area": 249
     },
     "2": {
@@ -3840,7 +3066,7 @@
         271,
         702
       ],
-      "mask_idx": 205,
+      "mask_idx": 162,
       "mask_area": 129
     },
     "3": {
@@ -3858,26 +3084,8 @@
         1346,
         447
       ],
-      "mask_idx": 206,
+      "mask_idx": 163,
       "mask_area": 6703
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.456,
-        675.237
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 207,
-      "mask_area": 114
     },
     "6": {
       "label": "ball",
@@ -3894,7 +3102,7 @@
         1293,
         484
       ],
-      "mask_idx": 208,
+      "mask_idx": 164,
       "mask_area": 2120
     }
   },
@@ -3914,7 +3122,7 @@
         1308,
         39
       ],
-      "mask_idx": 209,
+      "mask_idx": 165,
       "mask_area": 249
     },
     "2": {
@@ -3932,7 +3140,7 @@
         271,
         703
       ],
-      "mask_idx": 210,
+      "mask_idx": 166,
       "mask_area": 132
     },
     "3": {
@@ -3950,26 +3158,8 @@
         1313,
         432
       ],
-      "mask_idx": 211,
+      "mask_idx": 167,
       "mask_area": 6048
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.5,
-        675.31
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 212,
-      "mask_area": 116
     },
     "6": {
       "label": "ball",
@@ -3986,7 +3176,7 @@
         1289,
         479
       ],
-      "mask_idx": 213,
+      "mask_idx": 168,
       "mask_area": 1877
     }
   },
@@ -4006,7 +3196,7 @@
         1303,
         39
       ],
-      "mask_idx": 214,
+      "mask_idx": 169,
       "mask_area": 251
     },
     "2": {
@@ -4024,7 +3214,7 @@
         270,
         703
       ],
-      "mask_idx": 215,
+      "mask_idx": 170,
       "mask_area": 132
     },
     "3": {
@@ -4042,26 +3232,8 @@
         1299,
         427
       ],
-      "mask_idx": 216,
+      "mask_idx": 171,
       "mask_area": 5556
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.452,
-        675.287
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 217,
-      "mask_area": 115
     },
     "6": {
       "label": "ball",
@@ -4078,7 +3250,7 @@
         1287,
         473
       ],
-      "mask_idx": 218,
+      "mask_idx": 172,
       "mask_area": 2000
     }
   },
@@ -4098,7 +3270,7 @@
         1299,
         40
       ],
-      "mask_idx": 219,
+      "mask_idx": 173,
       "mask_area": 257
     },
     "2": {
@@ -4116,7 +3288,7 @@
         270,
         703
       ],
-      "mask_idx": 220,
+      "mask_idx": 174,
       "mask_area": 135
     },
     "3": {
@@ -4134,26 +3306,8 @@
         1250,
         400
       ],
-      "mask_idx": 221,
+      "mask_idx": 175,
       "mask_area": 4618
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.553,
-        675.281
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 222,
-      "mask_area": 114
     },
     "6": {
       "label": "ball",
@@ -4170,7 +3324,7 @@
         1282,
         468
       ],
-      "mask_idx": 223,
+      "mask_idx": 176,
       "mask_area": 1600
     }
   },
@@ -4190,7 +3344,7 @@
         1293,
         41
       ],
-      "mask_idx": 224,
+      "mask_idx": 177,
       "mask_area": 256
     },
     "2": {
@@ -4208,7 +3362,7 @@
         269,
         703
       ],
-      "mask_idx": 225,
+      "mask_idx": 178,
       "mask_area": 134
     },
     "3": {
@@ -4226,26 +3380,8 @@
         1244,
         417
       ],
-      "mask_idx": 226,
+      "mask_idx": 179,
       "mask_area": 4168
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.553,
-        675.281
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 227,
-      "mask_area": 114
     },
     "6": {
       "label": "ball",
@@ -4262,7 +3398,7 @@
         1281,
         462
       ],
-      "mask_idx": 228,
+      "mask_idx": 180,
       "mask_area": 1996
     }
   },
@@ -4282,7 +3418,7 @@
         1289,
         44
       ],
-      "mask_idx": 229,
+      "mask_idx": 181,
       "mask_area": 271
     },
     "2": {
@@ -4300,7 +3436,7 @@
         269,
         702
       ],
-      "mask_idx": 230,
+      "mask_idx": 182,
       "mask_area": 136
     },
     "3": {
@@ -4318,26 +3454,8 @@
         1196,
         432
       ],
-      "mask_idx": 231,
+      "mask_idx": 183,
       "mask_area": 2121
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.5,
-        675.31
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 232,
-      "mask_area": 116
     },
     "6": {
       "label": "ball",
@@ -4354,7 +3472,7 @@
         1272,
         455
       ],
-      "mask_idx": 233,
+      "mask_idx": 184,
       "mask_area": 1656
     }
   },
@@ -4374,7 +3492,7 @@
         1285,
         47
       ],
-      "mask_idx": 234,
+      "mask_idx": 185,
       "mask_area": 276
     },
     "2": {
@@ -4392,7 +3510,7 @@
         269,
         702
       ],
-      "mask_idx": 235,
+      "mask_idx": 186,
       "mask_area": 134
     },
     "3": {
@@ -4410,26 +3528,8 @@
         1213,
         478
       ],
-      "mask_idx": 236,
+      "mask_idx": 187,
       "mask_area": 5572
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.462,
-        675.35
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 237,
-      "mask_area": 117
     },
     "6": {
       "label": "ball",
@@ -4446,7 +3546,7 @@
         1268,
         423
       ],
-      "mask_idx": 238,
+      "mask_idx": 188,
       "mask_area": 1226
     }
   },
@@ -4466,7 +3566,7 @@
         1279,
         50
       ],
-      "mask_idx": 239,
+      "mask_idx": 189,
       "mask_area": 254
     },
     "2": {
@@ -4484,7 +3584,7 @@
         268,
         702
       ],
-      "mask_idx": 240,
+      "mask_idx": 190,
       "mask_area": 135
     },
     "3": {
@@ -4502,26 +3602,8 @@
         1232,
         512
       ],
-      "mask_idx": 241,
+      "mask_idx": 191,
       "mask_area": 6367
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.462,
-        675.35
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 242,
-      "mask_area": 117
     },
     "6": {
       "label": "ball",
@@ -4538,7 +3620,7 @@
         1259,
         421
       ],
-      "mask_idx": 243,
+      "mask_idx": 192,
       "mask_area": 1353
     }
   },
@@ -4558,7 +3640,7 @@
         1276,
         54
       ],
-      "mask_idx": 244,
+      "mask_idx": 193,
       "mask_area": 266
     },
     "2": {
@@ -4576,7 +3658,7 @@
         268,
         702
       ],
-      "mask_idx": 245,
+      "mask_idx": 194,
       "mask_area": 136
     },
     "3": {
@@ -4594,26 +3676,8 @@
         1229,
         544
       ],
-      "mask_idx": 246,
+      "mask_idx": 195,
       "mask_area": 6125
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.5,
-        675.31
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 247,
-      "mask_area": 116
     },
     "6": {
       "label": "ball",
@@ -4630,7 +3694,7 @@
         1254,
         425
       ],
-      "mask_idx": 248,
+      "mask_idx": 196,
       "mask_area": 1591
     }
   },
@@ -4650,7 +3714,7 @@
         1270,
         58
       ],
-      "mask_idx": 249,
+      "mask_idx": 197,
       "mask_area": 250
     },
     "2": {
@@ -4668,7 +3732,7 @@
         268,
         702
       ],
-      "mask_idx": 250,
+      "mask_idx": 198,
       "mask_area": 135
     },
     "3": {
@@ -4686,26 +3750,8 @@
         1232,
         571
       ],
-      "mask_idx": 251,
+      "mask_idx": 199,
       "mask_area": 6721
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.452,
-        675.287
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 252,
-      "mask_area": 115
     }
   },
   "60": {
@@ -4724,7 +3770,7 @@
         1266,
         64
       ],
-      "mask_idx": 253,
+      "mask_idx": 200,
       "mask_area": 236
     },
     "2": {
@@ -4742,7 +3788,7 @@
         266,
         702
       ],
-      "mask_idx": 254,
+      "mask_idx": 201,
       "mask_area": 131
     },
     "3": {
@@ -4760,26 +3806,8 @@
         1235,
         586
       ],
-      "mask_idx": 255,
+      "mask_idx": 202,
       "mask_area": 7243
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.456,
-        675.237
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 256,
-      "mask_area": 114
     }
   },
   "61": {
@@ -4798,7 +3826,7 @@
         1263,
         70
       ],
-      "mask_idx": 257,
+      "mask_idx": 203,
       "mask_area": 246
     },
     "2": {
@@ -4816,7 +3844,7 @@
         266,
         702
       ],
-      "mask_idx": 258,
+      "mask_idx": 204,
       "mask_area": 133
     },
     "3": {
@@ -4834,26 +3862,8 @@
         1284,
         583
       ],
-      "mask_idx": 259,
+      "mask_idx": 205,
       "mask_area": 7377
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.553,
-        675.281
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 260,
-      "mask_area": 114
     }
   },
   "62": {
@@ -4872,7 +3882,7 @@
         1258,
         78
       ],
-      "mask_idx": 261,
+      "mask_idx": 206,
       "mask_area": 274
     },
     "2": {
@@ -4890,7 +3900,7 @@
         265,
         702
       ],
-      "mask_idx": 262,
+      "mask_idx": 207,
       "mask_area": 127
     },
     "3": {
@@ -4908,26 +3918,8 @@
         1313,
         554
       ],
-      "mask_idx": 263,
+      "mask_idx": 208,
       "mask_area": 6079
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.452,
-        675.287
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 264,
-      "mask_area": 115
     }
   },
   "63": {
@@ -4946,7 +3938,7 @@
         1254,
         86
       ],
-      "mask_idx": 265,
+      "mask_idx": 209,
       "mask_area": 286
     },
     "2": {
@@ -4964,7 +3956,7 @@
         265,
         702
       ],
-      "mask_idx": 266,
+      "mask_idx": 210,
       "mask_area": 127
     },
     "3": {
@@ -4982,26 +3974,8 @@
         1355,
         495
       ],
-      "mask_idx": 267,
+      "mask_idx": 211,
       "mask_area": 4935
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.5,
-        675.31
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 268,
-      "mask_area": 116
     }
   },
   "64": {
@@ -5020,7 +3994,7 @@
         1249,
         94
       ],
-      "mask_idx": 269,
+      "mask_idx": 212,
       "mask_area": 297
     },
     "2": {
@@ -5038,7 +4012,7 @@
         264,
         702
       ],
-      "mask_idx": 270,
+      "mask_idx": 213,
       "mask_area": 121
     },
     "3": {
@@ -5056,26 +4030,8 @@
         1374,
         421
       ],
-      "mask_idx": 271,
+      "mask_idx": 214,
       "mask_area": 1944
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.462,
-        675.35
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 272,
-      "mask_area": 117
     }
   },
   "65": {
@@ -5094,7 +4050,7 @@
         264,
         702
       ],
-      "mask_idx": 273,
+      "mask_idx": 215,
       "mask_area": 121
     },
     "3": {
@@ -5112,26 +4068,8 @@
         1372,
         349
       ],
-      "mask_idx": 274,
+      "mask_idx": 216,
       "mask_area": 3124
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.462,
-        675.35
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 275,
-      "mask_area": 117
     },
     "7": {
       "label": "ball",
@@ -5148,7 +4086,7 @@
         1245,
         103
       ],
-      "mask_idx": 276,
+      "mask_idx": 217,
       "mask_area": 301
     }
   },
@@ -5168,7 +4106,7 @@
         264,
         703
       ],
-      "mask_idx": 277,
+      "mask_idx": 218,
       "mask_area": 122
     },
     "3": {
@@ -5186,26 +4124,8 @@
         1332,
         269
       ],
-      "mask_idx": 278,
+      "mask_idx": 219,
       "mask_area": 2711
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.462,
-        675.35
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 279,
-      "mask_area": 117
     },
     "7": {
       "label": "ball",
@@ -5222,7 +4142,7 @@
         1241,
         111
       ],
-      "mask_idx": 280,
+      "mask_idx": 220,
       "mask_area": 284
     }
   },
@@ -5242,7 +4162,7 @@
         263,
         703
       ],
-      "mask_idx": 281,
+      "mask_idx": 221,
       "mask_area": 118
     },
     "3": {
@@ -5260,26 +4180,8 @@
         1282,
         208
       ],
-      "mask_idx": 282,
+      "mask_idx": 222,
       "mask_area": 2370
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.814,
-        675.137
-      ],
-      "box_xyxy": [
-        1258,
-        670,
-        1268,
-        680
-      ],
-      "mask_idx": 283,
-      "mask_area": 102
     },
     "7": {
       "label": "ball",
@@ -5296,7 +4198,7 @@
         1237,
         122
       ],
-      "mask_idx": 284,
+      "mask_idx": 223,
       "mask_area": 318
     }
   },
@@ -5316,7 +4218,7 @@
         262,
         702
       ],
-      "mask_idx": 285,
+      "mask_idx": 224,
       "mask_area": 113
     },
     "3": {
@@ -5334,26 +4236,8 @@
         1274,
         227
       ],
-      "mask_idx": 286,
+      "mask_idx": 225,
       "mask_area": 4746
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.415,
-        675.381
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 287,
-      "mask_area": 118
     },
     "7": {
       "label": "ball",
@@ -5370,7 +4254,7 @@
         1233,
         133
       ],
-      "mask_idx": 288,
+      "mask_idx": 226,
       "mask_area": 345
     }
   },
@@ -5390,7 +4274,7 @@
         262,
         702
       ],
-      "mask_idx": 289,
+      "mask_idx": 227,
       "mask_area": 113
     },
     "3": {
@@ -5408,26 +4292,8 @@
         1272,
         250
       ],
-      "mask_idx": 290,
+      "mask_idx": 228,
       "mask_area": 3098
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.415,
-        675.381
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 291,
-      "mask_area": 118
     },
     "7": {
       "label": "ball",
@@ -5444,7 +4310,7 @@
         1169,
         183
       ],
-      "mask_idx": 292,
+      "mask_idx": 229,
       "mask_area": 241
     }
   },
@@ -5464,7 +4330,7 @@
         261,
         702
       ],
-      "mask_idx": 293,
+      "mask_idx": 230,
       "mask_area": 113
     },
     "3": {
@@ -5482,26 +4348,8 @@
         1291,
         285
       ],
-      "mask_idx": 294,
+      "mask_idx": 231,
       "mask_area": 2496
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.415,
-        675.381
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 295,
-      "mask_area": 118
     },
     "7": {
       "label": "ball",
@@ -5518,7 +4366,7 @@
         1116,
         225
       ],
-      "mask_idx": 296,
+      "mask_idx": 232,
       "mask_area": 211
     }
   },
@@ -5538,7 +4386,7 @@
         261,
         702
       ],
-      "mask_idx": 297,
+      "mask_idx": 233,
       "mask_area": 114
     },
     "3": {
@@ -5556,26 +4404,8 @@
         1300,
         340
       ],
-      "mask_idx": 298,
+      "mask_idx": 234,
       "mask_area": 529
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.548,
-        675.33
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 299,
-      "mask_area": 115
     },
     "7": {
       "label": "ball",
@@ -5592,7 +4422,7 @@
         1074,
         261
       ],
-      "mask_idx": 300,
+      "mask_idx": 235,
       "mask_area": 245
     }
   },
@@ -5612,7 +4442,7 @@
         261,
         702
       ],
-      "mask_idx": 301,
+      "mask_idx": 236,
       "mask_area": 111
     },
     "3": {
@@ -5630,26 +4460,8 @@
         1265,
         395
       ],
-      "mask_idx": 302,
+      "mask_idx": 237,
       "mask_area": 201
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.809,
-        675.217
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1269,
-        680
-      ],
-      "mask_idx": 303,
-      "mask_area": 115
     },
     "7": {
       "label": "ball",
@@ -5666,7 +4478,7 @@
         1034,
         294
       ],
-      "mask_idx": 304,
+      "mask_idx": 238,
       "mask_area": 158
     }
   },
@@ -5686,26 +4498,8 @@
         261,
         702
       ],
-      "mask_idx": 305,
+      "mask_idx": 239,
       "mask_area": 111
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.111,
-        675.296
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1267,
-        681
-      ],
-      "mask_idx": 306,
-      "mask_area": 108
     },
     "7": {
       "label": "ball",
@@ -5722,7 +4516,7 @@
         1002,
         321
       ],
-      "mask_idx": 307,
+      "mask_idx": 240,
       "mask_area": 168
     }
   },
@@ -5742,7 +4536,7 @@
         260,
         702
       ],
-      "mask_idx": 308,
+      "mask_idx": 241,
       "mask_area": 114
     },
     "3": {
@@ -5760,7 +4554,7 @@
         1252,
         589
       ],
-      "mask_idx": 309,
+      "mask_idx": 242,
       "mask_area": 532
     },
     "7": {
@@ -5778,7 +4572,7 @@
         973,
         344
       ],
-      "mask_idx": 310,
+      "mask_idx": 243,
       "mask_area": 114
     }
   },
@@ -5798,7 +4592,7 @@
         260,
         702
       ],
-      "mask_idx": 311,
+      "mask_idx": 244,
       "mask_area": 112
     },
     "3": {
@@ -5816,7 +4610,7 @@
         1249,
         617
       ],
-      "mask_idx": 312,
+      "mask_idx": 245,
       "mask_area": 1927
     },
     "7": {
@@ -5834,7 +4628,7 @@
         948,
         366
       ],
-      "mask_idx": 313,
+      "mask_idx": 246,
       "mask_area": 114
     }
   },
@@ -5854,7 +4648,7 @@
         260,
         703
       ],
-      "mask_idx": 314,
+      "mask_idx": 247,
       "mask_area": 117
     },
     "3": {
@@ -5872,26 +4666,8 @@
         1247,
         655
       ],
-      "mask_idx": 315,
+      "mask_idx": 248,
       "mask_area": 3496
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 0.996094,
-      "static_score": 0.847656,
-      "quality_score": 0.844345,
-      "centroid": [
-        920.95,
-        380.101
-      ],
-      "box_xyxy": [
-        916,
-        375,
-        926,
-        385
-      ],
-      "mask_idx": 316,
-      "mask_area": 99
     }
   },
   "77": {
@@ -5910,7 +4686,7 @@
         260,
         703
       ],
-      "mask_idx": 317,
+      "mask_idx": 249,
       "mask_area": 120
     },
     "3": {
@@ -5928,26 +4704,8 @@
         1242,
         676
       ],
-      "mask_idx": 318,
+      "mask_idx": 250,
       "mask_area": 4545
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 0.992188,
-      "static_score": 0.847656,
-      "quality_score": 0.841034,
-      "centroid": [
-        903.462,
-        397.548
-      ],
-      "box_xyxy": [
-        897,
-        393,
-        910,
-        401
-      ],
-      "mask_idx": 319,
-      "mask_area": 93
     }
   },
   "78": {
@@ -5966,7 +4724,7 @@
         260,
         703
       ],
-      "mask_idx": 320,
+      "mask_idx": 251,
       "mask_area": 121
     },
     "3": {
@@ -5984,26 +4742,8 @@
         1234,
         689
       ],
-      "mask_idx": 321,
+      "mask_idx": 252,
       "mask_area": 4958
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 0.976562,
-      "static_score": 0.722656,
-      "quality_score": 0.705719,
-      "centroid": [
-        1264.525,
-        674.925
-      ],
-      "box_xyxy": [
-        1262,
-        671,
-        1267,
-        679
-      ],
-      "mask_idx": 322,
-      "mask_area": 40
     }
   },
   "79": {
@@ -6022,7 +4762,7 @@
         259,
         703
       ],
-      "mask_idx": 323,
+      "mask_idx": 253,
       "mask_area": 120
     },
     "3": {
@@ -6040,44 +4780,8 @@
         1224,
         694
       ],
-      "mask_idx": 324,
+      "mask_idx": 254,
       "mask_area": 4651
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 0.996094,
-      "static_score": 0.722656,
-      "quality_score": 0.719833,
-      "centroid": [
-        1263.105,
-        675.19
-      ],
-      "box_xyxy": [
-        1258,
-        669,
-        1268,
-        681
-      ],
-      "mask_idx": 325,
-      "mask_area": 95
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.847656,
-      "quality_score": 0.847656,
-      "centroid": [
-        866.986,
-        429.301
-      ],
-      "box_xyxy": [
-        862,
-        425,
-        871,
-        433
-      ],
-      "mask_idx": 326,
-      "mask_area": 73
     }
   },
   "80": {
@@ -6096,7 +4800,7 @@
         260,
         703
       ],
-      "mask_idx": 327,
+      "mask_idx": 255,
       "mask_area": 124
     },
     "3": {
@@ -6114,26 +4818,8 @@
         1218,
         696
       ],
-      "mask_idx": 328,
+      "mask_idx": 256,
       "mask_area": 4471
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 0.996094,
-      "static_score": 0.722656,
-      "quality_score": 0.719833,
-      "centroid": [
-        1262.378,
-        675.345
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 329,
-      "mask_area": 119
     }
   },
   "81": {
@@ -6152,7 +4838,7 @@
         259,
         703
       ],
-      "mask_idx": 330,
+      "mask_idx": 257,
       "mask_area": 122
     },
     "3": {
@@ -6170,44 +4856,8 @@
         1209,
         695
       ],
-      "mask_idx": 331,
+      "mask_idx": 258,
       "mask_area": 4238
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.424,
-        675.314
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 332,
-      "mask_area": 118
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 0.996094,
-      "static_score": 0.847656,
-      "quality_score": 0.844345,
-      "centroid": [
-        839.828,
-        457.069
-      ],
-      "box_xyxy": [
-        834,
-        453,
-        845,
-        461
-      ],
-      "mask_idx": 333,
-      "mask_area": 87
     }
   },
   "82": {
@@ -6226,7 +4876,7 @@
         259,
         703
       ],
-      "mask_idx": 334,
+      "mask_idx": 259,
       "mask_area": 123
     },
     "3": {
@@ -6244,44 +4894,8 @@
         1204,
         693
       ],
-      "mask_idx": 335,
+      "mask_idx": 260,
       "mask_area": 3877
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.568,
-        675.52
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1269,
-        681
-      ],
-      "mask_idx": 336,
-      "mask_area": 125
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 0.996094,
-      "static_score": 0.847656,
-      "quality_score": 0.844345,
-      "centroid": [
-        826.798,
-        469.242
-      ],
-      "box_xyxy": [
-        821,
-        465,
-        833,
-        474
-      ],
-      "mask_idx": 337,
-      "mask_area": 99
     }
   },
   "83": {
@@ -6300,7 +4914,7 @@
         259,
         703
       ],
-      "mask_idx": 338,
+      "mask_idx": 261,
       "mask_area": 125
     },
     "3": {
@@ -6318,26 +4932,8 @@
         1200,
         692
       ],
-      "mask_idx": 339,
+      "mask_idx": 262,
       "mask_area": 3782
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.418,
-        675.475
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 340,
-      "mask_area": 122
     },
     "7": {
       "label": "ball",
@@ -6354,7 +4950,7 @@
         820,
         487
       ],
-      "mask_idx": 341,
+      "mask_idx": 263,
       "mask_area": 118
     }
   },
@@ -6374,7 +4970,7 @@
         259,
         703
       ],
-      "mask_idx": 342,
+      "mask_idx": 264,
       "mask_area": 122
     },
     "3": {
@@ -6392,44 +4988,8 @@
         1192,
         689
       ],
-      "mask_idx": 343,
+      "mask_idx": 265,
       "mask_area": 3641
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.433,
-        675.558
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 344,
-      "mask_area": 120
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.847656,
-      "quality_score": 0.847656,
-      "centroid": [
-        803.708,
-        492.2
-      ],
-      "box_xyxy": [
-        799,
-        488,
-        808,
-        496
-      ],
-      "mask_idx": 345,
-      "mask_area": 65
     }
   },
   "85": {
@@ -6448,7 +5008,7 @@
         259,
         703
       ],
-      "mask_idx": 346,
+      "mask_idx": 266,
       "mask_area": 125
     },
     "3": {
@@ -6466,44 +5026,8 @@
         1192,
         687
       ],
-      "mask_idx": 347,
+      "mask_idx": 267,
       "mask_area": 3631
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.433,
-        675.558
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 348,
-      "mask_area": 120
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.847656,
-      "quality_score": 0.847656,
-      "centroid": [
-        792.519,
-        503.593
-      ],
-      "box_xyxy": [
-        788,
-        499,
-        798,
-        508
-      ],
-      "mask_idx": 349,
-      "mask_area": 81
     }
   },
   "86": {
@@ -6522,7 +5046,7 @@
         258,
         703
       ],
-      "mask_idx": 350,
+      "mask_idx": 268,
       "mask_area": 121
     },
     "3": {
@@ -6540,44 +5064,8 @@
         1177,
         685
       ],
-      "mask_idx": 351,
+      "mask_idx": 269,
       "mask_area": 3434
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.454,
-        675.512
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 352,
-      "mask_area": 121
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 0.996094,
-      "static_score": 0.847656,
-      "quality_score": 0.844345,
-      "centroid": [
-        782.883,
-        513.0
-      ],
-      "box_xyxy": [
-        778,
-        509,
-        788,
-        517
-      ],
-      "mask_idx": 353,
-      "mask_area": 77
     }
   },
   "87": {
@@ -6596,7 +5084,7 @@
         258,
         703
       ],
-      "mask_idx": 354,
+      "mask_idx": 270,
       "mask_area": 118
     },
     "3": {
@@ -6614,44 +5102,8 @@
         1176,
         682
       ],
-      "mask_idx": 355,
+      "mask_idx": 271,
       "mask_area": 3385
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.415,
-        675.568
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 356,
-      "mask_area": 118
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.847656,
-      "quality_score": 0.847656,
-      "centroid": [
-        774.48,
-        522.8
-      ],
-      "box_xyxy": [
-        770,
-        519,
-        778,
-        526
-      ],
-      "mask_idx": 357,
-      "mask_area": 50
     }
   },
   "88": {
@@ -6670,7 +5122,7 @@
         258,
         703
       ],
-      "mask_idx": 358,
+      "mask_idx": 272,
       "mask_area": 119
     },
     "3": {
@@ -6688,44 +5140,8 @@
         1174,
         681
       ],
-      "mask_idx": 359,
+      "mask_idx": 273,
       "mask_area": 3336
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.578,
-        675.38
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1269,
-        681
-      ],
-      "mask_idx": 360,
-      "mask_area": 121
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 0.992188,
-      "static_score": 0.847656,
-      "quality_score": 0.841034,
-      "centroid": [
-        765.163,
-        532.395
-      ],
-      "box_xyxy": [
-        762,
-        529,
-        769,
-        535
-      ],
-      "mask_idx": 361,
-      "mask_area": 43
     }
   },
   "89": {
@@ -6744,7 +5160,7 @@
         257,
         703
       ],
-      "mask_idx": 362,
+      "mask_idx": 274,
       "mask_area": 120
     },
     "3": {
@@ -6762,44 +5178,8 @@
         1173,
         680
       ],
-      "mask_idx": 363,
+      "mask_idx": 275,
       "mask_area": 3394
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.362,
-        675.203
-      ],
-      "box_xyxy": [
-        1256,
-        670,
-        1269,
-        681
-      ],
-      "mask_idx": 364,
-      "mask_area": 138
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 0.996094,
-      "static_score": 0.847656,
-      "quality_score": 0.844345,
-      "centroid": [
-        759.375,
-        542.394
-      ],
-      "box_xyxy": [
-        753,
-        538,
-        765,
-        547
-      ],
-      "mask_idx": 365,
-      "mask_area": 104
     }
   },
   "90": {
@@ -6818,7 +5198,7 @@
         257,
         703
       ],
-      "mask_idx": 366,
+      "mask_idx": 276,
       "mask_area": 117
     },
     "3": {
@@ -6836,26 +5216,8 @@
         1172,
         680
       ],
-      "mask_idx": 367,
+      "mask_idx": 277,
       "mask_area": 3465
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 0.917969,
-      "static_score": 0.722656,
-      "quality_score": 0.663376,
-      "centroid": [
-        1261.107,
-        675.964
-      ],
-      "box_xyxy": [
-        1255,
-        671,
-        1269,
-        680
-      ],
-      "mask_idx": 368,
-      "mask_area": 84
     }
   },
   "91": {
@@ -6874,7 +5236,7 @@
         257,
         703
       ],
-      "mask_idx": 369,
+      "mask_idx": 278,
       "mask_area": 120
     },
     "3": {
@@ -6892,26 +5254,8 @@
         1171,
         679
       ],
-      "mask_idx": 370,
+      "mask_idx": 279,
       "mask_area": 3532
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 0.839844,
-      "static_score": 0.722656,
-      "quality_score": 0.606918,
-      "centroid": [
-        1259.727,
-        675.273
-      ],
-      "box_xyxy": [
-        1253,
-        672,
-        1266,
-        679
-      ],
-      "mask_idx": 371,
-      "mask_area": 88
     }
   },
   "92": {
@@ -6930,7 +5274,7 @@
         257,
         703
       ],
-      "mask_idx": 372,
+      "mask_idx": 280,
       "mask_area": 120
     },
     "3": {
@@ -6948,26 +5292,8 @@
         1170,
         679
       ],
-      "mask_idx": 373,
+      "mask_idx": 281,
       "mask_area": 3576
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 0.976562,
-      "static_score": 0.847656,
-      "quality_score": 0.827789,
-      "centroid": [
-        731.622,
-        568.095
-      ],
-      "box_xyxy": [
-        728,
-        563,
-        736,
-        573
-      ],
-      "mask_idx": 374,
-      "mask_area": 74
     }
   },
   "93": {
@@ -6986,7 +5312,7 @@
         257,
         703
       ],
-      "mask_idx": 375,
+      "mask_idx": 282,
       "mask_area": 121
     },
     "3": {
@@ -7004,26 +5330,8 @@
         1169,
         679
       ],
-      "mask_idx": 376,
+      "mask_idx": 283,
       "mask_area": 3619
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 0.984375,
-      "static_score": 0.847656,
-      "quality_score": 0.834412,
-      "centroid": [
-        724.417,
-        572.639
-      ],
-      "box_xyxy": [
-        722,
-        569,
-        728,
-        576
-      ],
-      "mask_idx": 377,
-      "mask_area": 36
     }
   },
   "94": {
@@ -7042,7 +5350,7 @@
         257,
         703
       ],
-      "mask_idx": 378,
+      "mask_idx": 284,
       "mask_area": 122
     },
     "3": {
@@ -7060,26 +5368,8 @@
         1171,
         679
       ],
-      "mask_idx": 379,
+      "mask_idx": 285,
       "mask_area": 3661
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 0.824219,
-      "static_score": 0.847656,
-      "quality_score": 0.698654,
-      "centroid": [
-        718.974,
-        582.132
-      ],
-      "box_xyxy": [
-        715,
-        580,
-        723,
-        584
-      ],
-      "mask_idx": 380,
-      "mask_area": 38
     }
   },
   "95": {
@@ -7098,7 +5388,7 @@
         256,
         703
       ],
-      "mask_idx": 381,
+      "mask_idx": 286,
       "mask_area": 124
     },
     "3": {
@@ -7116,44 +5406,8 @@
         1168,
         678
       ],
-      "mask_idx": 382,
+      "mask_idx": 287,
       "mask_area": 3736
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 0.992188,
-      "static_score": 0.722656,
-      "quality_score": 0.71701,
-      "centroid": [
-        1262.75,
-        674.893
-      ],
-      "box_xyxy": [
-        1258,
-        670,
-        1268,
-        680
-      ],
-      "mask_idx": 383,
-      "mask_area": 84
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 0.949219,
-      "static_score": 0.847656,
-      "quality_score": 0.804611,
-      "centroid": [
-        711.69,
-        589.862
-      ],
-      "box_xyxy": [
-        708,
-        588,
-        716,
-        592
-      ],
-      "mask_idx": 384,
-      "mask_area": 29
     }
   },
   "96": {
@@ -7172,7 +5426,7 @@
         256,
         703
       ],
-      "mask_idx": 385,
+      "mask_idx": 288,
       "mask_area": 124
     },
     "3": {
@@ -7190,44 +5444,8 @@
         1177,
         678
       ],
-      "mask_idx": 386,
+      "mask_idx": 289,
       "mask_area": 3819
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 0.996094,
-      "static_score": 0.722656,
-      "quality_score": 0.719833,
-      "centroid": [
-        1262.595,
-        675.432
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 387,
-      "mask_area": 111
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 0.992188,
-      "static_score": 0.847656,
-      "quality_score": 0.841034,
-      "centroid": [
-        704.824,
-        598.686
-      ],
-      "box_xyxy": [
-        701,
-        595,
-        709,
-        603
-      ],
-      "mask_idx": 388,
-      "mask_area": 51
     }
   },
   "97": {
@@ -7246,7 +5464,7 @@
         256,
         703
       ],
-      "mask_idx": 389,
+      "mask_idx": 290,
       "mask_area": 124
     },
     "3": {
@@ -7264,44 +5482,8 @@
         1170,
         678
       ],
-      "mask_idx": 390,
+      "mask_idx": 291,
       "mask_area": 3979
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.517,
-        675.492
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 391,
-      "mask_area": 118
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 0.988281,
-      "static_score": 0.847656,
-      "quality_score": 0.837723,
-      "centroid": [
-        699.047,
-        605.279
-      ],
-      "box_xyxy": [
-        695,
-        603,
-        703,
-        608
-      ],
-      "mask_idx": 392,
-      "mask_area": 43
     }
   },
   "98": {
@@ -7320,7 +5502,7 @@
         256,
         703
       ],
-      "mask_idx": 393,
+      "mask_idx": 292,
       "mask_area": 121
     },
     "3": {
@@ -7338,44 +5520,8 @@
         1166,
         677
       ],
-      "mask_idx": 394,
+      "mask_idx": 293,
       "mask_area": 3944
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.652,
-        675.527
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 395,
-      "mask_area": 112
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.847656,
-      "quality_score": 0.847656,
-      "centroid": [
-        692.857,
-        606.167
-      ],
-      "box_xyxy": [
-        689,
-        604,
-        697,
-        609
-      ],
-      "mask_idx": 396,
-      "mask_area": 42
     }
   },
   "99": {
@@ -7394,7 +5540,7 @@
         255,
         703
       ],
-      "mask_idx": 397,
+      "mask_idx": 294,
       "mask_area": 122
     },
     "3": {
@@ -7412,44 +5558,8 @@
         1165,
         677
       ],
-      "mask_idx": 398,
+      "mask_idx": 295,
       "mask_area": 3981
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.635,
-        675.539
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 399,
-      "mask_area": 115
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.847656,
-      "quality_score": 0.847656,
-      "centroid": [
-        688.562,
-        599.312
-      ],
-      "box_xyxy": [
-        686,
-        596,
-        691,
-        602
-      ],
-      "mask_idx": 400,
-      "mask_area": 32
     }
   },
   "100": {
@@ -7468,7 +5578,7 @@
         255,
         703
       ],
-      "mask_idx": 401,
+      "mask_idx": 296,
       "mask_area": 121
     },
     "3": {
@@ -7486,44 +5596,8 @@
         1162,
         677
       ],
-      "mask_idx": 402,
+      "mask_idx": 297,
       "mask_area": 4043
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.462,
-        675.539
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 403,
-      "mask_area": 117
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.847656,
-      "quality_score": 0.847656,
-      "centroid": [
-        684.0,
-        592.0
-      ],
-      "box_xyxy": [
-        682,
-        590,
-        686,
-        594
-      ],
-      "mask_idx": 404,
-      "mask_area": 25
     }
   },
   "101": {
@@ -7542,7 +5616,7 @@
         255,
         703
       ],
-      "mask_idx": 405,
+      "mask_idx": 298,
       "mask_area": 121
     },
     "3": {
@@ -7560,44 +5634,8 @@
         1160,
         677
       ],
-      "mask_idx": 406,
+      "mask_idx": 299,
       "mask_area": 4082
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.513,
-        675.452
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 407,
-      "mask_area": 115
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.847656,
-      "quality_score": 0.847656,
-      "centroid": [
-        679.297,
-        584.838
-      ],
-      "box_xyxy": [
-        676,
-        583,
-        683,
-        587
-      ],
-      "mask_idx": 408,
-      "mask_area": 37
     }
   },
   "102": {
@@ -7616,7 +5654,7 @@
         255,
         703
       ],
-      "mask_idx": 409,
+      "mask_idx": 300,
       "mask_area": 123
     },
     "3": {
@@ -7634,44 +5672,8 @@
         1157,
         677
       ],
-      "mask_idx": 410,
+      "mask_idx": 301,
       "mask_area": 4155
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.561,
-        675.474
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 411,
-      "mask_area": 114
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 0.996094,
-      "static_score": 0.847656,
-      "quality_score": 0.844345,
-      "centroid": [
-        674.853,
-        578.882
-      ],
-      "box_xyxy": [
-        671,
-        576,
-        678,
-        582
-      ],
-      "mask_idx": 412,
-      "mask_area": 34
     }
   },
   "103": {
@@ -7690,7 +5692,7 @@
         255,
         703
       ],
-      "mask_idx": 413,
+      "mask_idx": 302,
       "mask_area": 119
     },
     "3": {
@@ -7708,44 +5710,8 @@
         1154,
         677
       ],
-      "mask_idx": 414,
+      "mask_idx": 303,
       "mask_area": 4235
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.474,
-        675.491
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 415,
-      "mask_area": 116
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 0.996094,
-      "static_score": 0.847656,
-      "quality_score": 0.844345,
-      "centroid": [
-        670.364,
-        573.242
-      ],
-      "box_xyxy": [
-        668,
-        570,
-        673,
-        576
-      ],
-      "mask_idx": 416,
-      "mask_area": 33
     }
   },
   "104": {
@@ -7764,7 +5730,7 @@
         255,
         703
       ],
-      "mask_idx": 417,
+      "mask_idx": 304,
       "mask_area": 123
     },
     "3": {
@@ -7782,44 +5748,8 @@
         1148,
         678
       ],
-      "mask_idx": 418,
+      "mask_idx": 305,
       "mask_area": 4252
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.462,
-        675.445
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 419,
-      "mask_area": 119
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.847656,
-      "quality_score": 0.847656,
-      "centroid": [
-        666.08,
-        566.96
-      ],
-      "box_xyxy": [
-        663,
-        565,
-        670,
-        569
-      ],
-      "mask_idx": 420,
-      "mask_area": 25
     }
   },
   "105": {
@@ -7838,7 +5768,7 @@
         255,
         703
       ],
-      "mask_idx": 421,
+      "mask_idx": 306,
       "mask_area": 125
     },
     "3": {
@@ -7856,44 +5786,8 @@
         1144,
         679
       ],
-      "mask_idx": 422,
+      "mask_idx": 307,
       "mask_area": 4319
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.462,
-        675.539
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 423,
-      "mask_area": 117
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 0.996094,
-      "static_score": 0.847656,
-      "quality_score": 0.844345,
-      "centroid": [
-        661.64,
-        562.76
-      ],
-      "box_xyxy": [
-        659,
-        560,
-        664,
-        565
-      ],
-      "mask_idx": 424,
-      "mask_area": 25
     }
   },
   "106": {
@@ -7912,7 +5806,7 @@
         255,
         703
       ],
-      "mask_idx": 425,
+      "mask_idx": 308,
       "mask_area": 123
     },
     "3": {
@@ -7930,26 +5824,8 @@
         1139,
         680
       ],
-      "mask_idx": 426,
+      "mask_idx": 309,
       "mask_area": 4335
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.462,
-        675.539
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 427,
-      "mask_area": 117
     }
   },
   "107": {
@@ -7968,7 +5844,7 @@
         255,
         703
       ],
-      "mask_idx": 428,
+      "mask_idx": 310,
       "mask_area": 125
     },
     "3": {
@@ -7986,26 +5862,8 @@
         1133,
         681
       ],
-      "mask_idx": 429,
+      "mask_idx": 311,
       "mask_area": 4308
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.395,
-        675.521
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 430,
-      "mask_area": 119
     }
   },
   "108": {
@@ -8024,7 +5882,7 @@
         255,
         703
       ],
-      "mask_idx": 431,
+      "mask_idx": 312,
       "mask_area": 121
     },
     "3": {
@@ -8042,26 +5900,8 @@
         1129,
         682
       ],
-      "mask_idx": 432,
+      "mask_idx": 313,
       "mask_area": 4351
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.441,
-        675.492
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 433,
-      "mask_area": 118
     }
   },
   "109": {
@@ -8080,7 +5920,7 @@
         255,
         703
       ],
-      "mask_idx": 434,
+      "mask_idx": 314,
       "mask_area": 124
     },
     "3": {
@@ -8098,44 +5938,8 @@
         1121,
         683
       ],
-      "mask_idx": 435,
+      "mask_idx": 315,
       "mask_area": 4310
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.441,
-        675.492
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 436,
-      "mask_area": 118
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.847656,
-      "quality_score": 0.847656,
-      "centroid": [
-        646.25,
-        547.75
-      ],
-      "box_xyxy": [
-        643,
-        546,
-        649,
-        549
-      ],
-      "mask_idx": 437,
-      "mask_area": 24
     }
   },
   "110": {
@@ -8154,7 +5958,7 @@
         254,
         703
       ],
-      "mask_idx": 438,
+      "mask_idx": 316,
       "mask_area": 124
     },
     "3": {
@@ -8172,44 +5976,8 @@
         1119,
         684
       ],
-      "mask_idx": 439,
+      "mask_idx": 317,
       "mask_area": 4264
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.441,
-        675.492
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 440,
-      "mask_area": 118
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.847656,
-      "quality_score": 0.847656,
-      "centroid": [
-        641.852,
-        544.815
-      ],
-      "box_xyxy": [
-        638,
-        543,
-        645,
-        547
-      ],
-      "mask_idx": 441,
-      "mask_area": 27
     }
   },
   "111": {
@@ -8228,7 +5996,7 @@
         254,
         703
       ],
-      "mask_idx": 442,
+      "mask_idx": 318,
       "mask_area": 122
     },
     "3": {
@@ -8246,44 +6014,8 @@
         1116,
         685
       ],
-      "mask_idx": 443,
+      "mask_idx": 319,
       "mask_area": 4283
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.395,
-        675.521
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 444,
-      "mask_area": 119
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.847656,
-      "quality_score": 0.847656,
-      "centroid": [
-        637.25,
-        541.944
-      ],
-      "box_xyxy": [
-        634,
-        539,
-        641,
-        545
-      ],
-      "mask_idx": 445,
-      "mask_area": 36
     }
   },
   "112": {
@@ -8302,7 +6034,7 @@
         254,
         703
       ],
-      "mask_idx": 446,
+      "mask_idx": 320,
       "mask_area": 123
     },
     "3": {
@@ -8320,44 +6052,8 @@
         1111,
         688
       ],
-      "mask_idx": 447,
+      "mask_idx": 321,
       "mask_area": 4238
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.719,
-        675.322
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1269,
-        681
-      ],
-      "mask_idx": 448,
-      "mask_area": 121
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.847656,
-      "quality_score": 0.847656,
-      "centroid": [
-        633.29,
-        539.871
-      ],
-      "box_xyxy": [
-        630,
-        538,
-        636,
-        542
-      ],
-      "mask_idx": 449,
-      "mask_area": 31
     }
   },
   "113": {
@@ -8376,7 +6072,7 @@
         254,
         703
       ],
-      "mask_idx": 450,
+      "mask_idx": 322,
       "mask_area": 124
     },
     "3": {
@@ -8394,44 +6090,8 @@
         1103,
         689
       ],
-      "mask_idx": 451,
+      "mask_idx": 323,
       "mask_area": 4080
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.549,
-        675.425
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 452,
-      "mask_area": 113
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.847656,
-      "quality_score": 0.847656,
-      "centroid": [
-        629.7,
-        537.733
-      ],
-      "box_xyxy": [
-        627,
-        535,
-        633,
-        540
-      ],
-      "mask_idx": 453,
-      "mask_area": 30
     }
   },
   "114": {
@@ -8450,7 +6110,7 @@
         254,
         703
       ],
-      "mask_idx": 454,
+      "mask_idx": 324,
       "mask_area": 124
     },
     "3": {
@@ -8468,44 +6128,8 @@
         1103,
         692
       ],
-      "mask_idx": 455,
+      "mask_idx": 325,
       "mask_area": 4413
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.549,
-        675.425
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 456,
-      "mask_area": 113
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.847656,
-      "quality_score": 0.847656,
-      "centroid": [
-        626.524,
-        536.262
-      ],
-      "box_xyxy": [
-        623,
-        534,
-        630,
-        539
-      ],
-      "mask_idx": 457,
-      "mask_area": 42
     }
   },
   "115": {
@@ -8524,7 +6148,7 @@
         254,
         703
       ],
-      "mask_idx": 458,
+      "mask_idx": 326,
       "mask_area": 122
     },
     "3": {
@@ -8542,44 +6166,8 @@
         1097,
         694
       ],
-      "mask_idx": 459,
+      "mask_idx": 327,
       "mask_area": 4050
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.549,
-        675.425
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 460,
-      "mask_area": 113
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.847656,
-      "quality_score": 0.847656,
-      "centroid": [
-        622.704,
-        534.444
-      ],
-      "box_xyxy": [
-        620,
-        532,
-        625,
-        537
-      ],
-      "mask_idx": 461,
-      "mask_area": 27
     }
   },
   "116": {
@@ -8598,7 +6186,7 @@
         254,
         703
       ],
-      "mask_idx": 462,
+      "mask_idx": 328,
       "mask_area": 124
     },
     "3": {
@@ -8616,44 +6204,8 @@
         1091,
         695
       ],
-      "mask_idx": 463,
+      "mask_idx": 329,
       "mask_area": 3813
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.549,
-        675.425
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 464,
-      "mask_area": 113
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.847656,
-      "quality_score": 0.847656,
-      "centroid": [
-        619.8,
-        532.88
-      ],
-      "box_xyxy": [
-        616,
-        531,
-        623,
-        534
-      ],
-      "mask_idx": 465,
-      "mask_area": 25
     }
   },
   "117": {
@@ -8672,7 +6224,7 @@
         254,
         703
       ],
-      "mask_idx": 466,
+      "mask_idx": 330,
       "mask_area": 121
     },
     "3": {
@@ -8690,44 +6242,8 @@
         1089,
         697
       ],
-      "mask_idx": 467,
+      "mask_idx": 331,
       "mask_area": 3669
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.598,
-        675.402
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 468,
-      "mask_area": 112
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.847656,
-      "quality_score": 0.847656,
-      "centroid": [
-        625.264,
-        528.585
-      ],
-      "box_xyxy": [
-        621,
-        526,
-        630,
-        531
-      ],
-      "mask_idx": 469,
-      "mask_area": 53
     }
   },
   "118": {
@@ -8746,7 +6262,7 @@
         254,
         703
       ],
-      "mask_idx": 470,
+      "mask_idx": 332,
       "mask_area": 120
     },
     "3": {
@@ -8764,44 +6280,8 @@
         1085,
         700
       ],
-      "mask_idx": 471,
+      "mask_idx": 333,
       "mask_area": 3312
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.598,
-        675.402
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 472,
-      "mask_area": 112
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.847656,
-      "quality_score": 0.847656,
-      "centroid": [
-        633.727,
-        521.242
-      ],
-      "box_xyxy": [
-        630,
-        519,
-        637,
-        523
-      ],
-      "mask_idx": 473,
-      "mask_area": 33
     }
   },
   "119": {
@@ -8820,7 +6300,7 @@
         254,
         703
       ],
-      "mask_idx": 474,
+      "mask_idx": 334,
       "mask_area": 121
     },
     "3": {
@@ -8838,44 +6318,8 @@
         1080,
         701
       ],
-      "mask_idx": 475,
+      "mask_idx": 335,
       "mask_area": 2840
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.138,
-        675.6
-      ],
-      "box_xyxy": [
-        1256,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 476,
-      "mask_area": 130
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.847656,
-      "quality_score": 0.847656,
-      "centroid": [
-        641.333,
-        516.167
-      ],
-      "box_xyxy": [
-        638,
-        514,
-        644,
-        519
-      ],
-      "mask_idx": 477,
-      "mask_area": 30
     }
   },
   "120": {
@@ -8894,7 +6338,7 @@
         254,
         703
       ],
-      "mask_idx": 478,
+      "mask_idx": 336,
       "mask_area": 120
     },
     "3": {
@@ -8912,44 +6356,8 @@
         1077,
         704
       ],
-      "mask_idx": 479,
+      "mask_idx": 337,
       "mask_area": 2235
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.046,
-        675.614
-      ],
-      "box_xyxy": [
-        1256,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 480,
-      "mask_area": 132
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.847656,
-      "quality_score": 0.847656,
-      "centroid": [
-        648.562,
-        509.688
-      ],
-      "box_xyxy": [
-        646,
-        507,
-        651,
-        513
-      ],
-      "mask_idx": 481,
-      "mask_area": 32
     }
   },
   "121": {
@@ -8968,7 +6376,7 @@
         254,
         703
       ],
-      "mask_idx": 482,
+      "mask_idx": 338,
       "mask_area": 121
     },
     "3": {
@@ -8986,44 +6394,8 @@
         1075,
         706
       ],
-      "mask_idx": 483,
+      "mask_idx": 339,
       "mask_area": 1507
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.41,
-        675.729
-      ],
-      "box_xyxy": [
-        1256,
-        670,
-        1269,
-        681
-      ],
-      "mask_idx": 484,
-      "mask_area": 144
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.847656,
-      "quality_score": 0.847656,
-      "centroid": [
-        655.702,
-        504.979
-      ],
-      "box_xyxy": [
-        652,
-        501,
-        659,
-        509
-      ],
-      "mask_idx": 485,
-      "mask_area": 47
     }
   },
   "122": {
@@ -9042,7 +6414,7 @@
         254,
         703
       ],
-      "mask_idx": 486,
+      "mask_idx": 340,
       "mask_area": 121
     },
     "3": {
@@ -9060,44 +6432,8 @@
         1073,
         705
       ],
-      "mask_idx": 487,
+      "mask_idx": 341,
       "mask_area": 602
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.458,
-        675.743
-      ],
-      "box_xyxy": [
-        1256,
-        670,
-        1269,
-        682
-      ],
-      "mask_idx": 488,
-      "mask_area": 144
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.847656,
-      "quality_score": 0.847656,
-      "centroid": [
-        663.594,
-        499.062
-      ],
-      "box_xyxy": [
-        661,
-        496,
-        667,
-        502
-      ],
-      "mask_idx": 489,
-      "mask_area": 32
     }
   },
   "123": {
@@ -9116,7 +6452,7 @@
         254,
         703
       ],
-      "mask_idx": 490,
+      "mask_idx": 342,
       "mask_area": 121
     },
     "3": {
@@ -9134,44 +6470,8 @@
         1106,
         695
       ],
-      "mask_idx": 491,
+      "mask_idx": 343,
       "mask_area": 344
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.138,
-        675.6
-      ],
-      "box_xyxy": [
-        1256,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 492,
-      "mask_area": 130
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.847656,
-      "quality_score": 0.847656,
-      "centroid": [
-        670.98,
-        494.429
-      ],
-      "box_xyxy": [
-        668,
-        491,
-        676,
-        499
-      ],
-      "mask_idx": 493,
-      "mask_area": 49
     }
   },
   "124": {
@@ -9190,7 +6490,7 @@
         254,
         703
       ],
-      "mask_idx": 494,
+      "mask_idx": 344,
       "mask_area": 122
     },
     "3": {
@@ -9208,44 +6508,8 @@
         1109,
         705
       ],
-      "mask_idx": 495,
+      "mask_idx": 345,
       "mask_area": 969
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.116,
-        675.558
-      ],
-      "box_xyxy": [
-        1256,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 496,
-      "mask_area": 129
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.847656,
-      "quality_score": 0.847656,
-      "centroid": [
-        680.528,
-        488.556
-      ],
-      "box_xyxy": [
-        676,
-        486,
-        684,
-        491
-      ],
-      "mask_idx": 497,
-      "mask_area": 36
     }
   },
   "125": {
@@ -9264,7 +6528,7 @@
         254,
         703
       ],
-      "mask_idx": 498,
+      "mask_idx": 346,
       "mask_area": 123
     },
     "3": {
@@ -9282,44 +6546,8 @@
         1109,
         704
       ],
-      "mask_idx": 499,
+      "mask_idx": 347,
       "mask_area": 1003
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.078,
-        675.523
-      ],
-      "box_xyxy": [
-        1256,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 500,
-      "mask_area": 128
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.847656,
-      "quality_score": 0.847656,
-      "centroid": [
-        688.5,
-        483.833
-      ],
-      "box_xyxy": [
-        686,
-        481,
-        691,
-        487
-      ],
-      "mask_idx": 501,
-      "mask_area": 30
     }
   },
   "126": {
@@ -9338,7 +6566,7 @@
         254,
         703
       ],
-      "mask_idx": 502,
+      "mask_idx": 348,
       "mask_area": 122
     },
     "3": {
@@ -9356,44 +6584,8 @@
         1110,
         703
       ],
-      "mask_idx": 503,
+      "mask_idx": 349,
       "mask_area": 727
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.078,
-        675.523
-      ],
-      "box_xyxy": [
-        1256,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 504,
-      "mask_area": 128
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.847656,
-      "quality_score": 0.847656,
-      "centroid": [
-        696.7,
-        479.233
-      ],
-      "box_xyxy": [
-        694,
-        476,
-        699,
-        482
-      ],
-      "mask_idx": 505,
-      "mask_area": 30
     },
     "8": {
       "label": "racket",
@@ -9410,7 +6602,7 @@
         348,
         600
       ],
-      "mask_idx": 506,
+      "mask_idx": 350,
       "mask_area": 588
     }
   },
@@ -9430,7 +6622,7 @@
         254,
         703
       ],
-      "mask_idx": 507,
+      "mask_idx": 351,
       "mask_area": 122
     },
     "3": {
@@ -9448,44 +6640,8 @@
         1109,
         700
       ],
-      "mask_idx": 508,
+      "mask_idx": 352,
       "mask_area": 319
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.116,
-        675.558
-      ],
-      "box_xyxy": [
-        1256,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 509,
-      "mask_area": 129
-    },
-    "7": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.847656,
-      "quality_score": 0.847656,
-      "centroid": [
-        705.086,
-        475.086
-      ],
-      "box_xyxy": [
-        702,
-        473,
-        709,
-        477
-      ],
-      "mask_idx": 510,
-      "mask_area": 35
     },
     "8": {
       "label": "racket",
@@ -9502,7 +6658,7 @@
         348,
         599
       ],
-      "mask_idx": 511,
+      "mask_idx": 353,
       "mask_area": 619
     }
   },
@@ -9522,7 +6678,7 @@
         254,
         703
       ],
-      "mask_idx": 512,
+      "mask_idx": 354,
       "mask_area": 124
     },
     "3": {
@@ -9540,26 +6696,8 @@
         1110,
         699
       ],
-      "mask_idx": 513,
+      "mask_idx": 355,
       "mask_area": 292
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 1.0,
-      "static_score": 0.722656,
-      "quality_score": 0.722656,
-      "centroid": [
-        1262.622,
-        675.286
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 514,
-      "mask_area": 119
     },
     "8": {
       "label": "racket",
@@ -9576,7 +6714,7 @@
         348,
         598
       ],
-      "mask_idx": 515,
+      "mask_idx": 356,
       "mask_area": 629
     }
   },
@@ -9596,7 +6734,7 @@
         254,
         703
       ],
-      "mask_idx": 516,
+      "mask_idx": 357,
       "mask_area": 126
     },
     "3": {
@@ -9614,26 +6752,8 @@
         1110,
         695
       ],
-      "mask_idx": 517,
+      "mask_idx": 358,
       "mask_area": 289
-    },
-    "5": {
-      "label": "ball",
-      "tracker_score": 0.996094,
-      "static_score": 0.722656,
-      "quality_score": 0.719833,
-      "centroid": [
-        1262.437,
-        675.521
-      ],
-      "box_xyxy": [
-        1257,
-        670,
-        1268,
-        681
-      ],
-      "mask_idx": 518,
-      "mask_area": 119
     },
     "8": {
       "label": "racket",
@@ -9650,7 +6770,7 @@
         348,
         599
       ],
-      "mask_idx": 519,
+      "mask_idx": 359,
       "mask_area": 664
     }
   }
