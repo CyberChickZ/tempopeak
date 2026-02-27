@@ -476,6 +476,240 @@ def apply_gap_prediction(
     return tracks_dict, all_masks_list, mask_frame_indices_list, mask_object_ids_list
 
 
+def compute_hit_scores(
+    tracks: dict,
+    masks_np: np.ndarray,
+    ball_labels,
+    racket_labels,
+    *,
+    # Spatial scoring
+    sigma_dist_px: float = 18.0,          # The Gaussian standard deviation for pixel distance. A smaller value (e.g., 10-25) means proximity is judged more strictly (must be closer to get a high score).
+    iou_ref: float = 0.02,                # The reference Intesection over Union value. When the IoU between ball and racket reaches this scale, it's considered a highly confident collision/contact.
+    w_iou: float = 0.65,                  # The weighting factor (0 < w < 1) that balances between IoU-derived spatial score vs. precise point-to-mask distance score. Usually 0.5-0.8.
+    max_peak_cap: float = 0.92,           # The maximum allowable peak hit score. We cap it slightly below 1.0.
+    # Confidence scaling
+    conf_mode: str = "quality",           # How to compute tracker confidence. "quality" uses clamping on quality score, "tracker" uses tracker_score, and "mul" uses tracker*static.
+    conf_floor: float = 0.15,             # A minimal confidence floor; tracks with confidences below this threshold will have their output score mathematically flattened/crushed.
+    # Temporal label shaping (Gaussian around peak)
+    sigma_t: float = 2.5,                 # The standard deviation in frames for the bell curve spread around the peak frame. 2-4 captures the impact window cleanly.
+    left_cut_frames: int = -1,            # Left boundary cutoff. If >= 0, sets the hit_score to exactly 0.0 for frames occurring more than this many frames BEFORE the peak.
+    right_cut_frames: int = -1,           # Right boundary cutoff. If >= 0, sets the hit_score to exactly 0.0 for frames occurring more than this many frames AFTER the peak.
+    # Debug
+    return_debug: bool = False,
+):
+    import math
+
+    try:
+        import cv2
+    except Exception as e:
+        raise RuntimeError("cv2 is required for distanceTransform-based scoring. Please ensure opencv-python is available.") from e
+
+    if isinstance(ball_labels, (list, tuple)):
+        ball_labels = set(ball_labels)
+    if isinstance(racket_labels, (list, tuple)):
+        racket_labels = set(racket_labels)
+
+    # ---------- helpers ----------
+    def clamp01(x: float) -> float:
+        if x < 0.0:
+            return 0.0
+        if x > 1.0:
+            return 1.0
+        return float(x)
+
+    def get_conf(info: dict) -> float:
+        # conf in [0,1] roughly
+        q = float(info.get("quality_score", -1.0))
+        ts = float(info.get("tracker_score", 0.0))
+        ss = float(info.get("static_score", 0.0))
+
+        if conf_mode == "quality":
+            c = clamp01(q if q >= 0 else 0.0)
+        elif conf_mode == "tracker":
+            c = clamp01(ts)
+        elif conf_mode == "mul":
+            c = clamp01(ts * clamp01(ss))
+        else:
+            raise ValueError(f"Unknown conf_mode: {conf_mode}")
+
+        if c < conf_floor:
+            return c * (conf_floor if conf_floor > 0 else 1.0)
+        return c
+
+    def mask_iou(mask_a: np.ndarray, mask_b: np.ndarray) -> float:
+        inter = np.logical_and(mask_a, mask_b).sum()
+        union = np.logical_or(mask_a, mask_b).sum()
+        if union <= 0:
+            return 0.0
+        return float(inter) / float(union)
+
+    def point_to_mask_distance_px(mask_fg_bool: np.ndarray, x: float, y: float) -> float:
+        # 距离到 mask 前景(==True)的最近像素距离
+        fg = mask_fg_bool.astype(np.uint8)
+        inv = (1 - fg).astype(np.uint8)
+        dist = cv2.distanceTransform(inv, cv2.DIST_L2, 3)
+        h, w = dist.shape[:2]
+        xi = int(round(x))
+        yi = int(round(y))
+        if xi < 0:
+            xi = 0
+        if yi < 0:
+            yi = 0
+        if xi >= w:
+            xi = w - 1
+        if yi >= h:
+            yi = h - 1
+        return float(dist[yi, xi])
+
+    def spatial_score_from_dist_iou(dist_px: float, iou: float) -> float:
+        if sigma_dist_px <= 0:
+            dist_score = 0.0
+        else:
+            dist_score = math.exp(-(dist_px * dist_px) / (2.0 * sigma_dist_px * sigma_dist_px))
+
+        if iou_ref <= 0:
+            iou_score = 0.0
+        else:
+            iou_score = clamp01(iou / iou_ref)
+
+        return clamp01(w_iou * iou_score + (1.0 - w_iou) * dist_score)
+
+    frame_keys = sorted(tracks.keys(), key=lambda s: int(s))
+    per_frame_pair = {}
+
+    for fk in frame_keys:
+        frame_data = tracks[fk]
+        if not isinstance(frame_data, dict) or len(frame_data) == 0:
+            continue
+
+        ball_cands = []
+        racket_cands = []
+        for oid_str, info in frame_data.items():
+            label = str(info.get("label", "unknown"))
+            if label in ball_labels:
+                ball_cands.append((oid_str, info))
+            elif label in racket_labels:
+                racket_cands.append((oid_str, info))
+
+        if len(ball_cands) == 0 or len(racket_cands) == 0:
+            continue
+
+        best_ball = None
+        best_ball_conf = -1.0
+        for oid_str, info in ball_cands:
+            c = get_conf(info)
+            if c > best_ball_conf:
+                best_ball_conf = c
+                best_ball = (oid_str, info)
+
+        best_racket = None
+        best_racket_conf = -1.0
+        for oid_str, info in racket_cands:
+            c = get_conf(info)
+            if c > best_racket_conf:
+                best_racket_conf = c
+                best_racket = (oid_str, info)
+
+        if best_ball is None or best_racket is None:
+            continue
+
+        b_oid, b_info = best_ball
+        r_oid, r_info = best_racket
+
+        b_midx = int(b_info["mask_idx"])
+        r_midx = int(r_info["mask_idx"])
+        if b_midx < 0 or b_midx >= masks_np.shape[0]:
+            continue
+        if r_midx < 0 or r_midx >= masks_np.shape[0]:
+            continue
+
+        b_mask = masks_np[b_midx]
+        r_mask = masks_np[r_midx]
+
+        bx, by = float(b_info["centroid"][0]), float(b_info["centroid"][1])
+        dist_px = point_to_mask_distance_px(r_mask, bx, by)
+        iou = mask_iou(b_mask, r_mask)
+        s_spatial = spatial_score_from_dist_iou(dist_px, iou)
+
+        c_ball = get_conf(b_info)
+        c_racket = get_conf(r_info)
+        c_pair = clamp01(math.sqrt(max(0.0, c_ball) * max(0.0, c_racket)))
+
+        raw = clamp01(s_spatial * c_pair)
+
+        per_frame_pair[int(fk)] = {
+            "ball_oid": b_oid,
+            "racket_oid": r_oid,
+            "dist_px": dist_px,
+            "iou": iou,
+            "s_spatial": s_spatial,
+            "c_pair": c_pair,
+            "raw": raw,
+        }
+
+    if len(per_frame_pair) == 0:
+        for fk in frame_keys:
+            frame_data = tracks[fk]
+            for oid_str, info in frame_data.items():
+                if str(info.get("label", "unknown")) in ball_labels:
+                    info["hit_score"] = 0.0
+        if return_debug:
+            return tracks, {"status": "no_pair_frames"}
+        return tracks
+
+    peak_frame = max(per_frame_pair.keys(), key=lambda t: per_frame_pair[t]["raw"])
+    peak_raw = float(per_frame_pair[peak_frame]["raw"])
+    peak_score = min(float(max_peak_cap), peak_raw)
+
+    if sigma_t <= 0:
+        sigma_t = 1e-6
+
+    for fk in frame_keys:
+        frame_data = tracks[fk]
+        for oid_str, info in frame_data.items():
+            if str(info.get("label", "unknown")) in ball_labels:
+                info["hit_score"] = 0.0
+
+    for t, rec in per_frame_pair.items():
+        dt = int(t - peak_frame)
+
+        if left_cut_frames >= 0 and dt < 0 and abs(dt) > int(left_cut_frames):
+            continue
+        if right_cut_frames >= 0 and dt > 0 and abs(dt) > int(right_cut_frames):
+            continue
+
+        g = math.exp(-(dt * dt) / (2.0 * sigma_t * sigma_t))
+        s = clamp01(peak_score * g)
+
+        fk = str(t)
+        b_oid = rec["ball_oid"]
+        if fk in tracks and b_oid in tracks[fk]:
+            tracks[fk][b_oid]["hit_score"] = float(s)
+
+    if return_debug:
+        dbg = {
+            "status": "ok",
+            "peak_frame": int(peak_frame),
+            "peak_raw": float(peak_raw),
+            "peak_score": float(peak_score),
+            "num_pair_frames": int(len(per_frame_pair)),
+            "params": {
+                "sigma_dist_px": float(sigma_dist_px),
+                "iou_ref": float(iou_ref),
+                "w_iou": float(w_iou),
+                "max_peak_cap": float(max_peak_cap),
+                "conf_mode": str(conf_mode),
+                "conf_floor": float(conf_floor),
+                "sigma_t": float(sigma_t),
+                "left_cut_frames": int(left_cut_frames),
+                "right_cut_frames": int(right_cut_frames),
+            },
+        }
+        return tracks, dbg
+
+    return tracks
+
+
 def rebuild_npz_and_reindex(
     tracks_dict: dict,
     all_masks_list,
@@ -777,6 +1011,25 @@ if args.post_process_rm or args.post_process_fusion:
         )
         print("Total kept masks after gap prediction:", len(all_masks))
 
+    print("Computing Hit Scores for tennis interactions...")
+    # Generate hit_score dynamically
+    masks_for_scoring = np.array(all_masks, dtype=np.bool_)
+    tracks, hit_dbg = compute_hit_scores(
+        tracks=tracks,
+        masks_np=masks_for_scoring,
+        ball_labels={"Tennis_Ball", "tennisball"},
+        racket_labels={"Tennis_Racket", "tennisracket"},
+        sigma_dist_px=18.0,
+        iou_ref=0.02,
+        w_iou=0.65,
+        max_peak_cap=0.92,
+        conf_mode="quality",
+        sigma_t=2.5,
+        left_cut_frames=8,
+        right_cut_frames=12,
+        return_debug=True,
+    )
+
 
 # -------------------------
 # Save JSON
@@ -818,6 +1071,7 @@ meta = {
     "fusion_max_gap": int(args.fusion_max_gap),
     "fusion_skip_unknown": bool(args.fusion_skip_unknown),
     "predict_max_gap": int(args.predict_max_gap),
+    "hit_debug": hit_dbg,
 }
 
 json_payload = {"_meta": meta}
