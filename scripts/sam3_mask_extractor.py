@@ -366,6 +366,113 @@ def apply_delete_and_fusion(tracks_dict: dict, delete_set: set, fusion_map: dict
     return new_tracks, dropped_old_mask_indices
 
 
+def _compute_sdf_torch(mask_tensor: torch.Tensor, max_iters: int=25) -> tuple[torch.Tensor, torch.Tensor]:
+    """
+    Very fast pseudo-SDF using repeated max pooling.
+    Returns: dist_in, dist_out
+    """
+    import torch.nn.functional as F
+    m = mask_tensor.float().unsqueeze(0).unsqueeze(0)
+    dist_in = torch.zeros_like(m)
+    dist_out = torch.zeros_like(m)
+    curr_in = m
+    curr_out = 1.0 - m
+    
+    for _ in range(max_iters):
+        dist_in += curr_in
+        dist_out += curr_out
+        curr_in = F.max_pool2d(curr_in, kernel_size=3, stride=1, padding=1) * m
+        curr_out = F.max_pool2d(curr_out, kernel_size=3, stride=1, padding=1) * (1.0 - m)
+        
+    return dist_in.squeeze(), dist_out.squeeze()
+
+
+def apply_gap_prediction(
+    tracks_dict: dict,
+    track_history: dict,
+    all_masks_list: list,
+    mask_frame_indices_list: list,
+    mask_object_ids_list: list,
+    predict_max_gap: int
+):
+    """
+    Fill tracking gaps (where object was lost but re-acquired) up to predict_max_gap.
+    1. Linearly interpolate centroid & box.
+    2. Morph mask using signed distance field interpolation.
+    Outputs are safely appended to the global trackers and JSON dicts.
+    """
+    import copy
+    device = all_masks_list[0].device if len(all_masks_list) > 0 else "cpu"
+    
+    for oid_str, hist in track_history.items():
+        hist.sort(key=lambda x: x[0])  # ensure chronological
+        for i in range(len(hist) - 1):
+            f_prev = hist[i][0]
+            f_next = hist[i+1][0]
+            gap = f_next - f_prev
+            
+            if 1 < gap <= predict_max_gap:
+                info_prev = tracks_dict[str(f_prev)][oid_str]
+                info_next = tracks_dict[str(f_next)][oid_str]
+                
+                # Fetch masks
+                m_prev = all_masks_list[int(info_prev["mask_idx"])]
+                m_next = all_masks_list[int(info_next["mask_idx"])]
+                
+                # Compute SDFs once per gap ends
+                in_prev, out_prev = _compute_sdf_torch(m_prev)
+                sdf_prev = out_prev - in_prev
+                
+                in_next, out_next = _compute_sdf_torch(m_next)
+                sdf_next = out_next - in_next
+                
+                for step in range(1, gap):
+                    f_interp = f_prev + step
+                    alpha = step / float(gap)
+                    
+                    # 1. Morph mask via SDF
+                    sdf_interp = (1.0 - alpha) * sdf_prev + alpha * sdf_next
+                    m_interp = (sdf_interp <= 0)
+                    
+                    # 2. Add to central mask repository
+                    new_idx = len(all_masks_list)
+                    all_masks_list.append(m_interp)
+                    mask_frame_indices_list.append(f_interp)
+                    mask_object_ids_list.append(int(oid_str))
+                    
+                    # 3. Interp numeric stats
+                    new_info = copy.deepcopy(info_prev)
+                    new_info["mask_idx"] = new_idx
+                    
+                    c_p = info_prev["centroid"]
+                    c_n = info_next["centroid"]
+                    new_info["centroid"] = [
+                        (1-alpha)*c_p[0] + alpha*c_n[0],
+                        (1-alpha)*c_p[1] + alpha*c_n[1]
+                    ]
+                    
+                    b_p = info_prev["box_xyxy"]
+                    b_n = info_next["box_xyxy"]
+                    if b_p and b_n:
+                        new_info["box_xyxy"] = [
+                            int((1-alpha)*b_p[0] + alpha*b_n[0]),
+                            int((1-alpha)*b_p[1] + alpha*b_n[1]),
+                            int((1-alpha)*b_p[2] + alpha*b_n[2]),
+                            int((1-alpha)*b_p[3] + alpha*b_n[3])
+                        ]
+                        
+                    # Calculate new area based on morphed mask
+                    new_info["mask_area"] = int(m_interp.sum().item())
+                    
+                    # Store in dict
+                    f_str = str(f_interp)
+                    if f_str not in tracks_dict:
+                        tracks_dict[f_str] = {}
+                    tracks_dict[f_str][oid_str] = new_info
+
+    return tracks_dict, all_masks_list, mask_frame_indices_list, mask_object_ids_list
+
+
 def rebuild_npz_and_reindex(
     tracks_dict: dict,
     all_masks_list,
@@ -655,6 +762,18 @@ if args.post_process_rm or args.post_process_fusion:
 
     print("Total kept masks after post-processing:", len(all_masks))
 
+    if args.post_process_predict:
+        print(f"Applying Gap Prediction Phase (max_gap={args.predict_max_gap})...")
+        tracks, all_masks, mask_frame_indices, mask_object_ids = apply_gap_prediction(
+            tracks_dict=tracks,
+            track_history=track_history,
+            all_masks_list=all_masks,
+            mask_frame_indices_list=mask_frame_indices,
+            mask_object_ids_list=mask_object_ids,
+            predict_max_gap=int(args.predict_max_gap)
+        )
+        print("Total kept masks after gap prediction:", len(all_masks))
+
 
 # -------------------------
 # Save JSON
@@ -690,10 +809,12 @@ meta = {
     "plan": "A_hard_remove_on_reject",
     "post_process_rm": bool(args.post_process_rm),
     "post_process_fusion": bool(args.post_process_fusion),
+    "post_process_predict": bool(args.post_process_predict),
     "rm_min_len": int(args.rm_min_len),
     "rm_static_px": float(args.rm_static_px),
     "fusion_max_gap": int(args.fusion_max_gap),
     "fusion_skip_unknown": bool(args.fusion_skip_unknown),
+    "predict_max_gap": int(args.predict_max_gap),
 }
 
 json_payload = {"_meta": meta}

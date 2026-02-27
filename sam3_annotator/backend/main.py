@@ -26,6 +26,10 @@ class EditRequest(BaseModel):
     object_id: str
     prompt: str
 
+class EditTrackRequest(BaseModel):
+    object_id: str
+    prompt: str
+
 class DeleteRequest(BaseModel):
     frame_idx: int
     object_id: str
@@ -114,6 +118,13 @@ def edit_instance(req: EditRequest):
     success = data_store.edit_label(req.frame_idx, req.object_id, req.prompt)
     if not success:
         raise HTTPException(status_code=404, detail="Instance not found")
+    return {"ok": True}
+
+@app.post("/api/edit_track")
+def edit_track(req: EditTrackRequest):
+    success = data_store.edit_track_label(req.object_id, req.prompt)
+    if not success:
+        raise HTTPException(status_code=404, detail="Track not found or could not be edited")
     return {"ok": True}
 
 @app.post("/api/delete")
