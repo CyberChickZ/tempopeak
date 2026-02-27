@@ -182,18 +182,48 @@ def compute_quality_score(static_score: float, tracker_score: float, mode: str) 
     raise ValueError(f"Unknown quality_score_mode: {mode}")
 
 
+# -------------------------
+# Label binding (ROBUST prompt key matching)
+# -------------------------
+def _canon_prompt(s: str) -> str:
+    # normalize common prompt formatting differences: case, underscores, extra spaces
+    return str(s).strip().lower().replace("_", " ")
+
+
 def build_obj_id_to_label_from_pp(prompt_to_obj_ids: dict, prompt_order: list):
     """
-    Deterministic reverse map:
-    - If an obj_id appears in multiple prompts, take the first prompt in prompt_order.
-    - If not present in any prompt, it will be labeled as "unknown" later.
+    Robust reverse map using canonicalized prompt keys.
+
+    Why:
+      - HF processor may output prompt_to_obj_ids keys in a normalized form that differs from user args.prompts
+        (e.g., "Tennis_Ball" vs "tennis ball" vs "tennis_ball").
+      - Old exact string matching -> empty mapping -> all labels become "unknown".
+
+    Policy:
+      - Canonical key: lower + strip + '_'->' '
+      - If an obj_id appears in multiple prompts, keep the first prompt in prompt_order.
+      - Stored label is the ORIGINAL prompt string from prompt_order (so your dataset labels are stable).
     """
-    obj_id_to_label = {}
+    prompt_to_obj_ids = prompt_to_obj_ids or {}
+
+    # canonical user prompt -> original user prompt (first wins)
+    canon_to_label = {}
     for p in prompt_order:
-        ids = prompt_to_obj_ids.get(p, [])
+        cp = _canon_prompt(p)
+        if cp not in canon_to_label:
+            canon_to_label[cp] = p
+
+    # reverse mapping from pp
+    obj_id_to_label = {}
+    for raw_key, ids in prompt_to_obj_ids.items():
+        ck = _canon_prompt(raw_key)
+        label = canon_to_label.get(ck, None)
+        if label is None:
+            continue
         for oid in ids:
             if oid not in obj_id_to_label:
-                obj_id_to_label[oid] = p
+                obj_id_to_label[oid] = label
+
     return obj_id_to_label
 
 
@@ -339,7 +369,13 @@ def apply_delete_and_fusion(tracks_dict: dict, delete_set: set, fusion_map: dict
     return new_tracks, dropped_old_mask_indices
 
 
-def rebuild_npz_and_reindex(tracks_dict: dict, all_masks_list, mask_frame_indices_list, mask_object_ids_list, dropped_old_mask_indices: set):
+def rebuild_npz_and_reindex(
+    tracks_dict: dict,
+    all_masks_list,
+    mask_frame_indices_list,
+    mask_object_ids_list,
+    dropped_old_mask_indices: set,
+):
     """
     Rebuild NPZ arrays from the final tracks_dict.
     Ensures:
@@ -357,13 +393,15 @@ def rebuild_npz_and_reindex(tracks_dict: dict, all_masks_list, mask_frame_indice
             info = frame_data[oid_str]
             old_idx = int(info["mask_idx"])
             if old_idx in dropped_old_mask_indices:
-                # This should not happen, but fail fast if it does.
-                raise RuntimeError(f"mask_idx {old_idx} is marked dropped but still referenced in tracks (frame {fkey}, id {oid_str}).")
+                raise RuntimeError(
+                    f"mask_idx {old_idx} is marked dropped but still referenced in tracks (frame {fkey}, id {oid_str})."
+                )
             keep_old_indices.append(old_idx)
 
-    # Unique and stable: there should be no duplicates. If there are, something is wrong.
     if len(set(keep_old_indices)) != len(keep_old_indices):
-        raise RuntimeError("Duplicate mask_idx detected in final tracks. This indicates fusion collision was not resolved correctly.")
+        raise RuntimeError(
+            "Duplicate mask_idx detected in final tracks. This indicates fusion collision was not resolved correctly."
+        )
 
     old_to_new = {}
     for new_i, old_i in enumerate(keep_old_indices):
@@ -376,11 +414,9 @@ def rebuild_npz_and_reindex(tracks_dict: dict, all_masks_list, mask_frame_indice
     for old_i in keep_old_indices:
         new_masks.append(all_masks_list[old_i])
         new_frame_indices.append(mask_frame_indices_list[old_i])
-        # object id must match final tracks: we will overwrite from tracks below to be safe
         new_object_ids.append(mask_object_ids_list[old_i])
 
-    # Now overwrite object_ids and mask_idx from tracks (single source of truth).
-    # Build a lookup: old_idx -> final_obj_id
+    # overwrite object_ids from tracks (single source of truth)
     old_idx_to_final_obj = {}
     for fkey in frame_keys:
         frame_data = tracks_dict[fkey]
@@ -444,12 +480,6 @@ for p in args.prompts:
 # -------------------------
 # Tracking state (external gating)
 # -------------------------
-# state[obj_id] =
-#   {
-#     "last_centroid": (x,y),
-#     "lost_count": int,
-#     "last_velocity": (vx, vy),
-#   }
 state = {}
 
 # -------------------------
@@ -468,7 +498,7 @@ print("Propagating...")
 for frame_idx in range(num_track_frames):
     model_outputs = model(inference_session=session, frame_idx=int(frame_idx), reverse=False)
 
-    # PP FIRST: geometry + prompt_to_obj_ids come from PP only
+    # PP FIRST
     pp = processor.postprocess_outputs(session, model_outputs)
 
     obj_ids = pp["object_ids"].tolist()
@@ -480,9 +510,18 @@ for frame_idx in range(num_track_frames):
     if frame_idx < args.debug_first_frames:
         print(f"[debug] frame={frame_idx} prompt_to_obj_ids={prompt_to_obj_ids}")
         print(f"[debug] frame={frame_idx} obj_ids={obj_ids}")
+        # extra debug: show canonical keys side-by-side (first few frames only)
+        if prompt_to_obj_ids:
+            pp_keys = list(prompt_to_obj_ids.keys())
+            print(f"[debug] frame={frame_idx} pp_prompt_keys={pp_keys}")
+            print(f"[debug] frame={frame_idx} pp_prompt_keys_canon={[_canon_prompt(k) for k in pp_keys]}")
+        print(f"[debug] frame={frame_idx} args_prompts={list(args.prompts)}")
+        print(f"[debug] frame={frame_idx} args_prompts_canon={[_canon_prompt(p) for p in args.prompts]}")
 
     obj_id_to_static_score = dict(model_outputs.obj_id_to_score) if model_outputs.obj_id_to_score is not None else {}
-    obj_id_to_tracker_score = dict(model_outputs.obj_id_to_tracker_score) if model_outputs.obj_id_to_tracker_score is not None else {}
+    obj_id_to_tracker_score = (
+        dict(model_outputs.obj_id_to_tracker_score) if model_outputs.obj_id_to_tracker_score is not None else {}
+    )
 
     removed = set(model_outputs.removed_obj_ids) if model_outputs.removed_obj_ids is not None else set()
     suppressed = set(model_outputs.suppressed_obj_ids) if model_outputs.suppressed_obj_ids is not None else set()
@@ -527,7 +566,6 @@ for frame_idx in range(num_track_frames):
                     hard_remove_obj_ids.append(int(obj_id))
                 continue
 
-        # Accept -> update state
         if prev is None:
             state[obj_id] = {"last_centroid": centroid, "lost_count": 0, "last_velocity": (0.0, 0.0)}
             prev = state[obj_id]
@@ -561,7 +599,6 @@ for frame_idx in range(num_track_frames):
         mask_object_ids.append(int(obj_id))
         mask_counter += 1
 
-    # Hard removals after PP
     if hard_remove_obj_ids:
         for oid in hard_remove_obj_ids:
             try:
@@ -602,7 +639,6 @@ if args.post_process_rm or args.post_process_fusion:
     if delete_set or fusion_map:
         tracks, dropped_old_mask_indices = apply_delete_and_fusion(tracks, delete_set, fusion_map)
 
-        # Rebuild NPZ from final JSON
         tracks, all_masks, mask_frame_indices, mask_object_ids = rebuild_npz_and_reindex(
             tracks,
             all_masks,
