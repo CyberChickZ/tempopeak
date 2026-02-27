@@ -118,6 +118,9 @@ parser.add_argument("--rm_static_px", type=float, default=5.0)
 parser.add_argument("--fusion_max_gap", type=int, default=5)
 parser.add_argument("--fusion_skip_unknown", action="store_true", help="Do not fuse label=unknown tracks.")
 
+parser.add_argument("--post_process_predict", action="store_true", help="Predict and fill frame gaps using SDF morphing.")
+parser.add_argument("--predict_max_gap", type=int, default=15, help="Maximum gap length in frames to predict tracks across.")
+
 # Debug
 parser.add_argument("--print_every", type=int, default=30, help="print progress every N frames (<=0 disables)")
 parser.add_argument("--debug_first_frames", type=int, default=1, help="print mapping for first K frames")
