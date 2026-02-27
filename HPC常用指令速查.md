@@ -153,6 +153,11 @@ python scripts/sam3_mask_extractor.py \
   pip install -r requirements.txt
   uvicorn main:app --host 0.0.0.0 --port 8080 --reload
   ```
+
+  ```bash
+  cd /Users/harryzhang/git/tempopeak/sam3_annotator/backend
+  uvicorn main:app --host 0.0.0.0 --port 8080 --reload
+  ```
 - 访问：打开浏览器 `http://127.0.0.1:8080/`。支持按照视频名称自动加载 `00001.mp4`, `00001.json`, `00001.npz`，并提供拖拽式标注可视化和修改。
 
 ## 单帧 PCS Text-Only 测试
