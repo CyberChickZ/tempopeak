@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "time_unix": 1772213997.9474206,
+    "time_unix": 1772214650.8696196,
     "hostname": "dgxh-1.hpc.engr.oregonstate.edu",
     "platform": "Linux-5.14.0-570.58.1.el9_6.x86_64-x86_64-with-glibc2.34",
     "python": "3.11.14",
@@ -28,7 +28,9 @@
     "quality_score_mode": "mul",
     "processing_device": "cpu",
     "video_storage_device": "cpu",
-    "plan": "A_hard_remove_on_reject"
+    "plan": "A_hard_remove_on_reject",
+    "post_process_rm": true,
+    "post_process_fusion": true
   },
   "0": {
     "0": {
@@ -1293,7 +1295,7 @@
     }
   },
   "65": {
-    "4": {
+    "0": {
       "label": "tennisball",
       "tracker_score": 0.84375,
       "static_score": 0.84375,
@@ -1313,7 +1315,7 @@
     }
   },
   "66": {
-    "4": {
+    "0": {
       "label": "tennisball",
       "tracker_score": 1.0,
       "static_score": 0.84375,
@@ -1333,7 +1335,7 @@
     }
   },
   "67": {
-    "4": {
+    "0": {
       "label": "tennisball",
       "tracker_score": 1.0,
       "static_score": 0.84375,
@@ -1353,7 +1355,7 @@
     }
   },
   "68": {
-    "4": {
+    "0": {
       "label": "tennisball",
       "tracker_score": 0.996094,
       "static_score": 0.84375,
@@ -1373,7 +1375,7 @@
     }
   },
   "69": {
-    "4": {
+    "0": {
       "label": "tennisball",
       "tracker_score": 1.0,
       "static_score": 0.84375,
@@ -1393,7 +1395,7 @@
     }
   },
   "70": {
-    "4": {
+    "0": {
       "label": "tennisball",
       "tracker_score": 1.0,
       "static_score": 0.84375,
@@ -1413,7 +1415,7 @@
     }
   },
   "71": {
-    "4": {
+    "0": {
       "label": "tennisball",
       "tracker_score": 0.988281,
       "static_score": 0.84375,
@@ -1433,7 +1435,7 @@
     }
   },
   "72": {
-    "4": {
+    "0": {
       "label": "tennisball",
       "tracker_score": 1.0,
       "static_score": 0.84375,
@@ -1453,7 +1455,7 @@
     }
   },
   "73": {
-    "4": {
+    "0": {
       "label": "tennisball",
       "tracker_score": 1.0,
       "static_score": 0.84375,
@@ -1473,7 +1475,7 @@
     }
   },
   "74": {
-    "4": {
+    "0": {
       "label": "tennisball",
       "tracker_score": 1.0,
       "static_score": 0.84375,
@@ -1493,7 +1495,7 @@
     }
   },
   "75": {
-    "4": {
+    "0": {
       "label": "tennisball",
       "tracker_score": 1.0,
       "static_score": 0.84375,
@@ -1513,7 +1515,7 @@
     }
   },
   "76": {
-    "4": {
+    "0": {
       "label": "tennisball",
       "tracker_score": 0.996094,
       "static_score": 0.84375,
@@ -1533,7 +1535,7 @@
     }
   },
   "77": {
-    "4": {
+    "0": {
       "label": "tennisball",
       "tracker_score": 0.992188,
       "static_score": 0.84375,
@@ -1554,7 +1556,7 @@
   },
   "78": {},
   "79": {
-    "4": {
+    "0": {
       "label": "tennisball",
       "tracker_score": 1.0,
       "static_score": 0.84375,
@@ -1575,7 +1577,7 @@
   },
   "80": {},
   "81": {
-    "4": {
+    "0": {
       "label": "tennisball",
       "tracker_score": 0.996094,
       "static_score": 0.84375,
@@ -1595,7 +1597,7 @@
     }
   },
   "82": {
-    "4": {
+    "0": {
       "label": "tennisball",
       "tracker_score": 0.996094,
       "static_score": 0.84375,
@@ -1615,7 +1617,7 @@
     }
   },
   "83": {
-    "4": {
+    "0": {
       "label": "tennisball",
       "tracker_score": 1.0,
       "static_score": 0.84375,
@@ -1635,7 +1637,7 @@
     }
   },
   "84": {
-    "4": {
+    "0": {
       "label": "tennisball",
       "tracker_score": 1.0,
       "static_score": 0.84375,
@@ -1655,7 +1657,7 @@
     }
   },
   "85": {
-    "4": {
+    "0": {
       "label": "tennisball",
       "tracker_score": 1.0,
       "static_score": 0.84375,
@@ -1675,7 +1677,7 @@
     }
   },
   "86": {
-    "4": {
+    "0": {
       "label": "tennisball",
       "tracker_score": 0.996094,
       "static_score": 0.84375,
@@ -1695,7 +1697,7 @@
     }
   },
   "87": {
-    "4": {
+    "0": {
       "label": "tennisball",
       "tracker_score": 1.0,
       "static_score": 0.84375,
@@ -1716,7 +1718,7 @@
   },
   "88": {},
   "89": {
-    "4": {
+    "0": {
       "label": "tennisball",
       "tracker_score": 0.996094,
       "static_score": 0.84375,
@@ -1738,7 +1740,7 @@
   "90": {},
   "91": {},
   "92": {
-    "4": {
+    "0": {
       "label": "tennisball",
       "tracker_score": 0.976562,
       "static_score": 0.84375,
@@ -1761,7 +1763,7 @@
   "94": {},
   "95": {},
   "96": {
-    "4": {
+    "0": {
       "label": "tennisball",
       "tracker_score": 0.992188,
       "static_score": 0.84375,
@@ -1801,7 +1803,7 @@
   "115": {},
   "116": {},
   "117": {
-    "4": {
+    "0": {
       "label": "tennisball",
       "tracker_score": 1.0,
       "static_score": 0.84375,
