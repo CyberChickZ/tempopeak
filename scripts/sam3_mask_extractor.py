@@ -391,8 +391,69 @@ for frame_idx in range(num_track_frames):
         print("frame", frame_idx, "kept_masks", mask_counter, "kept_objs_this_frame", len(frame_data))
 
 t1 = time.time()
-print("Total kept masks:", len(all_masks))
+print("Total kept masks before filtering:", len(all_masks))
 print("Time (s):", round(t1 - t0, 2))
+
+
+# -------------------------
+# Post-processing: Filter out tracks
+# -------------------------
+print("Post-processing tracks...")
+track_history = {} # obj_id -> list of (frame_idx, centroid)
+for frame_idx_str, frame_data in tracks.items():
+    f_idx = int(frame_idx_str)
+    for obj_id_str, info in frame_data.items():
+        if obj_id_str not in track_history:
+            track_history[obj_id_str] = []
+        track_history[obj_id_str].append((f_idx, info["centroid"]))
+
+obj_ids_to_delete = set()
+for obj_id_str, history in track_history.items():
+    history.sort(key=lambda x: x[0])
+    num_frames_in_track = len(history)
+    
+    # Condition 1: total length < 15 frames
+    if num_frames_in_track < 15:
+        obj_ids_to_delete.add(obj_id_str)
+        continue
+    
+    # Condition 2: average movement <= 5px
+    total_movement = 0.0
+    for i in range(1, len(history)):
+        c1 = history[i-1][1]
+        c2 = history[i][1]
+        dist = ((c1[0] - c2[0])**2 + (c1[1] - c2[1])**2)**0.5
+        total_movement += dist
+    
+    avg_movement = total_movement / (num_frames_in_track - 1) if num_frames_in_track > 1 else 0
+    if avg_movement <= 5.0:
+        obj_ids_to_delete.add(obj_id_str)
+
+if obj_ids_to_delete:
+    print(f"Filtering out {len(obj_ids_to_delete)} tracks: {obj_ids_to_delete}")
+    for frame_idx_str in list(tracks.keys()):
+        for obj_id_str in list(tracks[frame_idx_str].keys()):
+            if obj_id_str in obj_ids_to_delete:
+                del tracks[frame_idx_str][obj_id_str]
+    
+    valid_mask_indices = []
+    old_to_new_mask_idx = {}
+    for i, oid in enumerate(mask_object_ids):
+        if str(oid) not in obj_ids_to_delete:
+            old_to_new_mask_idx[i] = len(valid_mask_indices)
+            valid_mask_indices.append(i)
+            
+    all_masks = [all_masks[i] for i in valid_mask_indices]
+    mask_frame_indices = [mask_frame_indices[i] for i in valid_mask_indices]
+    mask_object_ids = [mask_object_ids[i] for i in valid_mask_indices]
+    
+    for frame_idx_str, frame_data in tracks.items():
+        for obj_id_str, info in frame_data.items():
+            old_idx = info["mask_idx"]
+            if old_idx in old_to_new_mask_idx:
+                info["mask_idx"] = old_to_new_mask_idx[old_idx]
+
+print("Total kept masks after filtering:", len(all_masks))
 
 
 # -------------------------
