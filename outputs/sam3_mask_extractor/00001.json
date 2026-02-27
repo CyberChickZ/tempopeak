@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "time_unix": 1772227901.5458965,
+    "time_unix": 1772231825.0158215,
     "hostname": "dgxh-1.hpc.engr.oregonstate.edu",
     "platform": "Linux-5.14.0-570.58.1.el9_6.x86_64-x86_64-with-glibc2.34",
     "python": "3.11.14",
@@ -33,10 +33,30 @@
     "plan": "A_hard_remove_on_reject",
     "post_process_rm": true,
     "post_process_fusion": true,
+    "post_process_predict": true,
     "rm_min_len": 15,
     "rm_static_px": 5.0,
     "fusion_max_gap": 5,
-    "fusion_skip_unknown": false
+    "fusion_skip_unknown": false,
+    "predict_max_gap": 30,
+    "hit_debug": {
+      "status": "ok",
+      "peak_frame": 68,
+      "peak_raw": 0.8303219265128435,
+      "peak_score": 0.8303219265128435,
+      "num_pair_frames": 121,
+      "params": {
+        "sigma_dist_px": 18.0,
+        "iou_ref": 0.02,
+        "w_iou": 0.65,
+        "max_peak_cap": 0.92,
+        "conf_mode": "quality",
+        "conf_floor": 0.15,
+        "sigma_t": 2.5,
+        "left_cut_frames": 8,
+        "right_cut_frames": 12
+      }
+    }
   },
   "0": {
     "0": {
@@ -55,7 +75,8 @@
         693
       ],
       "mask_idx": 0,
-      "mask_area": 252
+      "mask_area": 252,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -93,7 +114,8 @@
         692
       ],
       "mask_idx": 2,
-      "mask_area": 325
+      "mask_area": 325,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -131,7 +153,8 @@
         692
       ],
       "mask_idx": 4,
-      "mask_area": 326
+      "mask_area": 326,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -169,7 +192,8 @@
         691
       ],
       "mask_idx": 6,
-      "mask_area": 336
+      "mask_area": 336,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -207,7 +231,8 @@
         684
       ],
       "mask_idx": 8,
-      "mask_area": 271
+      "mask_area": 271,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -245,7 +270,8 @@
         686
       ],
       "mask_idx": 10,
-      "mask_area": 201
+      "mask_area": 201,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -284,6 +310,25 @@
       ],
       "mask_idx": 12,
       "mask_area": 3098
+    },
+    "0": {
+      "label": "tennisball",
+      "tracker_score": 0.925781,
+      "static_score": 0.757812,
+      "quality_score": 0.701569,
+      "centroid": [
+        1405.5755,
+        663.3045
+      ],
+      "box_xyxy": [
+        1395,
+        652,
+        1412,
+        673
+      ],
+      "mask_idx": 248,
+      "mask_area": 467,
+      "hit_score": 0.0
     }
   },
   "7": {
@@ -303,7 +348,8 @@
         661
       ],
       "mask_idx": 13,
-      "mask_area": 266
+      "mask_area": 266,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -341,7 +387,8 @@
         652
       ],
       "mask_idx": 15,
-      "mask_area": 260
+      "mask_area": 260,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -379,7 +426,8 @@
         638
       ],
       "mask_idx": 17,
-      "mask_area": 319
+      "mask_area": 319,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -417,7 +465,8 @@
         623
       ],
       "mask_idx": 19,
-      "mask_area": 299
+      "mask_area": 299,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -455,7 +504,8 @@
         607
       ],
       "mask_idx": 21,
-      "mask_area": 346
+      "mask_area": 346,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -493,7 +543,26 @@
         588
       ],
       "mask_idx": 23,
-      "mask_area": 272
+      "mask_area": 272,
+      "hit_score": 0.0
+    },
+    "3": {
+      "label": "tennisracket",
+      "tracker_score": 1.0,
+      "static_score": 0.820312,
+      "quality_score": 0.820312,
+      "centroid": [
+        1432.6354999999999,
+        749.0545
+      ],
+      "box_xyxy": [
+        1403,
+        676,
+        1467,
+        800
+      ],
+      "mask_idx": 249,
+      "mask_area": 6397
     }
   },
   "13": {
@@ -513,7 +582,8 @@
         567
       ],
       "mask_idx": 24,
-      "mask_area": 315
+      "mask_area": 315,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -551,7 +621,8 @@
         543
       ],
       "mask_idx": 26,
-      "mask_area": 300
+      "mask_area": 300,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -589,7 +660,8 @@
         519
       ],
       "mask_idx": 28,
-      "mask_area": 292
+      "mask_area": 292,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -627,7 +699,8 @@
         496
       ],
       "mask_idx": 30,
-      "mask_area": 330
+      "mask_area": 330,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -665,7 +738,8 @@
         470
       ],
       "mask_idx": 32,
-      "mask_area": 327
+      "mask_area": 327,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -703,7 +777,8 @@
         446
       ],
       "mask_idx": 34,
-      "mask_area": 309
+      "mask_area": 309,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -741,7 +816,8 @@
         423
       ],
       "mask_idx": 36,
-      "mask_area": 341
+      "mask_area": 341,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -779,7 +855,8 @@
         399
       ],
       "mask_idx": 38,
-      "mask_area": 341
+      "mask_area": 341,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -817,7 +894,8 @@
         376
       ],
       "mask_idx": 40,
-      "mask_area": 301
+      "mask_area": 301,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -855,7 +933,8 @@
         353
       ],
       "mask_idx": 42,
-      "mask_area": 316
+      "mask_area": 316,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -893,7 +972,8 @@
         331
       ],
       "mask_idx": 44,
-      "mask_area": 328
+      "mask_area": 328,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -931,7 +1011,8 @@
         310
       ],
       "mask_idx": 46,
-      "mask_area": 323
+      "mask_area": 323,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -969,7 +1050,8 @@
         289
       ],
       "mask_idx": 48,
-      "mask_area": 300
+      "mask_area": 300,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -1007,7 +1089,8 @@
         271
       ],
       "mask_idx": 50,
-      "mask_area": 319
+      "mask_area": 319,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -1045,7 +1128,8 @@
         252
       ],
       "mask_idx": 52,
-      "mask_area": 296
+      "mask_area": 296,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -1083,7 +1167,8 @@
         235
       ],
       "mask_idx": 54,
-      "mask_area": 268
+      "mask_area": 268,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -1121,7 +1206,8 @@
         217
       ],
       "mask_idx": 56,
-      "mask_area": 221
+      "mask_area": 221,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -1159,7 +1245,8 @@
         203
       ],
       "mask_idx": 58,
-      "mask_area": 280
+      "mask_area": 280,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -1197,7 +1284,8 @@
         187
       ],
       "mask_idx": 60,
-      "mask_area": 258
+      "mask_area": 258,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -1235,7 +1323,8 @@
         173
       ],
       "mask_idx": 62,
-      "mask_area": 293
+      "mask_area": 293,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -1273,7 +1362,8 @@
         159
       ],
       "mask_idx": 64,
-      "mask_area": 253
+      "mask_area": 253,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -1311,7 +1401,8 @@
         146
       ],
       "mask_idx": 66,
-      "mask_area": 267
+      "mask_area": 267,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -1349,7 +1440,8 @@
         135
       ],
       "mask_idx": 68,
-      "mask_area": 267
+      "mask_area": 267,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -1387,7 +1479,8 @@
         123
       ],
       "mask_idx": 70,
-      "mask_area": 286
+      "mask_area": 286,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -1425,7 +1518,8 @@
         112
       ],
       "mask_idx": 72,
-      "mask_area": 270
+      "mask_area": 270,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -1463,7 +1557,8 @@
         102
       ],
       "mask_idx": 74,
-      "mask_area": 304
+      "mask_area": 304,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -1501,7 +1596,8 @@
         93
       ],
       "mask_idx": 76,
-      "mask_area": 288
+      "mask_area": 288,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -1539,7 +1635,8 @@
         84
       ],
       "mask_idx": 78,
-      "mask_area": 259
+      "mask_area": 259,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -1577,7 +1674,8 @@
         77
       ],
       "mask_idx": 80,
-      "mask_area": 253
+      "mask_area": 253,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -1615,7 +1713,8 @@
         69
       ],
       "mask_idx": 82,
-      "mask_area": 229
+      "mask_area": 229,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -1653,7 +1752,8 @@
         63
       ],
       "mask_idx": 84,
-      "mask_area": 238
+      "mask_area": 238,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -1691,7 +1791,8 @@
         58
       ],
       "mask_idx": 86,
-      "mask_area": 271
+      "mask_area": 271,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -1729,7 +1830,8 @@
         53
       ],
       "mask_idx": 88,
-      "mask_area": 268
+      "mask_area": 268,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -1767,7 +1869,8 @@
         49
       ],
       "mask_idx": 90,
-      "mask_area": 241
+      "mask_area": 241,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -1805,7 +1908,8 @@
         45
       ],
       "mask_idx": 92,
-      "mask_area": 251
+      "mask_area": 251,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -1843,7 +1947,8 @@
         43
       ],
       "mask_idx": 94,
-      "mask_area": 258
+      "mask_area": 258,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -1881,7 +1986,8 @@
         41
       ],
       "mask_idx": 96,
-      "mask_area": 239
+      "mask_area": 239,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -1919,7 +2025,8 @@
         40
       ],
       "mask_idx": 98,
-      "mask_area": 249
+      "mask_area": 249,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -1957,7 +2064,8 @@
         39
       ],
       "mask_idx": 100,
-      "mask_area": 250
+      "mask_area": 250,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -1995,7 +2103,8 @@
         39
       ],
       "mask_idx": 102,
-      "mask_area": 251
+      "mask_area": 251,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -2033,7 +2142,8 @@
         40
       ],
       "mask_idx": 104,
-      "mask_area": 257
+      "mask_area": 257,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -2071,7 +2181,8 @@
         41
       ],
       "mask_idx": 106,
-      "mask_area": 257
+      "mask_area": 257,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -2109,7 +2220,8 @@
         44
       ],
       "mask_idx": 108,
-      "mask_area": 273
+      "mask_area": 273,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -2147,7 +2259,8 @@
         47
       ],
       "mask_idx": 110,
-      "mask_area": 277
+      "mask_area": 277,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -2185,7 +2298,8 @@
         50
       ],
       "mask_idx": 112,
-      "mask_area": 255
+      "mask_area": 255,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -2223,7 +2337,8 @@
         54
       ],
       "mask_idx": 114,
-      "mask_area": 265
+      "mask_area": 265,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -2261,7 +2376,8 @@
         58
       ],
       "mask_idx": 116,
-      "mask_area": 250
+      "mask_area": 250,
+      "hit_score": 0.0
     },
     "3": {
       "label": "tennisracket",
@@ -2299,7 +2415,8 @@
         64
       ],
       "mask_idx": 118,
-      "mask_area": 236
+      "mask_area": 236,
+      "hit_score": 0.004962022843066195
     },
     "3": {
       "label": "tennisracket",
@@ -2337,7 +2454,8 @@
         70
       ],
       "mask_idx": 120,
-      "mask_area": 246
+      "mask_area": 246,
+      "hit_score": 0.016474496012269392
     },
     "3": {
       "label": "tennisracket",
@@ -2375,7 +2493,8 @@
         78
       ],
       "mask_idx": 122,
-      "mask_area": 276
+      "mask_area": 276,
+      "hit_score": 0.046609924420779485
     },
     "3": {
       "label": "tennisracket",
@@ -2413,7 +2532,8 @@
         86
       ],
       "mask_idx": 124,
-      "mask_area": 285
+      "mask_area": 285,
+      "hit_score": 0.1123718531021856
     },
     "3": {
       "label": "tennisracket",
@@ -2451,7 +2571,8 @@
         94
       ],
       "mask_idx": 126,
-      "mask_area": 296
+      "mask_area": 296,
+      "hit_score": 0.23086046695472645
     },
     "3": {
       "label": "tennisracket",
@@ -2507,7 +2628,8 @@
         103
       ],
       "mask_idx": 128,
-      "mask_area": 301
+      "mask_area": 301,
+      "hit_score": 0.4041610709031564
     }
   },
   "66": {
@@ -2545,7 +2667,8 @@
         111
       ],
       "mask_idx": 130,
-      "mask_area": 284
+      "mask_area": 284,
+      "hit_score": 0.6029374673984733
     }
   },
   "67": {
@@ -2583,7 +2706,8 @@
         122
       ],
       "mask_idx": 132,
-      "mask_area": 318
+      "mask_area": 318,
+      "hit_score": 0.7664837431272488
     }
   },
   "68": {
@@ -2621,7 +2745,8 @@
         133
       ],
       "mask_idx": 134,
-      "mask_area": 345
+      "mask_area": 345,
+      "hit_score": 0.8303219265128435
     }
   },
   "69": {
@@ -2659,7 +2784,8 @@
         183
       ],
       "mask_idx": 136,
-      "mask_area": 241
+      "mask_area": 241,
+      "hit_score": 0.7664837431272488
     }
   },
   "70": {
@@ -2697,7 +2823,8 @@
         225
       ],
       "mask_idx": 138,
-      "mask_area": 211
+      "mask_area": 211,
+      "hit_score": 0.6029374673984733
     }
   },
   "71": {
@@ -2735,7 +2862,8 @@
         261
       ],
       "mask_idx": 140,
-      "mask_area": 245
+      "mask_area": 245,
+      "hit_score": 0.4041610709031564
     }
   },
   "72": {
@@ -2773,7 +2901,8 @@
         294
       ],
       "mask_idx": 142,
-      "mask_area": 158
+      "mask_area": 158,
+      "hit_score": 0.23086046695472645
     }
   },
   "73": {
@@ -2793,7 +2922,26 @@
         321
       ],
       "mask_idx": 144,
-      "mask_area": 168
+      "mask_area": 168,
+      "hit_score": 0.1123718531021856
+    },
+    "3": {
+      "label": "tennisracket",
+      "tracker_score": 0.914062,
+      "static_score": 0.820312,
+      "quality_score": 0.749817,
+      "centroid": [
+        1252.289,
+        469.486
+      ],
+      "box_xyxy": [
+        1244,
+        452,
+        1258,
+        492
+      ],
+      "mask_idx": 250,
+      "mask_area": 727
     }
   },
   "74": {
@@ -2831,7 +2979,8 @@
         344
       ],
       "mask_idx": 145,
-      "mask_area": 114
+      "mask_area": 114,
+      "hit_score": 0.046609924420779485
     }
   },
   "75": {
@@ -2869,7 +3018,8 @@
         366
       ],
       "mask_idx": 147,
-      "mask_area": 114
+      "mask_area": 114,
+      "hit_score": 0.016474496012269392
     }
   },
   "76": {
@@ -2907,7 +3057,8 @@
         385
       ],
       "mask_idx": 149,
-      "mask_area": 99
+      "mask_area": 99,
+      "hit_score": 0.004962022843066195
     }
   },
   "77": {
@@ -2945,7 +3096,8 @@
         401
       ],
       "mask_idx": 151,
-      "mask_area": 93
+      "mask_area": 93,
+      "hit_score": 0.0012735566381626615
     }
   },
   "78": {
@@ -3003,7 +3155,8 @@
         433
       ],
       "mask_idx": 154,
-      "mask_area": 73
+      "mask_area": 73,
+      "hit_score": 5.191297546278878e-05
     }
   },
   "80": {
@@ -3061,7 +3214,8 @@
         461
       ],
       "mask_idx": 157,
-      "mask_area": 87
+      "mask_area": 87,
+      "hit_score": 0.0
     }
   },
   "82": {
@@ -3099,7 +3253,8 @@
         474
       ],
       "mask_idx": 159,
-      "mask_area": 99
+      "mask_area": 99,
+      "hit_score": 0.0
     }
   },
   "83": {
@@ -3137,7 +3292,8 @@
         487
       ],
       "mask_idx": 161,
-      "mask_area": 118
+      "mask_area": 118,
+      "hit_score": 0.0
     }
   },
   "84": {
@@ -3175,7 +3331,8 @@
         496
       ],
       "mask_idx": 163,
-      "mask_area": 65
+      "mask_area": 65,
+      "hit_score": 0.0
     }
   },
   "85": {
@@ -3213,7 +3370,8 @@
         508
       ],
       "mask_idx": 165,
-      "mask_area": 81
+      "mask_area": 81,
+      "hit_score": 0.0
     }
   },
   "86": {
@@ -3251,7 +3409,8 @@
         517
       ],
       "mask_idx": 167,
-      "mask_area": 77
+      "mask_area": 77,
+      "hit_score": 0.0
     }
   },
   "87": {
@@ -3289,7 +3448,8 @@
         526
       ],
       "mask_idx": 169,
-      "mask_area": 50
+      "mask_area": 50,
+      "hit_score": 0.0
     }
   },
   "88": {
@@ -3327,7 +3487,8 @@
         535
       ],
       "mask_idx": 171,
-      "mask_area": 43
+      "mask_area": 43,
+      "hit_score": 0.0
     }
   },
   "89": {
@@ -3365,7 +3526,8 @@
         547
       ],
       "mask_idx": 173,
-      "mask_area": 104
+      "mask_area": 104,
+      "hit_score": 0.0
     }
   },
   "90": {
@@ -3443,7 +3605,8 @@
         573
       ],
       "mask_idx": 177,
-      "mask_area": 74
+      "mask_area": 74,
+      "hit_score": 0.0
     }
   },
   "93": {
@@ -3481,7 +3644,8 @@
         576
       ],
       "mask_idx": 179,
-      "mask_area": 36
+      "mask_area": 36,
+      "hit_score": 0.0
     }
   },
   "94": {
@@ -3519,7 +3683,8 @@
         584
       ],
       "mask_idx": 181,
-      "mask_area": 38
+      "mask_area": 38,
+      "hit_score": 0.0
     }
   },
   "95": {
@@ -3557,7 +3722,8 @@
         592
       ],
       "mask_idx": 183,
-      "mask_area": 29
+      "mask_area": 29,
+      "hit_score": 0.0
     }
   },
   "96": {
@@ -3595,7 +3761,8 @@
         603
       ],
       "mask_idx": 185,
-      "mask_area": 51
+      "mask_area": 51,
+      "hit_score": 0.0
     }
   },
   "97": {
@@ -3633,7 +3800,8 @@
         608
       ],
       "mask_idx": 187,
-      "mask_area": 43
+      "mask_area": 43,
+      "hit_score": 0.0
     }
   },
   "98": {
@@ -3671,7 +3839,8 @@
         609
       ],
       "mask_idx": 189,
-      "mask_area": 42
+      "mask_area": 42,
+      "hit_score": 0.0
     }
   },
   "99": {
@@ -3709,7 +3878,8 @@
         602
       ],
       "mask_idx": 191,
-      "mask_area": 32
+      "mask_area": 32,
+      "hit_score": 0.0
     }
   },
   "100": {
@@ -3747,7 +3917,8 @@
         594
       ],
       "mask_idx": 193,
-      "mask_area": 25
+      "mask_area": 25,
+      "hit_score": 0.0
     }
   },
   "101": {
@@ -3785,7 +3956,8 @@
         587
       ],
       "mask_idx": 195,
-      "mask_area": 37
+      "mask_area": 37,
+      "hit_score": 0.0
     }
   },
   "102": {
@@ -3823,7 +3995,8 @@
         582
       ],
       "mask_idx": 197,
-      "mask_area": 34
+      "mask_area": 34,
+      "hit_score": 0.0
     }
   },
   "103": {
@@ -3861,7 +4034,8 @@
         576
       ],
       "mask_idx": 199,
-      "mask_area": 33
+      "mask_area": 33,
+      "hit_score": 0.0
     }
   },
   "104": {
@@ -3899,7 +4073,8 @@
         569
       ],
       "mask_idx": 201,
-      "mask_area": 25
+      "mask_area": 25,
+      "hit_score": 0.0
     }
   },
   "105": {
@@ -3937,7 +4112,8 @@
         565
       ],
       "mask_idx": 203,
-      "mask_area": 25
+      "mask_area": 25,
+      "hit_score": 0.0
     }
   },
   "106": {
@@ -4035,7 +4211,8 @@
         549
       ],
       "mask_idx": 208,
-      "mask_area": 24
+      "mask_area": 24,
+      "hit_score": 0.0
     }
   },
   "110": {
@@ -4073,7 +4250,8 @@
         547
       ],
       "mask_idx": 210,
-      "mask_area": 27
+      "mask_area": 27,
+      "hit_score": 0.0
     }
   },
   "111": {
@@ -4111,7 +4289,8 @@
         545
       ],
       "mask_idx": 212,
-      "mask_area": 36
+      "mask_area": 36,
+      "hit_score": 0.0
     }
   },
   "112": {
@@ -4149,7 +4328,8 @@
         542
       ],
       "mask_idx": 214,
-      "mask_area": 31
+      "mask_area": 31,
+      "hit_score": 0.0
     }
   },
   "113": {
@@ -4187,7 +4367,8 @@
         540
       ],
       "mask_idx": 216,
-      "mask_area": 30
+      "mask_area": 30,
+      "hit_score": 0.0
     }
   },
   "114": {
@@ -4225,7 +4406,8 @@
         539
       ],
       "mask_idx": 218,
-      "mask_area": 42
+      "mask_area": 42,
+      "hit_score": 0.0
     }
   },
   "115": {
@@ -4263,7 +4445,8 @@
         537
       ],
       "mask_idx": 220,
-      "mask_area": 27
+      "mask_area": 27,
+      "hit_score": 0.0
     }
   },
   "116": {
@@ -4301,7 +4484,8 @@
         534
       ],
       "mask_idx": 222,
-      "mask_area": 25
+      "mask_area": 25,
+      "hit_score": 0.0
     }
   },
   "117": {
@@ -4339,7 +4523,8 @@
         531
       ],
       "mask_idx": 224,
-      "mask_area": 53
+      "mask_area": 53,
+      "hit_score": 0.0
     }
   },
   "118": {
@@ -4377,7 +4562,8 @@
         523
       ],
       "mask_idx": 226,
-      "mask_area": 33
+      "mask_area": 33,
+      "hit_score": 0.0
     }
   },
   "119": {
@@ -4415,7 +4601,8 @@
         519
       ],
       "mask_idx": 228,
-      "mask_area": 30
+      "mask_area": 30,
+      "hit_score": 0.0
     }
   },
   "120": {
@@ -4453,7 +4640,8 @@
         513
       ],
       "mask_idx": 230,
-      "mask_area": 32
+      "mask_area": 32,
+      "hit_score": 0.0
     }
   },
   "121": {
@@ -4491,7 +4679,8 @@
         509
       ],
       "mask_idx": 232,
-      "mask_area": 47
+      "mask_area": 47,
+      "hit_score": 0.0
     }
   },
   "122": {
@@ -4529,7 +4718,8 @@
         502
       ],
       "mask_idx": 234,
-      "mask_area": 32
+      "mask_area": 32,
+      "hit_score": 0.0
     }
   },
   "123": {
@@ -4567,7 +4757,8 @@
         499
       ],
       "mask_idx": 236,
-      "mask_area": 49
+      "mask_area": 49,
+      "hit_score": 0.0
     }
   },
   "124": {
@@ -4605,7 +4796,8 @@
         491
       ],
       "mask_idx": 238,
-      "mask_area": 36
+      "mask_area": 36,
+      "hit_score": 0.0
     }
   },
   "125": {
@@ -4643,7 +4835,8 @@
         487
       ],
       "mask_idx": 240,
-      "mask_area": 30
+      "mask_area": 30,
+      "hit_score": 0.0
     }
   },
   "126": {
@@ -4681,7 +4874,8 @@
         482
       ],
       "mask_idx": 242,
-      "mask_area": 30
+      "mask_area": 30,
+      "hit_score": 0.0
     }
   },
   "127": {
@@ -4719,7 +4913,8 @@
         477
       ],
       "mask_idx": 244,
-      "mask_area": 35
+      "mask_area": 35,
+      "hit_score": 0.0
     }
   },
   "128": {
