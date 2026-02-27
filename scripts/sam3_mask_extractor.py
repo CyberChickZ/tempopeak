@@ -486,6 +486,7 @@ def apply_gap_prediction(
                     if f_str not in tracks_dict:
                         tracks_dict[f_str] = {}
                     tracks_dict[f_str][oid_str] = new_info
+                    print(f"DEBUG: Filled gap for obj {oid_str} at frame {f_str} (between {f_prev_str} and {f_next_str})")
 
     return tracks_dict, all_masks_list, mask_frame_indices_list, mask_object_ids_list
 
@@ -1015,9 +1016,11 @@ if args.post_process_rm or args.post_process_fusion:
 
     if args.post_process_predict:
         print(f"Applying Gap Prediction Phase (max_gap={args.predict_max_gap})...")
+        # Rebuild history after deletions and fusions, so gap logic works linearly!
+        track_history_updated = build_track_history(tracks)
         tracks, all_masks, mask_frame_indices, mask_object_ids = apply_gap_prediction(
             tracks_dict=tracks,
-            track_history=track_history,
+            track_history=track_history_updated,
             all_masks_list=all_masks,
             mask_frame_indices_list=mask_frame_indices,
             mask_object_ids_list=mask_object_ids,
