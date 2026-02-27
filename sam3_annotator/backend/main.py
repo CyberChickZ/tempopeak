@@ -37,6 +37,10 @@ class DeleteRequest(BaseModel):
 class DeleteTrackRequest(BaseModel):
     object_id: str
 
+class EditHitScoreRequest(BaseModel):
+    frame_idx: int
+    sigma: float = 2.5
+
 class ScanRequest(BaseModel):
     workdir: str
 
@@ -139,6 +143,13 @@ def delete_track(req: DeleteTrackRequest):
     success = data_store.delete_track(req.object_id)
     if not success:
         raise HTTPException(status_code=404, detail="Track not found")
+    return {"ok": True}
+
+@app.post("/api/edit_hit_score_gaussian")
+def edit_hit_score_gaussian(req: EditHitScoreRequest):
+    success = data_store.apply_hit_score_gaussian(req.frame_idx, req.sigma)
+    if not success:
+        raise HTTPException(status_code=400, detail="Could not apply hit scores")
     return {"ok": True}
 
 @app.post("/api/save_overwrite")

@@ -381,13 +381,35 @@ document.getElementById('fps-input').addEventListener('change', (e) => {
 });
 
 // Keyboard
-document.addEventListener('keydown', e => {
+document.addEventListener('keydown', async e => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
     if (e.key === 'a' || e.key === 'ArrowLeft') setFrame(currentFrame - 1);
     if (e.key === 'd' || e.key === 'ArrowRight') setFrame(currentFrame + 1);
     if (e.key === ' ') {
         e.preventDefault();
-        document.getElementById('play-pause-btn').click();
+        // Invoke gaussian fall-off hit score modification for the current frame
+        try {
+            const res = await fetch('/api/edit_hit_score_gaussian', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ frame_idx: currentFrame, sigma: 2.5 })
+            });
+            if (res.ok) {
+                // To keep frontend strictly in sync, just re-download the JSON and re-render.
+                const dlRes = await fetch('/api/download_json');
+                const jsonText = await dlRes.text();
+                parsedTracks = JSON.parse(jsonText);
+                delete parsedTracks["_meta"];
+                buildTimelineData();
+                renderTimelineTracks();
+                onFrameChange(currentFrame);
+                hasUnsavedChanges = true;
+            } else {
+                console.error("Failed to edit hit score");
+            }
+        } catch (err) {
+            console.error("Error applying hit score:", err);
+        }
     }
 });
 
@@ -529,6 +551,7 @@ function renderSidebar(instances) {
             })()}
                 </select>
                 <div style="font-size: 0.8rem; color: #64748b; margin-top: 4px;">Score: ${(info.tracker_score ?? info.score ?? 0).toFixed(3)}</div>
+                ${info.hit_score !== undefined ? `<div style="font-size: 0.8rem; color: #ef4444; font-weight: bold; margin-top: 2px;">Hit Score: ${(info.hit_score).toFixed(3)}</div>` : ''}
             </div>
         `;
 
