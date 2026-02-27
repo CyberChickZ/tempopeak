@@ -103,6 +103,18 @@ class SAM3DataStore:
             return True
         return False
         
+    def edit_track_label(self, obj_id: str, new_label: str):
+        edited_any = False
+        for frame_idx, frame_data in self.tracks.items():
+            if obj_id in frame_data:
+                obj = frame_data[obj_id]
+                if 'label' in obj:
+                    obj['label'] = new_label
+                else:
+                    obj['prompt'] = new_label
+                edited_any = True
+        return edited_any
+        
     def delete_instance(self, frame_idx: int, obj_id: str):
         if frame_idx in self.tracks and obj_id in self.tracks[frame_idx]:
             del self.tracks[frame_idx][obj_id]

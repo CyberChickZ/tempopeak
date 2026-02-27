@@ -474,10 +474,12 @@ async function drawMasks(instances) {
         const tinted = tintCanvas(img, color, tempCanvas, isHovered);
         maskCtx.drawImage(tinted, 0, 0);
 
-        if (isHovered && info.box) {
+        if (info.box) {
             uiCtx.strokeStyle = `rgb(${color.join(',')})`;
-            uiCtx.lineWidth = 2;
+            uiCtx.globalAlpha = isHovered ? 1.0 : 0.4;
+            uiCtx.lineWidth = isHovered ? 2 : 1;
             uiCtx.strokeRect(info.box[0], info.box[1], info.box[2] - info.box[0], info.box[3] - info.box[1]);
+            uiCtx.globalAlpha = 1.0; // reset
         }
     }
 }
@@ -511,9 +513,20 @@ function renderSidebar(instances) {
             </div>
             <div class="obj-body">
                 <select class="label-select">
-                    <option value="ball" ${(info.label || info.prompt) === 'ball' ? 'selected' : ''}>Ball</option>
-                    <option value="racket" ${(info.label || info.prompt) === 'racket' ? 'selected' : ''}>Racket</option>
-                    <option value="unknown" ${(info.label || info.prompt) === 'unknown' || (!['ball', 'racket'].includes(info.label || info.prompt)) ? 'selected' : ''}>Unknown</option>
+                    ${(() => {
+                const baseKeys = ['ball', 'racket'];
+                const discoveredKeys = [...new Set(Object.values(trackBounds).map(b => b.defaultLabel))].filter(l => l && l !== 'unknown');
+                const allKeys = [...new Set([...baseKeys, ...discoveredKeys])];
+                let html = '';
+                let hasMatched = false;
+                allKeys.forEach(k => {
+                    const isSelected = (info.label || info.prompt) === k;
+                    if (isSelected) hasMatched = true;
+                    html += `<option value="${k}" ${isSelected ? 'selected' : ''}>${k}</option>`;
+                });
+                html += `<option value="unknown" ${!hasMatched || (info.label || info.prompt) === 'unknown' ? 'selected' : ''}>Unknown</option>`;
+                return html;
+            })()}
                 </select>
                 <div style="font-size: 0.8rem; color: #64748b; margin-top: 4px;">Score: ${(info.tracker_score ?? info.score ?? 0).toFixed(3)}</div>
             </div>
@@ -538,17 +551,30 @@ function renderSidebar(instances) {
             if ('label' in info) info.label = newLabel; else info.prompt = newLabel;
             drawMasks(instances);
 
-            // Backend update
-            await fetch('/api/edit', {
+            // Backend update (update entire track)
+            await fetch('/api/edit_track', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ frame_idx: currentFrame, object_id: objId, prompt: newLabel })
+                body: JSON.stringify({ object_id: objId, prompt: newLabel })
             });
-            // Update local timeline cache so re-renders of timeline reflect label changes
-            const tracked = parsedTracks[currentFrame][objId];
-            if ('label' in tracked) tracked.label = newLabel; else tracked.prompt = newLabel;
-            const trackLabel = container.querySelector(`.track-label[data-oid="${objId}"]`);
-            if (trackLabel) trackLabel.innerText = `Obj ${objId} (${newLabel})`;
+
+            // Update local timeline cache so re-renders of timeline reflect label changes globally
+            for (const f in parsedTracks) {
+                if (parsedTracks[f][objId]) {
+                    if ('label' in parsedTracks[f][objId]) {
+                        parsedTracks[f][objId].label = newLabel;
+                    } else {
+                        parsedTracks[f][objId].prompt = newLabel;
+                    }
+                }
+            }
+            if (trackBounds[objId]) trackBounds[objId].defaultLabel = newLabel;
+
+            const listContainer = document.getElementById('tracks-container');
+            if (listContainer) {
+                const trackLabel = listContainer.querySelector(`.track-label[data-oid="${objId}"]`);
+                if (trackLabel) trackLabel.innerText = `Obj ${objId} (${newLabel})`;
+            }
 
             hasUnsavedChanges = true;
         });
