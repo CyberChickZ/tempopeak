@@ -17,7 +17,6 @@
 # Post-processing (JSON+NPZ consistent):
 # - delete: remove track entries from JSON, and remove all corresponding masks from NPZ.
 # - fusion: merge tracks with the same label if separated by < max_gap frames.
-#          "Other" tracks are fused into the first (base) track.
 #          If fusion causes collisions in the same frame, keep the better one and drop the other
 #          (and also drop its NPZ mask).
 #
@@ -62,6 +61,14 @@ parser.add_argument("--vis", action="store_true")
 
 # Prompts (session initialization; labels come from PP prompt_to_obj_ids)
 parser.add_argument("--prompts", nargs="+", default=["ball", "racket"])
+
+# Optional: map prompt label -> canonical label for dataset/vis (e.g. tennisball:ball)
+parser.add_argument(
+    "--label_aliases",
+    nargs="*",
+    default=[],
+    help="Optional label aliasing like: tennisball:ball tennisracket:racket",
+)
 
 # Runtime
 parser.add_argument("--dtype", type=str, choices=["bf16", "fp16", "fp32"], default="bf16")
@@ -144,6 +151,27 @@ else:
 
 
 # -------------------------
+# Label aliases
+# -------------------------
+def _canon_prompt(s: str) -> str:
+    return str(s).strip().lower().replace("_", " ").replace("  ", " ")
+
+
+label_alias = {}
+for item in args.label_aliases:
+    if ":" not in item:
+        raise ValueError(f"--label_aliases item must be 'src:dst', got: {item}")
+    src, dst = item.split(":", 1)
+    label_alias[_canon_prompt(src)] = str(dst).strip()
+
+
+def apply_alias(label: str) -> str:
+    # alias based on canonical key
+    k = _canon_prompt(label)
+    return label_alias.get(k, label)
+
+
+# -------------------------
 # Helpers
 # -------------------------
 def mask_centroid(mask_bool: torch.Tensor):
@@ -182,60 +210,48 @@ def compute_quality_score(static_score: float, tracker_score: float, mode: str) 
     raise ValueError(f"Unknown quality_score_mode: {mode}")
 
 
-# -------------------------
-# Label binding (ROBUST prompt key matching)
-# -------------------------
-def _canon_prompt(s: str) -> str:
-    # normalize common prompt formatting differences: case, underscores, extra spaces
-    return str(s).strip().lower().replace("_", " ")
+def _to_int_list(x):
+    # x can be list[int], list[np.int64], torch tensor, etc.
+    if x is None:
+        return []
+    if isinstance(x, torch.Tensor):
+        return [int(v) for v in x.detach().cpu().tolist()]
+    # assume iterable
+    return [int(v) for v in list(x)]
 
 
 def build_obj_id_to_label_from_pp(prompt_to_obj_ids: dict, prompt_order: list):
     """
-    Robust reverse map using canonicalized prompt keys.
-
-    Why:
-      - HF processor may output prompt_to_obj_ids keys in a normalized form that differs from user args.prompts
-        (e.g., "Tennis_Ball" vs "tennis ball" vs "tennis_ball").
-      - Old exact string matching -> empty mapping -> all labels become "unknown".
-
-    Policy:
-      - Canonical key: lower + strip + '_'->' '
-      - If an obj_id appears in multiple prompts, keep the first prompt in prompt_order.
-      - Stored label is the ORIGINAL prompt string from prompt_order (so your dataset labels are stable).
+    Robust reverse map:
+      - canonicalize prompt keys (case/underscore/space)
+      - cast all obj ids to int (critical)
+      - store label as ORIGINAL prompt string from prompt_order (stable dataset label),
+        then apply optional alias map.
     """
     prompt_to_obj_ids = prompt_to_obj_ids or {}
 
     # canonical user prompt -> original user prompt (first wins)
-    canon_to_label = {}
+    canon_to_user_label = {}
     for p in prompt_order:
         cp = _canon_prompt(p)
-        if cp not in canon_to_label:
-            canon_to_label[cp] = p
+        if cp not in canon_to_user_label:
+            canon_to_user_label[cp] = p
 
-    # reverse mapping from pp
     obj_id_to_label = {}
     for raw_key, ids in prompt_to_obj_ids.items():
         ck = _canon_prompt(raw_key)
-        label = canon_to_label.get(ck, None)
-        if label is None:
+        user_label = canon_to_user_label.get(ck, None)
+        if user_label is None:
             continue
-        for oid in ids:
-            if oid not in obj_id_to_label:
-                obj_id_to_label[oid] = label
+        final_label = apply_alias(user_label)
+        for oid in _to_int_list(ids):
+            if int(oid) not in obj_id_to_label:
+                obj_id_to_label[int(oid)] = final_label
 
     return obj_id_to_label
 
 
 def _score_tuple(info: dict):
-    """
-    Higher is better. Used to resolve fusion collisions within the same frame.
-    Priority:
-      1) quality_score
-      2) tracker_score
-      3) static_score
-      4) mask_area
-    """
     q = float(info.get("quality_score", -1.0))
     ts = float(info.get("tracker_score", 0.0))
     ss = float(info.get("static_score", 0.0))
@@ -244,11 +260,6 @@ def _score_tuple(info: dict):
 
 
 def build_track_history(tracks_dict: dict):
-    """
-    Returns:
-      history[obj_id_str] = list of (frame_idx, centroid_xy, label)
-      plus quick stats: start, end, len
-    """
     history = defaultdict(list)
     for frame_idx_str, frame_data in tracks_dict.items():
         f = int(frame_idx_str)
@@ -294,11 +305,6 @@ def plan_deletions(track_history: dict, rm_min_len: int, rm_static_px: float):
 
 
 def plan_fusions(track_history: dict, delete_set: set, max_gap: int, skip_unknown: bool):
-    """
-    Greedy fusions per label.
-    If same label and 0 < next.start - prev.end < max_gap, fuse next into prev base.
-    Returns fusion_map: old_id_str -> base_id_str
-    """
     label_to_tracks = defaultdict(list)
     for oid_str, hist in track_history.items():
         if oid_str in delete_set:
@@ -330,13 +336,6 @@ def plan_fusions(track_history: dict, delete_set: set, max_gap: int, skip_unknow
 
 
 def apply_delete_and_fusion(tracks_dict: dict, delete_set: set, fusion_map: dict):
-    """
-    Applies delete and fusion to tracks_dict (JSON layer), preserving labels.
-    Also resolves same-frame collisions by keeping the better entry and dropping the other.
-    Returns:
-      new_tracks
-      dropped_old_mask_indices: set[int]
-    """
     new_tracks = {}
     dropped_old_mask_indices = set()
 
@@ -353,8 +352,6 @@ def apply_delete_and_fusion(tracks_dict: dict, delete_set: set, fusion_map: dict
                 out_frame[final_id] = info
                 continue
 
-            # Collision: same final_id in same frame.
-            # Keep the better one, drop the other (and drop its NPZ mask).
             keep = out_frame[final_id]
             cand = info
 
@@ -376,15 +373,7 @@ def rebuild_npz_and_reindex(
     mask_object_ids_list,
     dropped_old_mask_indices: set,
 ):
-    """
-    Rebuild NPZ arrays from the final tracks_dict.
-    Ensures:
-      - deleted masks are removed
-      - fused ids are reflected in NPZ object_ids
-      - mask_idx values in JSON are reindexed to [0..M-1] consistent with new NPZ
-    """
     keep_old_indices = []
-    # Deterministic order: by frame, then by object id numeric if possible, else string
     frame_keys = sorted(tracks_dict.keys(), key=lambda x: int(x))
     for fkey in frame_keys:
         frame_data = tracks_dict[fkey]
@@ -399,9 +388,7 @@ def rebuild_npz_and_reindex(
             keep_old_indices.append(old_idx)
 
     if len(set(keep_old_indices)) != len(keep_old_indices):
-        raise RuntimeError(
-            "Duplicate mask_idx detected in final tracks. This indicates fusion collision was not resolved correctly."
-        )
+        raise RuntimeError("Duplicate mask_idx detected in final tracks.")
 
     old_to_new = {}
     for new_i, old_i in enumerate(keep_old_indices):
@@ -416,7 +403,6 @@ def rebuild_npz_and_reindex(
         new_frame_indices.append(mask_frame_indices_list[old_i])
         new_object_ids.append(mask_object_ids_list[old_i])
 
-    # overwrite object_ids from tracks (single source of truth)
     old_idx_to_final_obj = {}
     for fkey in frame_keys:
         frame_data = tracks_dict[fkey]
@@ -430,7 +416,6 @@ def rebuild_npz_and_reindex(
             raise RuntimeError(f"Kept mask_idx {old_i} not found in tracks during NPZ rebuild.")
         new_object_ids[old_to_new[int(old_i)]] = int(final_oid)
 
-    # Update mask_idx in tracks to new indices
     for fkey in frame_keys:
         frame_data = tracks_dict[fkey]
         for oid_str, info in frame_data.items():
@@ -498,38 +483,59 @@ print("Propagating...")
 for frame_idx in range(num_track_frames):
     model_outputs = model(inference_session=session, frame_idx=int(frame_idx), reverse=False)
 
-    # PP FIRST
     pp = processor.postprocess_outputs(session, model_outputs)
 
-    obj_ids = pp["object_ids"].tolist()
+    obj_ids = _to_int_list(pp["object_ids"])
     masks = pp["masks"]  # Tensor[N, H, W] bool
-    prompt_to_obj_ids = pp.get("prompt_to_obj_ids", {})
+    prompt_to_obj_ids = pp.get("prompt_to_obj_ids", {}) or {}
 
     obj_id_to_label = build_obj_id_to_label_from_pp(prompt_to_obj_ids, args.prompts)
+
+    # ---- fail-fast sanity on frame 0 ----
+    if frame_idx == 0 and len(prompt_to_obj_ids) > 0:
+        labeled_cnt = 0
+        for oid in obj_ids:
+            if int(oid) in obj_id_to_label:
+                labeled_cnt += 1
+        if labeled_cnt == 0:
+            raise RuntimeError(
+                "Label mapping produced 0 labeled objects on frame 0, but prompt_to_obj_ids is non-empty.\n"
+                f"prompt_to_obj_ids={prompt_to_obj_ids}\n"
+                f"obj_ids={obj_ids}\n"
+                f"pp_keys={list(prompt_to_obj_ids.keys())}\n"
+                f"pp_keys_canon={[_canon_prompt(k) for k in list(prompt_to_obj_ids.keys())]}\n"
+                f"args_prompts={list(args.prompts)}\n"
+                f"args_prompts_canon={[_canon_prompt(p) for p in args.prompts]}\n"
+                f"label_alias={label_alias}\n"
+            )
 
     if frame_idx < args.debug_first_frames:
         print(f"[debug] frame={frame_idx} prompt_to_obj_ids={prompt_to_obj_ids}")
         print(f"[debug] frame={frame_idx} obj_ids={obj_ids}")
-        # extra debug: show canonical keys side-by-side (first few frames only)
         if prompt_to_obj_ids:
             pp_keys = list(prompt_to_obj_ids.keys())
             print(f"[debug] frame={frame_idx} pp_prompt_keys={pp_keys}")
             print(f"[debug] frame={frame_idx} pp_prompt_keys_canon={[_canon_prompt(k) for k in pp_keys]}")
         print(f"[debug] frame={frame_idx} args_prompts={list(args.prompts)}")
         print(f"[debug] frame={frame_idx} args_prompts_canon={[_canon_prompt(p) for p in args.prompts]}")
+        # distribution
+        dist = defaultdict(int)
+        for oid in obj_ids:
+            dist[obj_id_to_label.get(int(oid), "unknown")] += 1
+        print(f"[debug] frame={frame_idx} label_dist={dict(dist)}")
 
     obj_id_to_static_score = dict(model_outputs.obj_id_to_score) if model_outputs.obj_id_to_score is not None else {}
-    obj_id_to_tracker_score = (
-        dict(model_outputs.obj_id_to_tracker_score) if model_outputs.obj_id_to_tracker_score is not None else {}
-    )
+    obj_id_to_tracker_score = dict(model_outputs.obj_id_to_tracker_score) if model_outputs.obj_id_to_tracker_score is not None else {}
 
-    removed = set(model_outputs.removed_obj_ids) if model_outputs.removed_obj_ids is not None else set()
-    suppressed = set(model_outputs.suppressed_obj_ids) if model_outputs.suppressed_obj_ids is not None else set()
+    removed = set(_to_int_list(model_outputs.removed_obj_ids)) if model_outputs.removed_obj_ids is not None else set()
+    suppressed = set(_to_int_list(model_outputs.suppressed_obj_ids)) if model_outputs.suppressed_obj_ids is not None else set()
 
     frame_data = {}
     hard_remove_obj_ids = []
 
     for i, obj_id in enumerate(obj_ids):
+        obj_id = int(obj_id)
+
         if obj_id in removed:
             continue
         if obj_id in suppressed:
@@ -581,7 +587,7 @@ for frame_idx in range(num_track_frames):
             prev["last_centroid"] = centroid
 
         quality_score = compute_quality_score(static_score, tracker_score, args.quality_score_mode)
-        label = obj_id_to_label.get(obj_id, "unknown")
+        label = obj_id_to_label.get(int(obj_id), "unknown")
 
         frame_data[str(obj_id)] = {
             "label": label,
@@ -671,6 +677,7 @@ meta = {
     "out_npz": out_npz,
     "out_mp4": out_mp4 if args.vis else "",
     "prompts": list(args.prompts),
+    "label_aliases": dict(label_alias),
     "tracker_score_min": float(args.tracker_score_min),
     "static_score_min": float(args.static_score_min),
     "mask_area_min": int(args.mask_area_min),
@@ -727,10 +734,13 @@ if args.vis:
 
     out = cv2.VideoWriter(out_mp4, cv2.VideoWriter_fourcc(*"mp4v"), fps, (w, h))
 
+    # keep old names + allow your custom ones
     LABEL_COLORS = {
         "ball": (0, 0, 255),
         "racket": (255, 128, 0),
         "unknown": (200, 200, 200),
+        "tennisball": (0, 0, 255),
+        "tennisracket": (255, 128, 0),
     }
 
     frame_idx = 0
