@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "time_unix": 1772231825.0158215,
+    "time_unix": 1772232821.531906,
     "hostname": "dgxh-1.hpc.engr.oregonstate.edu",
     "platform": "Linux-5.14.0-570.58.1.el9_6.x86_64-x86_64-with-glibc2.34",
     "python": "3.11.14",
@@ -44,7 +44,7 @@
       "peak_frame": 68,
       "peak_raw": 0.8303219265128435,
       "peak_score": 0.8303219265128435,
-      "num_pair_frames": 121,
+      "num_pair_frames": 128,
       "params": {
         "sigma_dist_px": 18.0,
         "iou_ref": 0.02,
@@ -561,7 +561,7 @@
         1467,
         800
       ],
-      "mask_idx": 249,
+      "mask_idx": 256,
       "mask_area": 6397
     }
   },
@@ -2940,7 +2940,7 @@
         1258,
         492
       ],
-      "mask_idx": 250,
+      "mask_idx": 257,
       "mask_area": 727
     }
   },
@@ -3118,6 +3118,25 @@
       ],
       "mask_idx": 153,
       "mask_area": 4955
+    },
+    "0": {
+      "label": "tennisball",
+      "tracker_score": 0.992188,
+      "static_score": 0.84375,
+      "quality_score": 0.837158,
+      "centroid": [
+        885.2239999999999,
+        413.42449999999997
+      ],
+      "box_xyxy": [
+        879,
+        409,
+        890,
+        417
+      ],
+      "mask_idx": 249,
+      "mask_area": 166,
+      "hit_score": 0.0002785419754730748
     }
   },
   "79": {
@@ -3177,6 +3196,25 @@
       ],
       "mask_idx": 156,
       "mask_area": 4484
+    },
+    "0": {
+      "label": "tennisball",
+      "tracker_score": 1.0,
+      "static_score": 0.84375,
+      "quality_score": 0.84375,
+      "centroid": [
+        853.4069999999999,
+        443.185
+      ],
+      "box_xyxy": [
+        848,
+        439,
+        858,
+        447
+      ],
+      "mask_idx": 250,
+      "mask_area": 160,
+      "hit_score": 8.244685144551844e-06
     }
   },
   "81": {
@@ -3548,6 +3586,25 @@
       ],
       "mask_idx": 175,
       "mask_area": 3464
+    },
+    "0": {
+      "label": "tennisball",
+      "tracker_score": 0.996094,
+      "static_score": 0.84375,
+      "quality_score": 0.840454,
+      "centroid": [
+        750.124,
+        550.961
+      ],
+      "box_xyxy": [
+        744,
+        546,
+        755,
+        555
+      ],
+      "mask_idx": 251,
+      "mask_area": 104,
+      "hit_score": 0.0
     }
   },
   "91": {
@@ -3568,6 +3625,25 @@
       ],
       "mask_idx": 176,
       "mask_area": 3531
+    },
+    "0": {
+      "label": "tennisball",
+      "tracker_score": 0.996094,
+      "static_score": 0.84375,
+      "quality_score": 0.840454,
+      "centroid": [
+        740.8729999999999,
+        559.528
+      ],
+      "box_xyxy": [
+        736,
+        554,
+        745,
+        564
+      ],
+      "mask_idx": 252,
+      "mask_area": 74,
+      "hit_score": 0.0
     }
   },
   "92": {
@@ -4134,6 +4210,25 @@
       ],
       "mask_idx": 205,
       "mask_area": 4346
+    },
+    "0": {
+      "label": "tennisball",
+      "tracker_score": 0.996094,
+      "static_score": 0.84375,
+      "quality_score": 0.840454,
+      "centroid": [
+        657.7925,
+        559.0074999999999
+      ],
+      "box_xyxy": [
+        655,
+        556,
+        660,
+        561
+      ],
+      "mask_idx": 253,
+      "mask_area": 25,
+      "hit_score": 0.0
     }
   },
   "107": {
@@ -4154,6 +4249,25 @@
       ],
       "mask_idx": 206,
       "mask_area": 4313
+    },
+    "0": {
+      "label": "tennisball",
+      "tracker_score": 0.996094,
+      "static_score": 0.84375,
+      "quality_score": 0.840454,
+      "centroid": [
+        653.9449999999999,
+        555.255
+      ],
+      "box_xyxy": [
+        651,
+        553,
+        656,
+        557
+      ],
+      "mask_idx": 254,
+      "mask_area": 49,
+      "hit_score": 0.0
     }
   },
   "108": {
@@ -4174,6 +4288,25 @@
       ],
       "mask_idx": 207,
       "mask_area": 4359
+    },
+    "0": {
+      "label": "tennisball",
+      "tracker_score": 0.996094,
+      "static_score": 0.84375,
+      "quality_score": 0.840454,
+      "centroid": [
+        650.0975,
+        551.5025
+      ],
+      "box_xyxy": [
+        647,
+        549,
+        652,
+        553
+      ],
+      "mask_idx": 255,
+      "mask_area": 24,
+      "hit_score": 0.0
     }
   },
   "109": {
