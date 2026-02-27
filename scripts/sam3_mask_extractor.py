@@ -420,8 +420,17 @@ def apply_gap_prediction(
             gap = f_next - f_prev
             
             if 1 < gap <= predict_max_gap:
-                info_prev = tracks_dict[str(f_prev)][oid_str]
-                info_next = tracks_dict[str(f_next)][oid_str]
+                f_prev_str = str(f_prev)
+                f_next_str = str(f_next)
+                
+                # Check if the keys still exist (they might have been pruned by rm/fusion post-processing)
+                if f_prev_str not in tracks_dict or oid_str not in tracks_dict[f_prev_str]:
+                    continue
+                if f_next_str not in tracks_dict or oid_str not in tracks_dict[f_next_str]:
+                    continue
+                    
+                info_prev = tracks_dict[f_prev_str][oid_str]
+                info_next = tracks_dict[f_next_str][oid_str]
                 
                 # Fetch masks
                 m_prev = all_masks_list[int(info_prev["mask_idx"])]
