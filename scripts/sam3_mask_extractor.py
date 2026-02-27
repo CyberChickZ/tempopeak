@@ -369,12 +369,17 @@ def apply_delete_and_fusion(tracks_dict: dict, delete_set: set, fusion_map: dict
     return new_tracks, dropped_old_mask_indices
 
 
-def _compute_sdf_torch(mask_tensor: torch.Tensor, max_iters: int=25) -> tuple[torch.Tensor, torch.Tensor]:
+def _compute_sdf_torch(mask_tensor, max_iters: int=25) -> tuple[torch.Tensor, torch.Tensor]:
     """
     Very fast pseudo-SDF using repeated max pooling.
     Returns: dist_in, dist_out
     """
     import torch.nn.functional as F
+    
+    # Ensure it's a tensor
+    if not isinstance(mask_tensor, torch.Tensor):
+        mask_tensor = torch.from_numpy(mask_tensor)
+        
     m = mask_tensor.float().unsqueeze(0).unsqueeze(0)
     dist_in = torch.zeros_like(m)
     dist_out = torch.zeros_like(m)
