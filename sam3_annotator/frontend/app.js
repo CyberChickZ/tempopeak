@@ -109,6 +109,8 @@ async function scanDirectory() {
                 item.onclick = () => selectVideoItem(v, item);
                 listContainer.appendChild(item);
             });
+            // Auto-load first video
+            selectVideoItem(data.videos[0], listContainer.children[0]);
         }
     } catch (err) {
         alert(err.message);
@@ -119,12 +121,15 @@ async function scanDirectory() {
 let selectedVideoName = null;
 let activeVideoListItem = null;
 
-function selectVideoItem(videoName, element) {
+async function selectVideoItem(videoName, element) {
     if (selectedVideoName === videoName) return;
 
     if (hasUnsavedChanges) {
-        if (!confirm("You have unsaved changes. Are you sure you want to load a different video and lose them?")) {
-            return;
+        // Auto-save before switching video
+        try {
+            await fetch('/api/save_overwrite', { method: 'POST' });
+        } catch (e) {
+            console.error("Auto save failed", e);
         }
     }
 
@@ -202,8 +207,21 @@ async function loadVideoData(videoName) {
 
             renderTimelineTracks();
 
-            // Initial render
-            onFrameChange(0);
+            // Initial render - Jump to peak hit score frame
+            let targetFrame = 0;
+            let maxScore = -1;
+            for (let f = 0; f <= totalFrames; f++) {
+                if (parsedTracks[f]) {
+                    Object.values(parsedTracks[f]).forEach(info => {
+                        if (info.hit_score !== undefined && info.hit_score > maxScore) {
+                            maxScore = info.hit_score;
+                            targetFrame = f;
+                        }
+                    });
+                }
+            }
+            setFrame(targetFrame);
+
             document.getElementById('loading-msg').innerText = "Loaded successfully!";
             setTimeout(() => { document.getElementById('loading-msg').innerText = ""; }, 3000);
         };
@@ -304,6 +322,55 @@ function renderTimelineTracks() {
             row.appendChild(bar);
         });
 
+        // Add Hit Score Curve
+        let hasHitScore = false;
+        let points = [];
+        for (let f = 0; f <= totalFrames; f++) {
+            if (parsedTracks[f] && parsedTracks[f][oid]) {
+                const hs = parsedTracks[f][oid].hit_score;
+                if (hs !== undefined) {
+                    hasHitScore = true;
+                    points.push({ f: f, s: hs });
+                }
+            }
+        }
+
+        if (hasHitScore && points.length > 0) {
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.style.position = "absolute";
+            svg.style.left = "0";
+            svg.style.top = "0";
+            svg.style.width = "100%";
+            svg.style.height = "100%";
+            svg.style.pointerEvents = "none";
+            svg.setAttribute("preserveAspectRatio", "none");
+            svg.setAttribute("viewBox", "0 0 1000 100");
+
+            let d = "";
+            let started = false;
+
+            for (let p of points) {
+                const x = (p.f / totalFrames) * 1000;
+                const y = 100 - (p.s * 100);
+                if (!started) {
+                    d += `M ${x} ${y} `;
+                    started = true;
+                } else {
+                    d += `L ${x} ${y} `;
+                }
+            }
+            if (d) {
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute("d", d);
+                path.setAttribute("fill", "none");
+                path.setAttribute("stroke", "#3b82f6");
+                path.setAttribute("stroke-width", "3");
+                path.setAttribute("vector-effect", "non-scaling-stroke");
+                svg.appendChild(path);
+                row.appendChild(svg);
+            }
+        }
+
         container.appendChild(row);
     });
 
@@ -380,36 +447,52 @@ document.getElementById('fps-input').addEventListener('change', (e) => {
     }
 });
 
+async function applyHitScoreCalibration() {
+    try {
+        const res = await fetch('/api/edit_hit_score_gaussian', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ frame_idx: currentFrame, sigma: 2.5 })
+        });
+        if (res.ok) {
+            const dlRes = await fetch('/api/download_json');
+            const jsonText = await dlRes.text();
+            parsedTracks = JSON.parse(jsonText);
+            delete parsedTracks["_meta"];
+            buildTimelineData();
+            renderTimelineTracks();
+            onFrameChange(currentFrame);
+            hasUnsavedChanges = true;
+        } else {
+            console.error("Failed to edit hit score");
+        }
+    } catch (err) {
+        console.error("Error applying hit score:", err);
+    }
+}
+
+document.getElementById('calibrate-btn').addEventListener('click', applyHitScoreCalibration);
+
 // Keyboard
 document.addEventListener('keydown', async e => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
     if (e.key === 'a' || e.key === 'ArrowLeft') setFrame(currentFrame - 1);
     if (e.key === 'd' || e.key === 'ArrowRight') setFrame(currentFrame + 1);
+    if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (activeVideoListItem && activeVideoListItem.previousElementSibling) {
+            activeVideoListItem.previousElementSibling.click();
+        }
+    }
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (activeVideoListItem && activeVideoListItem.nextElementSibling) {
+            activeVideoListItem.nextElementSibling.click();
+        }
+    }
     if (e.key === ' ') {
         e.preventDefault();
-        // Invoke gaussian fall-off hit score modification for the current frame
-        try {
-            const res = await fetch('/api/edit_hit_score_gaussian', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ frame_idx: currentFrame, sigma: 2.5 })
-            });
-            if (res.ok) {
-                // To keep frontend strictly in sync, just re-download the JSON and re-render.
-                const dlRes = await fetch('/api/download_json');
-                const jsonText = await dlRes.text();
-                parsedTracks = JSON.parse(jsonText);
-                delete parsedTracks["_meta"];
-                buildTimelineData();
-                renderTimelineTracks();
-                onFrameChange(currentFrame);
-                hasUnsavedChanges = true;
-            } else {
-                console.error("Failed to edit hit score");
-            }
-        } catch (err) {
-            console.error("Error applying hit score:", err);
-        }
+        await applyHitScoreCalibration();
     }
 });
 
