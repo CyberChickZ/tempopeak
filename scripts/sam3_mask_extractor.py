@@ -91,6 +91,10 @@ parser.add_argument(
     help='How to compute "quality_score" from (static_score, tracker_score): none|mul|min',
 )
 
+# Post-processing
+parser.add_argument("--post_process_rm", action="store_true", help="Remove tracks that are too short (<15 frames) or static (<= 5px average movement).")
+parser.add_argument("--post_process_fusion", action="store_true", help="Fuse tracks with the same label if they are separated by < 5 frames.")
+
 # Debug
 parser.add_argument("--print_every", type=int, default=30, help="print progress every N frames (<=0 disables)")
 parser.add_argument("--debug_first_frames", type=int, default=1, help="print mapping for first K frames")
@@ -396,64 +400,139 @@ print("Time (s):", round(t1 - t0, 2))
 
 
 # -------------------------
-# Post-processing: Filter out tracks
+# Post-processing: Filter and Fuse tracks
 # -------------------------
-print("Post-processing tracks...")
-track_history = {} # obj_id -> list of (frame_idx, centroid)
-for frame_idx_str, frame_data in tracks.items():
-    f_idx = int(frame_idx_str)
-    for obj_id_str, info in frame_data.items():
-        if obj_id_str not in track_history:
-            track_history[obj_id_str] = []
-        track_history[obj_id_str].append((f_idx, info["centroid"]))
-
-obj_ids_to_delete = set()
-for obj_id_str, history in track_history.items():
-    history.sort(key=lambda x: x[0])
-    num_frames_in_track = len(history)
-    
-    # Condition 1: total length < 15 frames
-    if num_frames_in_track < 15:
-        obj_ids_to_delete.add(obj_id_str)
-        continue
-    
-    # Condition 2: average movement <= 5px
-    total_movement = 0.0
-    for i in range(1, len(history)):
-        c1 = history[i-1][1]
-        c2 = history[i][1]
-        dist = ((c1[0] - c2[0])**2 + (c1[1] - c2[1])**2)**0.5
-        total_movement += dist
-    
-    avg_movement = total_movement / (num_frames_in_track - 1) if num_frames_in_track > 1 else 0
-    if avg_movement <= 5.0:
-        obj_ids_to_delete.add(obj_id_str)
-
-if obj_ids_to_delete:
-    print(f"Filtering out {len(obj_ids_to_delete)} tracks: {obj_ids_to_delete}")
-    for frame_idx_str in list(tracks.keys()):
-        for obj_id_str in list(tracks[frame_idx_str].keys()):
-            if obj_id_str in obj_ids_to_delete:
-                del tracks[frame_idx_str][obj_id_str]
-    
-    valid_mask_indices = []
-    old_to_new_mask_idx = {}
-    for i, oid in enumerate(mask_object_ids):
-        if str(oid) not in obj_ids_to_delete:
-            old_to_new_mask_idx[i] = len(valid_mask_indices)
-            valid_mask_indices.append(i)
-            
-    all_masks = [all_masks[i] for i in valid_mask_indices]
-    mask_frame_indices = [mask_frame_indices[i] for i in valid_mask_indices]
-    mask_object_ids = [mask_object_ids[i] for i in valid_mask_indices]
-    
+if args.post_process_rm or args.post_process_fusion:
+    print("Post-processing tracks...")
+    track_history = {} # obj_id -> list of (frame_idx, centroid, label)
     for frame_idx_str, frame_data in tracks.items():
+        f_idx = int(frame_idx_str)
         for obj_id_str, info in frame_data.items():
-            old_idx = info["mask_idx"]
-            if old_idx in old_to_new_mask_idx:
-                info["mask_idx"] = old_to_new_mask_idx[old_idx]
+            if obj_id_str not in track_history:
+                track_history[obj_id_str] = []
+            track_history[obj_id_str].append((f_idx, info["centroid"], info["label"]))
 
-print("Total kept masks after filtering:", len(all_masks))
+    obj_ids_to_delete = set()
+    
+    if args.post_process_rm:
+        for obj_id_str, history in track_history.items():
+            history.sort(key=lambda x: x[0])
+            num_frames_in_track = len(history)
+            
+            # Condition 1: total length < 15 frames
+            if num_frames_in_track < 15:
+                obj_ids_to_delete.add(obj_id_str)
+                continue
+            
+            # Condition 2: average movement <= 5px
+            total_movement = 0.0
+            for i in range(1, len(history)):
+                c1 = history[i-1][1]
+                c2 = history[i][1]
+                dist = ((c1[0] - c2[0])**2 + (c1[1] - c2[1])**2)**0.5
+                total_movement += dist
+            
+            avg_movement = total_movement / (num_frames_in_track - 1) if num_frames_in_track > 1 else 0
+            if avg_movement <= 5.0:
+                obj_ids_to_delete.add(obj_id_str)
+
+        if obj_ids_to_delete:
+            print(f"Filtering out {len(obj_ids_to_delete)} tracks based on short/static criteria.")
+            # We don't delete them from `tracks` just yet, as we need a unified deletion pass to remap masks
+
+    fusion_mapping = {}  # old_obj_id -> merged_obj_id
+    if args.post_process_fusion:
+        # Sort surviving tracks by their start frame
+        surviving_tracks = []
+        for obj_id_str, history in track_history.items():
+            if obj_id_str not in obj_ids_to_delete:
+                history.sort(key=lambda x: x[0])
+                start_frame = history[0][0]
+                end_frame = history[-1][0]
+                # Assuming label is mostly consistent, grab the first one
+                label = history[0][2]
+                surviving_tracks.append({
+                    "id": obj_id_str,
+                    "start": start_frame,
+                    "end": end_frame,
+                    "label": label
+                })
+        
+        # Sort by start frame
+        surviving_tracks.sort(key=lambda x: x["start"])
+        
+        merged_groups = [] # list of lists of obj_id_strs
+        
+        # Greedy merging: 
+        # For each track, check if it can be appended to an existing merged_group
+        for track_info in surviving_tracks:
+            appended = False
+            if track_info["label"] != "unknown": # Do not automatically merge unknowns
+                for group in merged_groups:
+                    last_track_in_group = [t for t in surviving_tracks if t["id"] == group[-1]][0]
+                    # Check conditions:
+                    # 1. Same label
+                    # 2. End of last track to start of current track is < 5 frames
+                    # 3. Must be strictly after (start > last end), but we allow some overlap implicitly if needed, or strictly strictly check:
+                    if last_track_in_group["label"] == track_info["label"] and \
+                       0 < (track_info["start"] - last_track_in_group["end"]) < 5:
+                        # Merge!
+                        group.append(track_info["id"])
+                        appended = True
+                        break
+            if not appended:
+                merged_groups.append([track_info["id"]])
+                
+        for group in merged_groups:
+            if len(group) > 1:
+                base_id = group[0]
+                for other_id in group[1:]:
+                    fusion_mapping[other_id] = base_id
+        
+        if fusion_mapping:
+            print(f"Fusing {len(fusion_mapping)} tracks.")
+
+    if obj_ids_to_delete or fusion_mapping:
+        # Apply deletions and fusions to `tracks`
+        new_tracks = {}
+        for frame_idx_str, frame_data in tracks.items():
+            new_tracks[frame_idx_str] = {}
+            for obj_id_str, info in frame_data.items():
+                if obj_id_str in obj_ids_to_delete:
+                    continue
+                
+                final_obj_id = fusion_mapping.get(obj_id_str, obj_id_str)
+                # Keep the same info but we will place it under final_obj_id
+                # Note: if there is an overlap in the same frame after fusion, 
+                # we just overwrite (the latter one is kept). Usually they shouldn't overlap if they were separate tracks.
+                new_tracks[frame_idx_str][final_obj_id] = info
+                
+        tracks = new_tracks
+        
+        # Remap masks arrays
+        valid_mask_indices = []
+        old_to_new_mask_idx = {}
+        for i, oid in enumerate(mask_object_ids):
+            oid_str = str(oid)
+            if oid_str not in obj_ids_to_delete:
+                final_oid_str = fusion_mapping.get(oid_str, oid_str)
+                old_to_new_mask_idx[i] = len(valid_mask_indices)
+                valid_mask_indices.append(i)
+                # update the mask_object_ids array to the fused id!
+                mask_object_ids[i] = int(final_oid_str)
+                
+        all_masks = [all_masks[i] for i in valid_mask_indices]
+        mask_frame_indices = [mask_frame_indices[i] for i in valid_mask_indices]
+        mask_object_ids = [mask_object_ids[i] for i in valid_mask_indices]
+        
+        # update mask_idx in `tracks`
+        for frame_idx_str, frame_data in tracks.items():
+            for obj_id_str, info in frame_data.items():
+                old_idx = info["mask_idx"]
+                if old_idx in old_to_new_mask_idx:
+                    info["mask_idx"] = old_to_new_mask_idx[old_idx]
+
+    print("Total kept masks after post-processing:", len(all_masks))
 
 
 # -------------------------
@@ -487,6 +566,8 @@ meta = {
     "processing_device": args.processing_device,
     "video_storage_device": args.video_storage_device,
     "plan": "A_hard_remove_on_reject",
+    "post_process_rm": bool(args.post_process_rm),
+    "post_process_fusion": bool(args.post_process_fusion),
 }
 
 json_payload = {"_meta": meta}
