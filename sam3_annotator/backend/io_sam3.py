@@ -129,6 +129,30 @@ class SAM3DataStore:
                 deleted_any = True
         return deleted_any
 
+    def apply_hit_score_gaussian(self, peak_frame: int, sigma: float = 2.5):
+        import math
+        # 1. Clear all existing hit_scores
+        for f, frame_data in self.tracks.items():
+            for oid, info in frame_data.items():
+                if "hit_score" in info:
+                    info["hit_score"] = 0.0
+                    
+        # 2. Apply new Gaussian hit scores around the peak
+        # Only assign it to objects labeled as ball
+        # According to previous discussions, hit_score was assigned to the 'ball' mainly.
+        # So we identify 'ball' objects:
+        for f, frame_data in self.tracks.items():
+            if abs(f - peak_frame) <= 15:
+                # Calculate gaussian value
+                score = math.exp(-((f - peak_frame) ** 2) / (2 * (sigma ** 2)))
+                # Update ball and racket tracks
+                for oid, info in frame_data.items():
+                    lbl = info.get("label", info.get("prompt", ""))
+                    if lbl.lower() in ("tennisball", "tennis_ball", "tennisracket", "tennis_racket"):
+                        info["hit_score"] = float(score)
+        return True
+
+
     def generate_download_json(self) -> bytes:
         stringified = {str(k): v for k, v in self.tracks.items()}
         return json.dumps(stringified, indent=2).encode('utf-8')
