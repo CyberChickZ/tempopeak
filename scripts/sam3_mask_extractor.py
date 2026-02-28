@@ -54,8 +54,7 @@ parser = argparse.ArgumentParser()
 
 # IO
 parser.add_argument("--hf_local_model", type=str, required=True)
-parser.add_argument("--video_name", type=str, required=True)
-parser.add_argument("--video_path", type=str, required=True)
+parser.add_argument("--video_dir", type=str, required=True)
 parser.add_argument("--out_dir", type=str, required=True)
 parser.add_argument("--vis", action="store_true")
 
@@ -133,13 +132,10 @@ args = parser.parse_args()
 # -------------------------
 if not os.path.isdir(args.hf_local_model):
     raise FileNotFoundError(f"hf_local_model not found: {args.hf_local_model}")
-if not os.path.isfile(args.video_path):
-    raise FileNotFoundError(f"video_path not found: {args.video_path}")
+if not os.path.isdir(args.video_dir):
+    raise FileNotFoundError(f"video_dir not found: {args.video_dir}")
 
 os.makedirs(args.out_dir, exist_ok=True)
-out_json = os.path.join(args.out_dir, f"{args.video_name}.json")
-out_npz = os.path.join(args.out_dir, f"{args.video_name}.npz")
-out_mp4 = os.path.join(args.out_dir, f"{args.video_name}_vis.mp4")
 
 
 # -------------------------
@@ -797,383 +793,401 @@ processor = Sam3VideoProcessor.from_pretrained(args.hf_local_model, local_files_
 # -------------------------
 # Load video
 # -------------------------
-print("Loading video...")
-video_frames, _ = load_video(args.video_path)
-num_frames = len(video_frames)
+import glob
+mp4_files = sorted(glob.glob(os.path.join(args.video_dir, "*.mp4")))
+print(f"Found {len(mp4_files)} videos in {args.video_dir}")
 
-if args.max_frames > 0:
-    num_track_frames = min(num_frames, args.max_frames)
-else:
-    num_track_frames = num_frames
+for video_path in mp4_files:
+    video_name = os.path.splitext(os.path.basename(video_path))[0]
+    out_json = os.path.join(args.out_dir, f"{video_name}.json")
+    out_npz = os.path.join(args.out_dir, f"{video_name}.npz")
+    out_mp4 = os.path.join(args.out_dir, f"{video_name}_vis.mp4")
 
-print("Total frames:", num_frames, "Tracking frames:", num_track_frames)
+    if os.path.exists(out_npz) and os.path.exists(out_json):
+        print(f"Skipping {video_name} (already processed)")
+        continue
 
-# -------------------------
-# Init session
-# -------------------------
-session = processor.init_video_session(
-    video=video_frames,
-    inference_device=device,
-    processing_device=args.processing_device,
-    video_storage_device=args.video_storage_device,
-    dtype=torch_dtype,
-)
-for p in args.prompts:
-    session = processor.add_text_prompt(inference_session=session, text=p)
+    print(f"\n=========================================")
+    print(f"Processing {video_name}...")
+    print(f"=========================================")
 
-# -------------------------
-# Tracking state (external gating)
-# -------------------------
-state = {}
+    print("Loading video...")
+    video_frames, _ = load_video(video_path)
+    num_frames = len(video_frames)
 
-# -------------------------
-# Main loop
-# -------------------------
-tracks = {}
+    if args.max_frames > 0:
+        num_track_frames = min(num_frames, args.max_frames)
+    else:
+        num_track_frames = num_frames
 
-all_masks = []
-mask_frame_indices = []
-mask_object_ids = []
-mask_counter = 0
+    print("Total frames:", num_frames, "Tracking frames:", num_track_frames)
 
-t0 = time.time()
-print("Propagating...")
+    # -------------------------
+    # Init session
+    # -------------------------
+    session = processor.init_video_session(
+        video=video_frames,
+        inference_device=device,
+        processing_device=args.processing_device,
+        video_storage_device=args.video_storage_device,
+        dtype=torch_dtype,
+    )
+    for p in args.prompts:
+        session = processor.add_text_prompt(inference_session=session, text=p)
 
-for frame_idx in range(num_track_frames):
-    model_outputs = model(inference_session=session, frame_idx=int(frame_idx), reverse=False)
+    # -------------------------
+    # Tracking state (external gating)
+    # -------------------------
+    state = {}
 
-    pp = processor.postprocess_outputs(session, model_outputs)
+    # -------------------------
+    # Main loop
+    # -------------------------
+    tracks = {}
 
-    obj_ids = _to_int_list(pp["object_ids"])
-    masks = pp["masks"]  # Tensor[N, H, W] bool
-    prompt_to_obj_ids = pp.get("prompt_to_obj_ids", {}) or {}
+    all_masks = []
+    mask_frame_indices = []
+    mask_object_ids = []
+    mask_counter = 0
 
-    obj_id_to_label = build_obj_id_to_label_from_pp(prompt_to_obj_ids, args.prompts)
+    t0 = time.time()
+    print("Propagating...")
 
-    # ---- fail-fast sanity on frame 0 ----
-    if frame_idx == 0 and len(prompt_to_obj_ids) > 0:
-        labeled_cnt = 0
-        for oid in obj_ids:
-            if int(oid) in obj_id_to_label:
-                labeled_cnt += 1
-        if labeled_cnt == 0:
-            raise RuntimeError(
-                "Label mapping produced 0 labeled objects on frame 0, but prompt_to_obj_ids is non-empty.\n"
-                f"prompt_to_obj_ids={prompt_to_obj_ids}\n"
-                f"obj_ids={obj_ids}\n"
-                f"pp_keys={list(prompt_to_obj_ids.keys())}\n"
-                f"pp_keys_canon={[_canon_prompt(k) for k in list(prompt_to_obj_ids.keys())]}\n"
-                f"args_prompts={list(args.prompts)}\n"
-                f"args_prompts_canon={[_canon_prompt(p) for p in args.prompts]}\n"
-                f"label_alias={label_alias}\n"
+    for frame_idx in range(num_track_frames):
+        model_outputs = model(inference_session=session, frame_idx=int(frame_idx), reverse=False)
+
+        pp = processor.postprocess_outputs(session, model_outputs)
+
+        obj_ids = _to_int_list(pp["object_ids"])
+        masks = pp["masks"]  # Tensor[N, H, W] bool
+        prompt_to_obj_ids = pp.get("prompt_to_obj_ids", {}) or {}
+
+        obj_id_to_label = build_obj_id_to_label_from_pp(prompt_to_obj_ids, args.prompts)
+
+        # ---- fail-fast sanity on frame 0 ----
+        if frame_idx == 0 and len(prompt_to_obj_ids) > 0:
+            labeled_cnt = 0
+            for oid in obj_ids:
+                if int(oid) in obj_id_to_label:
+                    labeled_cnt += 1
+            if labeled_cnt == 0:
+                raise RuntimeError(
+                    "Label mapping produced 0 labeled objects on frame 0, but prompt_to_obj_ids is non-empty.\n"
+                    f"prompt_to_obj_ids={prompt_to_obj_ids}\n"
+                    f"obj_ids={obj_ids}\n"
+                    f"pp_keys={list(prompt_to_obj_ids.keys())}\n"
+                    f"pp_keys_canon={[_canon_prompt(k) for k in list(prompt_to_obj_ids.keys())]}\n"
+                    f"args_prompts={list(args.prompts)}\n"
+                    f"args_prompts_canon={[_canon_prompt(p) for p in args.prompts]}\n"
+                    f"label_alias={label_alias}\n"
+                )
+
+        if frame_idx < args.debug_first_frames:
+            print(f"[debug] frame={frame_idx} prompt_to_obj_ids={prompt_to_obj_ids}")
+            print(f"[debug] frame={frame_idx} obj_ids={obj_ids}")
+            if prompt_to_obj_ids:
+                pp_keys = list(prompt_to_obj_ids.keys())
+                print(f"[debug] frame={frame_idx} pp_prompt_keys={pp_keys}")
+                print(f"[debug] frame={frame_idx} pp_prompt_keys_canon={[_canon_prompt(k) for k in pp_keys]}")
+            print(f"[debug] frame={frame_idx} args_prompts={list(args.prompts)}")
+            print(f"[debug] frame={frame_idx} args_prompts_canon={[_canon_prompt(p) for p in args.prompts]}")
+            # distribution
+            dist = defaultdict(int)
+            for oid in obj_ids:
+                dist[obj_id_to_label.get(int(oid), "unknown")] += 1
+            print(f"[debug] frame={frame_idx} label_dist={dict(dist)}")
+
+        obj_id_to_static_score = dict(model_outputs.obj_id_to_score) if model_outputs.obj_id_to_score is not None else {}
+        obj_id_to_tracker_score = dict(model_outputs.obj_id_to_tracker_score) if model_outputs.obj_id_to_tracker_score is not None else {}
+
+        removed = set(_to_int_list(model_outputs.removed_obj_ids)) if model_outputs.removed_obj_ids is not None else set()
+        suppressed = set(_to_int_list(model_outputs.suppressed_obj_ids)) if model_outputs.suppressed_obj_ids is not None else set()
+
+        frame_data = {}
+        hard_remove_obj_ids = []
+
+        for i, obj_id in enumerate(obj_ids):
+            obj_id = int(obj_id)
+
+            if obj_id in removed:
+                continue
+            if obj_id in suppressed:
+                continue
+
+            mask = masks[i]
+
+            area = int(mask.sum().item())
+            if area < args.mask_area_min:
+                continue
+
+            centroid = mask_centroid(mask)
+            if centroid is None:
+                continue
+
+            box = mask_box_xyxy(mask)
+            if box is None:
+                continue
+
+            static_score = float(obj_id_to_static_score.get(obj_id, 0.0))
+            tracker_score = float(obj_id_to_tracker_score.get(obj_id, 0.0))
+
+            if tracker_score < args.tracker_score_min:
+                continue
+            if args.static_score_min > 0.0 and static_score < args.static_score_min:
+                continue
+
+            prev = state.get(obj_id)
+            if args.max_jump_px > 0.0 and prev is not None:
+                dist = l2(centroid, prev["last_centroid"])
+                if dist > float(args.max_jump_px):
+                    prev["lost_count"] += 1
+                    if args.max_lost <= 0 or prev["lost_count"] > int(args.max_lost):
+                        hard_remove_obj_ids.append(int(obj_id))
+                    continue
+
+            if prev is None:
+                state[obj_id] = {"last_centroid": centroid, "lost_count": 0, "last_velocity": (0.0, 0.0)}
+                prev = state[obj_id]
+            else:
+                prev["lost_count"] = 0
+                pc = prev["last_centroid"]
+
+                if args.ema_alpha < 1.0:
+                    a = float(args.ema_alpha)
+                    centroid = (a * centroid[0] + (1.0 - a) * pc[0], a * centroid[1] + (1.0 - a) * pc[1])
+
+                prev["last_velocity"] = (centroid[0] - pc[0], centroid[1] - pc[1])
+                prev["last_centroid"] = centroid
+
+            quality_score = compute_quality_score(static_score, tracker_score, args.quality_score_mode)
+            label = obj_id_to_label.get(int(obj_id), "unknown")
+
+            frame_data[str(obj_id)] = {
+                "label": label,
+                "tracker_score": round(tracker_score, 6),
+                "static_score": round(static_score, 6),
+                "quality_score": round(float(quality_score), 6) if quality_score >= 0 else -1.0,
+                "centroid": [round(float(centroid[0]), 3), round(float(centroid[1]), 3)],
+                "box_xyxy": [int(box[0]), int(box[1]), int(box[2]), int(box[3])],
+                "mask_idx": int(mask_counter),
+                "mask_area": int(area),
+            }
+
+            all_masks.append(mask.detach().to("cpu").numpy().astype(np.bool_))
+            mask_frame_indices.append(int(frame_idx))
+            mask_object_ids.append(int(obj_id))
+            mask_counter += 1
+
+        if hard_remove_obj_ids:
+            for oid in hard_remove_obj_ids:
+                try:
+                    session.remove_object(int(oid))
+                except Exception as e:
+                    raise RuntimeError(f"session.remove_object({oid}) failed at frame {frame_idx}: {e}") from e
+                state.pop(int(oid), None)
+
+        tracks[str(frame_idx)] = frame_data
+
+        if args.print_every > 0 and (frame_idx % args.print_every == 0):
+            print("frame", frame_idx, "kept_masks", mask_counter, "kept_objs_this_frame", len(frame_data))
+
+    t1 = time.time()
+    print("Total kept masks before post-processing:", len(all_masks))
+    print("Time (s):", round(t1 - t0, 2))
+
+
+    # -------------------------
+    # Post-processing: delete and fuse (JSON + NPZ consistent)
+    # -------------------------
+    if args.post_process_rm or args.post_process_fusion:
+        print("Post-processing tracks...")
+        track_history = build_track_history(tracks)
+
+        delete_set = set()
+        if args.post_process_rm:
+            delete_set = plan_deletions(track_history, args.rm_min_len, args.rm_static_px)
+            if delete_set:
+                print("Delete tracks:", len(delete_set))
+
+        fusion_map = {}
+        if args.post_process_fusion:
+            fusion_map = plan_fusions(track_history, delete_set, args.fusion_max_gap, args.fusion_skip_unknown)
+            if fusion_map:
+                print("Fuse tracks:", len(fusion_map))
+
+        if delete_set or fusion_map:
+            tracks, dropped_old_mask_indices = apply_delete_and_fusion(tracks, delete_set, fusion_map)
+
+            tracks, all_masks, mask_frame_indices, mask_object_ids = rebuild_npz_and_reindex(
+                tracks,
+                all_masks,
+                mask_frame_indices,
+                mask_object_ids,
+                dropped_old_mask_indices,
             )
 
-    if frame_idx < args.debug_first_frames:
-        print(f"[debug] frame={frame_idx} prompt_to_obj_ids={prompt_to_obj_ids}")
-        print(f"[debug] frame={frame_idx} obj_ids={obj_ids}")
-        if prompt_to_obj_ids:
-            pp_keys = list(prompt_to_obj_ids.keys())
-            print(f"[debug] frame={frame_idx} pp_prompt_keys={pp_keys}")
-            print(f"[debug] frame={frame_idx} pp_prompt_keys_canon={[_canon_prompt(k) for k in pp_keys]}")
-        print(f"[debug] frame={frame_idx} args_prompts={list(args.prompts)}")
-        print(f"[debug] frame={frame_idx} args_prompts_canon={[_canon_prompt(p) for p in args.prompts]}")
-        # distribution
-        dist = defaultdict(int)
-        for oid in obj_ids:
-            dist[obj_id_to_label.get(int(oid), "unknown")] += 1
-        print(f"[debug] frame={frame_idx} label_dist={dict(dist)}")
+        print("Total kept masks after post-processing:", len(all_masks))
 
-    obj_id_to_static_score = dict(model_outputs.obj_id_to_score) if model_outputs.obj_id_to_score is not None else {}
-    obj_id_to_tracker_score = dict(model_outputs.obj_id_to_tracker_score) if model_outputs.obj_id_to_tracker_score is not None else {}
+        if args.post_process_predict:
+            print(f"Applying Gap Prediction Phase (max_gap={args.predict_max_gap})...")
+            # Rebuild history after deletions and fusions, so gap logic works linearly!
+            track_history_updated = build_track_history(tracks)
+            tracks, all_masks, mask_frame_indices, mask_object_ids = apply_gap_prediction(
+                tracks_dict=tracks,
+                track_history=track_history_updated,
+                all_masks_list=all_masks,
+                mask_frame_indices_list=mask_frame_indices,
+                mask_object_ids_list=mask_object_ids,
+                predict_max_gap=int(args.predict_max_gap)
+            )
+            print("Total kept masks after gap prediction:", len(all_masks))
 
-    removed = set(_to_int_list(model_outputs.removed_obj_ids)) if model_outputs.removed_obj_ids is not None else set()
-    suppressed = set(_to_int_list(model_outputs.suppressed_obj_ids)) if model_outputs.suppressed_obj_ids is not None else set()
-
-    frame_data = {}
-    hard_remove_obj_ids = []
-
-    for i, obj_id in enumerate(obj_ids):
-        obj_id = int(obj_id)
-
-        if obj_id in removed:
-            continue
-        if obj_id in suppressed:
-            continue
-
-        mask = masks[i]
-
-        area = int(mask.sum().item())
-        if area < args.mask_area_min:
-            continue
-
-        centroid = mask_centroid(mask)
-        if centroid is None:
-            continue
-
-        box = mask_box_xyxy(mask)
-        if box is None:
-            continue
-
-        static_score = float(obj_id_to_static_score.get(obj_id, 0.0))
-        tracker_score = float(obj_id_to_tracker_score.get(obj_id, 0.0))
-
-        if tracker_score < args.tracker_score_min:
-            continue
-        if args.static_score_min > 0.0 and static_score < args.static_score_min:
-            continue
-
-        prev = state.get(obj_id)
-        if args.max_jump_px > 0.0 and prev is not None:
-            dist = l2(centroid, prev["last_centroid"])
-            if dist > float(args.max_jump_px):
-                prev["lost_count"] += 1
-                if args.max_lost <= 0 or prev["lost_count"] > int(args.max_lost):
-                    hard_remove_obj_ids.append(int(obj_id))
-                continue
-
-        if prev is None:
-            state[obj_id] = {"last_centroid": centroid, "lost_count": 0, "last_velocity": (0.0, 0.0)}
-            prev = state[obj_id]
-        else:
-            prev["lost_count"] = 0
-            pc = prev["last_centroid"]
-
-            if args.ema_alpha < 1.0:
-                a = float(args.ema_alpha)
-                centroid = (a * centroid[0] + (1.0 - a) * pc[0], a * centroid[1] + (1.0 - a) * pc[1])
-
-            prev["last_velocity"] = (centroid[0] - pc[0], centroid[1] - pc[1])
-            prev["last_centroid"] = centroid
-
-        quality_score = compute_quality_score(static_score, tracker_score, args.quality_score_mode)
-        label = obj_id_to_label.get(int(obj_id), "unknown")
-
-        frame_data[str(obj_id)] = {
-            "label": label,
-            "tracker_score": round(tracker_score, 6),
-            "static_score": round(static_score, 6),
-            "quality_score": round(float(quality_score), 6) if quality_score >= 0 else -1.0,
-            "centroid": [round(float(centroid[0]), 3), round(float(centroid[1]), 3)],
-            "box_xyxy": [int(box[0]), int(box[1]), int(box[2]), int(box[3])],
-            "mask_idx": int(mask_counter),
-            "mask_area": int(area),
-        }
-
-        all_masks.append(mask.detach().to("cpu").numpy().astype(np.bool_))
-        mask_frame_indices.append(int(frame_idx))
-        mask_object_ids.append(int(obj_id))
-        mask_counter += 1
-
-    if hard_remove_obj_ids:
-        for oid in hard_remove_obj_ids:
-            try:
-                session.remove_object(int(oid))
-            except Exception as e:
-                raise RuntimeError(f"session.remove_object({oid}) failed at frame {frame_idx}: {e}") from e
-            state.pop(int(oid), None)
-
-    tracks[str(frame_idx)] = frame_data
-
-    if args.print_every > 0 and (frame_idx % args.print_every == 0):
-        print("frame", frame_idx, "kept_masks", mask_counter, "kept_objs_this_frame", len(frame_data))
-
-t1 = time.time()
-print("Total kept masks before post-processing:", len(all_masks))
-print("Time (s):", round(t1 - t0, 2))
-
-
-# -------------------------
-# Post-processing: delete and fuse (JSON + NPZ consistent)
-# -------------------------
-if args.post_process_rm or args.post_process_fusion:
-    print("Post-processing tracks...")
-    track_history = build_track_history(tracks)
-
-    delete_set = set()
-    if args.post_process_rm:
-        delete_set = plan_deletions(track_history, args.rm_min_len, args.rm_static_px)
-        if delete_set:
-            print("Delete tracks:", len(delete_set))
-
-    fusion_map = {}
-    if args.post_process_fusion:
-        fusion_map = plan_fusions(track_history, delete_set, args.fusion_max_gap, args.fusion_skip_unknown)
-        if fusion_map:
-            print("Fuse tracks:", len(fusion_map))
-
-    if delete_set or fusion_map:
-        tracks, dropped_old_mask_indices = apply_delete_and_fusion(tracks, delete_set, fusion_map)
-
-        tracks, all_masks, mask_frame_indices, mask_object_ids = rebuild_npz_and_reindex(
-            tracks,
-            all_masks,
-            mask_frame_indices,
-            mask_object_ids,
-            dropped_old_mask_indices,
+        print("Computing Hit Scores for tennis interactions...")
+        # Generate hit_score dynamically
+        masks_for_scoring = np.array(all_masks, dtype=np.bool_)
+        tracks, hit_dbg = compute_hit_scores(
+            tracks=tracks,
+            masks_np=masks_for_scoring,
+            ball_labels={"Tennis_Ball", "tennisball"},
+            racket_labels={"Tennis_Racket", "tennisracket"},
+            sigma_dist_px=18.0,
+            iou_ref=0.02,
+            w_iou=0.65,
+            max_peak_cap=0.92,
+            conf_mode="quality",
+            sigma_t=2.5,
+            left_cut_frames=8,
+            right_cut_frames=12,
+            return_debug=True,
         )
 
-    print("Total kept masks after post-processing:", len(all_masks))
 
-    if args.post_process_predict:
-        print(f"Applying Gap Prediction Phase (max_gap={args.predict_max_gap})...")
-        # Rebuild history after deletions and fusions, so gap logic works linearly!
-        track_history_updated = build_track_history(tracks)
-        tracks, all_masks, mask_frame_indices, mask_object_ids = apply_gap_prediction(
-            tracks_dict=tracks,
-            track_history=track_history_updated,
-            all_masks_list=all_masks,
-            mask_frame_indices_list=mask_frame_indices,
-            mask_object_ids_list=mask_object_ids,
-            predict_max_gap=int(args.predict_max_gap)
-        )
-        print("Total kept masks after gap prediction:", len(all_masks))
-
-    print("Computing Hit Scores for tennis interactions...")
-    # Generate hit_score dynamically
-    masks_for_scoring = np.array(all_masks, dtype=np.bool_)
-    tracks, hit_dbg = compute_hit_scores(
-        tracks=tracks,
-        masks_np=masks_for_scoring,
-        ball_labels={"Tennis_Ball", "tennisball"},
-        racket_labels={"Tennis_Racket", "tennisracket"},
-        sigma_dist_px=18.0,
-        iou_ref=0.02,
-        w_iou=0.65,
-        max_peak_cap=0.92,
-        conf_mode="quality",
-        sigma_t=2.5,
-        left_cut_frames=8,
-        right_cut_frames=12,
-        return_debug=True,
-    )
-
-
-# -------------------------
-# Save JSON
-# -------------------------
-meta = {
-    "time_unix": time.time(),
-    "hostname": platform.node(),
-    "platform": platform.platform(),
-    "python": platform.python_version(),
-    "torch": torch.__version__,
-    "device": str(device),
-    "dtype": args.dtype,
-    "video_name": args.video_name,
-    "video_path": args.video_path,
-    "num_frames_total": int(num_frames),
-    "num_frames_tracked": int(num_track_frames),
-    "hf_local_model": args.hf_local_model,
-    "out_dir": args.out_dir,
-    "out_json": out_json,
-    "out_npz": out_npz,
-    "out_mp4": out_mp4 if args.vis else "",
-    "prompts": list(args.prompts),
-    "label_aliases": dict(label_alias),
-    "tracker_score_min": float(args.tracker_score_min),
-    "static_score_min": float(args.static_score_min),
-    "mask_area_min": int(args.mask_area_min),
-    "max_jump_px": float(args.max_jump_px),
-    "max_lost": int(args.max_lost),
-    "ema_alpha": float(args.ema_alpha),
-    "quality_score_mode": str(args.quality_score_mode),
-    "processing_device": args.processing_device,
-    "video_storage_device": args.video_storage_device,
-    "plan": "A_hard_remove_on_reject",
-    "post_process_rm": bool(args.post_process_rm),
-    "post_process_fusion": bool(args.post_process_fusion),
-    "post_process_predict": bool(args.post_process_predict),
-    "rm_min_len": int(args.rm_min_len),
-    "rm_static_px": float(args.rm_static_px),
-    "fusion_max_gap": int(args.fusion_max_gap),
-    "fusion_skip_unknown": bool(args.fusion_skip_unknown),
-    "predict_max_gap": int(args.predict_max_gap),
-    "hit_debug": hit_dbg,
-}
-
-json_payload = {"_meta": meta}
-json_payload.update(tracks)
-
-with open(out_json, "w") as f:
-    json.dump(json_payload, f, indent=2)
-
-print("Saved:", out_json)
-
-# -------------------------
-# Save NPZ
-# -------------------------
-np.savez_compressed(
-    out_npz,
-    masks=np.array(all_masks, dtype=np.bool_),
-    frame_indices=np.array(mask_frame_indices, dtype=np.int32),
-    object_ids=np.array(mask_object_ids, dtype=np.int32),
-)
-
-print("Saved:", out_npz)
-
-# -------------------------
-# Visualization (optional)
-# -------------------------
-if args.vis:
-    import cv2
-
-    print("Rendering video...")
-
-    data = np.load(out_npz)
-    masks_np = data["masks"]
-
-    cap = cv2.VideoCapture(args.video_path)
-    fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
-    w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-
-    out = cv2.VideoWriter(out_mp4, cv2.VideoWriter_fourcc(*"mp4v"), fps, (w, h))
-
-    # keep old names + allow your custom ones
-    LABEL_COLORS = {
-        "ball": (0, 0, 255),
-        "racket": (255, 128, 0),
-        "unknown": (200, 200, 200),
-        "tennisball": (0, 0, 255),
-        "tennisracket": (255, 128, 0),
+    # -------------------------
+    # Save JSON
+    # -------------------------
+    meta = {
+        "time_unix": time.time(),
+        "hostname": platform.node(),
+        "platform": platform.platform(),
+        "python": platform.python_version(),
+        "torch": torch.__version__,
+        "device": str(device),
+        "dtype": args.dtype,
+        "video_name": video_name,
+        "video_path": video_path,
+        "num_frames_total": int(num_frames),
+        "num_frames_tracked": int(num_track_frames),
+        "hf_local_model": args.hf_local_model,
+        "out_dir": args.out_dir,
+        "out_json": out_json,
+        "out_npz": out_npz,
+        "out_mp4": out_mp4 if args.vis else "",
+        "prompts": list(args.prompts),
+        "label_aliases": dict(label_alias),
+        "tracker_score_min": float(args.tracker_score_min),
+        "static_score_min": float(args.static_score_min),
+        "mask_area_min": int(args.mask_area_min),
+        "max_jump_px": float(args.max_jump_px),
+        "max_lost": int(args.max_lost),
+        "ema_alpha": float(args.ema_alpha),
+        "quality_score_mode": str(args.quality_score_mode),
+        "processing_device": args.processing_device,
+        "video_storage_device": args.video_storage_device,
+        "plan": "A_hard_remove_on_reject",
+        "post_process_rm": bool(args.post_process_rm),
+        "post_process_fusion": bool(args.post_process_fusion),
+        "post_process_predict": bool(args.post_process_predict),
+        "rm_min_len": int(args.rm_min_len),
+        "rm_static_px": float(args.rm_static_px),
+        "fusion_max_gap": int(args.fusion_max_gap),
+        "fusion_skip_unknown": bool(args.fusion_skip_unknown),
+        "predict_max_gap": int(args.predict_max_gap),
+        "hit_debug": hit_dbg,
     }
 
-    frame_idx = 0
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
+    json_payload = {"_meta": meta}
+    json_payload.update(tracks)
 
-        per_frame = tracks.get(str(frame_idx), {})
+    with open(out_json, "w") as f:
+        json.dump(json_payload, f, indent=2)
 
-        for obj_id_str, info in per_frame.items():
-            midx = int(info["mask_idx"])
-            if midx < 0 or midx >= masks_np.shape[0]:
-                continue
+    print("Saved:", out_json)
 
-            mask = masks_np[midx]
+    # -------------------------
+    # Save NPZ
+    # -------------------------
+    np.savez_compressed(
+        out_npz,
+        masks=np.array(all_masks, dtype=np.bool_),
+        frame_indices=np.array(mask_frame_indices, dtype=np.int32),
+        object_ids=np.array(mask_object_ids, dtype=np.int32),
+    )
 
-            label = info.get("label", "unknown")
-            color = LABEL_COLORS.get(label, (200, 200, 200))
+    print("Saved:", out_npz)
 
-            overlay = np.zeros_like(frame)
-            overlay[mask] = color
-            frame = cv2.addWeighted(frame, 1.0, overlay, 0.4, 0)
+    # -------------------------
+    # Visualization (optional)
+    # -------------------------
+    if args.vis:
+        import cv2
 
-            x0, y0, x1, y1 = info["box_xyxy"]
-            cv2.rectangle(frame, (x0, y0), (x1, y1), color, 2)
+        print("Rendering video...")
 
-            qs = float(info.get("quality_score", -1.0))
-            ts = float(info.get("tracker_score", 0.0))
-            ss = float(info.get("static_score", 0.0))
-            txt = f"id={obj_id_str} {label} q={qs:.3f} ts={ts:.3f} ss={ss:.3f}"
-            cv2.putText(frame, txt, (x0, max(0, y0 - 6)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, cv2.LINE_AA)
+        data = np.load(out_npz)
+        masks_np = data["masks"]
 
-        out.write(frame)
-        frame_idx += 1
+        cap = cv2.VideoCapture(video_path)
+        fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
+        w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-    cap.release()
-    out.release()
-    print("Saved:", out_mp4)
-else:
-    print("Done (no visualization)")
+        out = cv2.VideoWriter(out_mp4, cv2.VideoWriter_fourcc(*"mp4v"), fps, (w, h))
+
+        # keep old names + allow your custom ones
+        LABEL_COLORS = {
+            "ball": (0, 0, 255),
+            "racket": (255, 128, 0),
+            "unknown": (200, 200, 200),
+            "tennisball": (0, 0, 255),
+            "tennisracket": (255, 128, 0),
+        }
+
+        frame_idx = 0
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+
+            per_frame = tracks.get(str(frame_idx), {})
+
+            for obj_id_str, info in per_frame.items():
+                midx = int(info["mask_idx"])
+                if midx < 0 or midx >= masks_np.shape[0]:
+                    continue
+
+                mask = masks_np[midx]
+
+                label = info.get("label", "unknown")
+                color = LABEL_COLORS.get(label, (200, 200, 200))
+
+                overlay = np.zeros_like(frame)
+                overlay[mask] = color
+                frame = cv2.addWeighted(frame, 1.0, overlay, 0.4, 0)
+
+                x0, y0, x1, y1 = info["box_xyxy"]
+                cv2.rectangle(frame, (x0, y0), (x1, y1), color, 2)
+
+                qs = float(info.get("quality_score", -1.0))
+                ts = float(info.get("tracker_score", 0.0))
+                ss = float(info.get("static_score", 0.0))
+                txt = f"id={obj_id_str} {label} q={qs:.3f} ts={ts:.3f} ss={ss:.3f}"
+                cv2.putText(frame, txt, (x0, max(0, y0 - 6)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, cv2.LINE_AA)
+
+            out.write(frame)
+            frame_idx += 1
+
+        cap.release()
+        out.release()
+        print("Saved:", out_mp4)
+    else:
+        print("Done (no visualization)")
