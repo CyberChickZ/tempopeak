@@ -803,13 +803,19 @@ for video_path in mp4_files:
     out_npz = os.path.join(args.out_dir, f"{video_name}.npz")
     out_mp4 = os.path.join(args.out_dir, f"{video_name}_vis.mp4")
 
-    if os.path.exists(out_npz) and os.path.exists(out_json):
-        print(f"Skipping {video_name} (already processed)")
-        continue
-
     print(f"\n=========================================")
     print(f"Processing {video_name}...")
     print(f"=========================================")
+
+    # EXTREMELY AGGRESSIVE MEMORY AND KV CACHE CLEARING
+    if 'session' in locals():
+        del session
+    import gc
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+    elif torch.backends.mps.is_available():
+        torch.mps.empty_cache()
 
     print("Loading video...")
     video_frames, _ = load_video(video_path)
