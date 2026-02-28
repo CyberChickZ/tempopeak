@@ -825,6 +825,9 @@ for video_path in mp4_files:
     # -------------------------
     # Init session
     # -------------------------
+    if hasattr(model, "reset_state"):
+        model.reset_state()
+        
     session = processor.init_video_session(
         video=video_frames,
         inference_device=device,
