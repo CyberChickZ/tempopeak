@@ -1027,48 +1027,56 @@ for video_path in mp4_files:
         if delete_set or fusion_map:
             tracks, dropped_old_mask_indices = apply_delete_and_fusion(tracks, delete_set, fusion_map)
 
-            tracks, all_masks, mask_frame_indices, mask_object_ids = rebuild_npz_and_reindex(
-                tracks,
-                all_masks,
-                mask_frame_indices,
-                mask_object_ids,
-                dropped_old_mask_indices,
-            )
-
-        print("Total kept masks after post-processing:", len(all_masks))
-
-        if args.post_process_predict:
-            print(f"Applying Gap Prediction Phase (max_gap={args.predict_max_gap})...")
-            # Rebuild history after deletions and fusions, so gap logic works linearly!
-            track_history_updated = build_track_history(tracks)
-            tracks, all_masks, mask_frame_indices, mask_object_ids = apply_gap_prediction(
-                tracks_dict=tracks,
-                track_history=track_history_updated,
-                all_masks_list=all_masks,
-                mask_frame_indices_list=mask_frame_indices,
-                mask_object_ids_list=mask_object_ids,
-                predict_max_gap=int(args.predict_max_gap)
-            )
-            print("Total kept masks after gap prediction:", len(all_masks))
-
-        print("Computing Hit Scores for tennis interactions...")
-        # Generate hit_score dynamically
-        masks_for_scoring = np.array(all_masks, dtype=np.bool_)
-        tracks, hit_dbg = compute_hit_scores(
-            tracks=tracks,
-            masks_np=masks_for_scoring,
-            ball_labels={"Tennis_Ball", "tennisball"},
-            racket_labels={"Tennis_Racket", "tennisracket"},
-            sigma_dist_px=18.0,
-            iou_ref=0.02,
-            w_iou=0.65,
-            max_peak_cap=0.92,
-            conf_mode="quality",
-            sigma_t=2.5,
-            left_cut_frames=8,
-            right_cut_frames=12,
-            return_debug=True,
+    if args.post_process_predict:
+        print(f"Applying Gap Prediction Phase (max_gap={args.predict_max_gap})...")
+        track_history_updated = build_track_history(tracks)
+        tracks, all_masks, mask_frame_indices, mask_object_ids = apply_gap_prediction(
+            tracks_dict=tracks,
+            track_history=track_history_updated,
+            all_masks_list=all_masks,
+            mask_frame_indices_list=mask_frame_indices,
+            mask_object_ids_list=mask_object_ids,
+            predict_max_gap=int(args.predict_max_gap)
         )
+        print("Total kept masks after gap prediction:", len(all_masks))
+
+    # --- ONE SINGLE REBUILD TO RULE THEM ALL ---
+    print("Consolidating NPZ structure and reindexing mask tracking...")
+    tracks, all_masks, mask_frame_indices, mask_object_ids = rebuild_npz_and_reindex(
+        tracks,
+        all_masks,
+        mask_frame_indices,
+        mask_object_ids,
+        dropped_old_mask_indices if 'dropped_old_mask_indices' in locals() else set(),
+    )
+    
+    # SAFETY DEBUG: Verify Frame Sync
+    for fkey, frame_data in tracks.items():
+        for oid_str, info in frame_data.items():
+            midx = int(info["mask_idx"])
+            if midx >= len(all_masks):
+                raise RuntimeError("mask_idx overflow")
+            # 验证 frame_index 一致
+            if int(mask_frame_indices[midx]) != int(fkey):
+                print(f"Frame mismatch! fkey={fkey}, midx={midx}, array_frame={mask_frame_indices[midx]}")
+
+    print("Computing Hit Scores for tennis interactions...")
+    masks_for_scoring = np.array(all_masks, dtype=np.bool_)
+    tracks, hit_dbg = compute_hit_scores(
+        tracks=tracks,
+        masks_np=masks_for_scoring,
+        ball_labels={"Tennis_Ball", "tennisball"},
+        racket_labels={"Tennis_Racket", "tennisracket"},
+        sigma_dist_px=18.0,
+        iou_ref=0.02,
+        w_iou=0.65,
+        max_peak_cap=0.92,
+        conf_mode="quality",
+        sigma_t=2.5,
+        left_cut_frames=8,
+        right_cut_frames=12,
+        return_debug=True,
+    )
 
 
     # -------------------------
