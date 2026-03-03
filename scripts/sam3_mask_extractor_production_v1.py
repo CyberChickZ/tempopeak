@@ -760,40 +760,69 @@ for video_path in mp4_files:
     print("Time (s):", round(time.time() - t0, 2))
 
     # =============================================================================
-    # Postprocess (3 stages)
-    # =============================================================================
-    dropped_old_mask_indices = set()
+# Postprocess (FORCED APPLY VERSION)
+# =============================================================================
 
-    if args.post_process_rm or args.post_process_fusion:
-        print("Post-processing: rm/fusion ...")
-        track_history = build_track_history(tracks)
+print("\n===== POST PROCESS START =====")
+orig_track_count = sum(len(v) for v in tracks.values())
+print("original total track entries:", orig_track_count)
 
-        delete_set = set()
-        if args.post_process_rm:
-            delete_set = plan_deletions(track_history, int(args.rm_min_len), float(args.rm_static_px))
-            if delete_set:
-                print("rm delete tracks:", len(delete_set))
+dropped_old_mask_indices = set()
 
-        fusion_map = {}
-        if args.post_process_fusion:
-            fusion_map = plan_fusions(track_history, delete_set, int(args.fusion_max_gap), bool(args.fusion_skip_unknown))
-            if fusion_map:
-                print("fusion pairs:", len(fusion_map))
+if args.post_process_rm or args.post_process_fusion:
 
-        if delete_set or fusion_map:
-            tracks, dropped_old_mask_indices = apply_delete_and_fusion(tracks, delete_set, fusion_map)
+    print("Building track history...")
+    track_history = build_track_history(tracks)
+    print("total unique track ids:", len(track_history))
 
-    # predict stage (v1.0: 只保留开关与框架, 不做 SDF 形变实现; 避免引入不稳定依赖)
-    # 你如果坚持要 SDF morphing, 我可以在 v1.1 里把你原来的实现安全移植回来.
-    if args.post_process_predict:
-        print("Post-processing: predict ... (v1.0 stub: no-op)")
-        # no-op in v1.0
-
-    # rebuild NPZ indices if rm/fusion happened
-    if dropped_old_mask_indices:
-        tracks, all_masks, mask_frame_indices, mask_object_ids = rebuild_npz_and_reindex(
-            tracks, all_masks, mask_frame_indices, mask_object_ids, dropped_old_mask_indices
+    delete_set = set()
+    if args.post_process_rm:
+        print("Running rm stage ...")
+        delete_set = plan_deletions(
+            track_history,
+            int(args.rm_min_len),
+            float(args.rm_static_px),
         )
+        print("rm delete tracks:", len(delete_set))
+
+    fusion_map = {}
+    if args.post_process_fusion:
+        print("Running fusion stage ...")
+        fusion_map = plan_fusions(
+            track_history,
+            delete_set,
+            int(args.fusion_max_gap),
+            bool(args.fusion_skip_unknown),
+        )
+        print("fusion pairs:", len(fusion_map))
+
+    # 🔥 强制执行 apply
+    print("Applying delete/fusion ...")
+    tracks, dropped_old_mask_indices = apply_delete_and_fusion(
+        tracks,
+        delete_set,
+        fusion_map,
+    )
+
+    print("dropped mask count:", len(dropped_old_mask_indices))
+
+    # 🔥 强制 rebuild
+    print("Rebuilding NPZ ...")
+    tracks, all_masks, mask_frame_indices, mask_object_ids = rebuild_npz_and_reindex(
+        tracks,
+        all_masks,
+        mask_frame_indices,
+        mask_object_ids,
+        dropped_old_mask_indices,
+    )
+
+else:
+    print("Post-process disabled.")
+
+new_track_count = sum(len(v) for v in tracks.values())
+print("new total track entries:", new_track_count)
+print("POST PROCESS DELTA:", orig_track_count - new_track_count)
+print("===== POST PROCESS END =====\n")
 
     # =============================================================================
     # Hit score (always)
