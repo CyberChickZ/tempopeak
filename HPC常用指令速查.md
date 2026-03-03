@@ -50,109 +50,27 @@ conda activate sam_3d_body
 - 运行合成数据训练测试：`python train.py`
   - 预期：Loss 快速下降，Acc 接近 1.0
 
-## SAM3 Mask 提取器（v2 — 全量重写）
+## SAM3 Mask 提取器 (生产级 v1.0)
 
-脚本：`scripts/sam3_mask_extractor.py`（完整 argparse CLI，无需改源码即可调参）
+脚本：`scripts/sam3_mask_extractor_production_v1.py`
 
-### 最小运行（默认参数）
-```bash
-python scripts/sam3_mask_extractor.py
+### 生产环境批量运行命令
 ```
-
-### 自定义视频 + 渲染可视化
-```bash
-python scripts/sam3_mask_extractor.py \
+CUDA_VISIBLE_DEVICES=0 python scripts/sam3_mask_extractor_production_v1.py \
   --hf_local_model /nfs/hpc/share/zhanhaoc/hpe/tempopeak/models/models--facebook--sam3/snapshots/3c879f39826c281e95690f02c7821c4de09afae7 \
   --video_dir /nfs/hpc/share/zhanhaoc/hpe/tempopeak/datasets/serve \
-  --out_dir /nfs/hpc/share/zhanhaoc/hpe/tempopeak/outputs/sam3_mask_extractor \
-  --vis
-```
-
-### 指定 ID→Label 映射（推荐，避免歧义）
-```bash
-python scripts/sam3_mask_extractor.py \
-  --obj_id_to_label "0:ball,1:ball,2:racket" \
-  --vis
-```
-
-### 开启空间跳变拦截和后处理（全量参数基准测试）
-```bash
-python scripts/sam3_mask_extractor.py \
-  --hf_local_model /nfs/hpc/share/zhanhaoc/hpe/tempopeak/models/models--facebook--sam3/snapshots/3c879f39826c281e95690f02c7821c4de09afae7 \
-  --video_dir /nfs/hpc/share/zhanhaoc/hpe/tempopeak/datasets/serve \
-  --out_dir /nfs/hpc/share/zhanhaoc/hpe/tempopeak/outputs/sam3_mask_extractor \
-  --prompts tennisball tennisracket \
+  --out_dir /nfs/hpc/share/zhanhaoc/hpe/tempopeak/outputs/sam3_prod_v1 \
+  --prompts ball racket \
   --dtype bf16 \
-  --max_jump_px 200 \
-  --tracker_score_min 0.45 \
-  --mask_area_min 20 \
-  --max_lost 4 \
-  --post_process_rm \
-  --post_process_fusion \
-  --post_process_predict \
-  --predict_max_gap 30
+  --tracker_score_min 0.1 \
+  --mask_area_min 1 \
+  --print_every 30
 ```
 
-### 完整参数表
-
-| 参数 | 默认值 | 说明 |
-|---|---|---|
-| `--hf_local_model` | HPC Snapshots 路径 | SAM3 本地权重目录 |
-| `--video_dir` | HPC serve | 输入视频所在的目录 |
-| `--out_dir` | `outputs/sam3_mask_extractor/` | 对应每个视频的输出目录 |
-| `--vis` | off | 是否渲染带标注 MP4 |
-| `--prompts` | `ball racket` | 传给 SAM3 PCS 的文字 prompt 列表 |
-| `--dtype` | `bf16` | 推理精度（bf16/fp16/fp32） |
-| `--max_frames` | `-1`（全视频）| 限制处理帧数，调试用 |
-| `--tracker_score_min` | `0.10` | 低于此 tracker score 的 mask 丢弃 |
-| `--static_score_min` | `-1.0`（关闭） | 低于此 static score 的 mask 丢弃 |
-| `--quality_score_mode` | `mul` | `quality_score` 的计算方式 (`none`/`mul`/`min`) |
-| `--mask_area_min` | `1` | mask 像素数低于此值的丢弃 |
-| `--max_jump_px` | `-1`（关闭）| 相邻帧 centroid 欧氏距离超过此值则视为 ID Switch，丢弃 |
-| `--ema_alpha` | `1.0`（关闭 EMA）| centroid EMA 平滑系数（0.5~0.8 为典型值） |
-| `--max_lost` | `0` | 若为 0，则纯静态丢弃；若 >0 则允许在连续丢失 N 帧内通过速度外推状态 |
-| `--predict_on_reject` | off | 当拒绝当前帧且 `max_lost>0` 时，利用上一帧的速度 (vx, vy) 外推 centroid |
-| `--force_memory_update` | off | 启用强制记忆刷新 hook（需配合 HF 源码 patch），利用 last_low_res_mask 强制维持轨迹记忆 |
-| `--force_memory_update_on_lost_only` | on | 仅针对处于丢失状态 `lost_count > 0` 的目标触发记忆刷新 |
-| `--force_memory_update_max_lost` | `-1` | 最大触发刷新所需的丢失帧数，默认自动使用 `--max_lost` 的值 |
-| `--print_every` | `30` | 提取过程中每 N 帧打印一次进度和保留 mask 数量 |
-| `--debug_first_frames` | `1` | 打印前 K 帧的 PP `prompt_to_obj_ids` 映射信息供调试 |
-
-### 输出文件
-
-| 文件 | 内容 |
-|---|---|
-| `{video_name}.json` | 含 `_meta`（完整运行参数），及 `"0"~"N"` 帧数据 |
-| `{video_name}.npz` | `masks [M,H,W] bool` + `frame_indices [M] int32` + `object_ids [M] int32` |
-| `{video_name}_vis.mp4` | 带遮罩/BBox/ID/score OSD 的可视化视频（仅 `--vis` 时） |
-
-### JSON schema（单帧）
-```json
-{
-  "_meta": { "tracker_score_min": 0.1, "max_jump_px": 300, ... },
-  "42": {
-    "0": {
-      "label": "ball",
-      "tracker_score": 0.823,
-      "static_score": 0.911,
-      "quality_score": 0.749753,
-      "centroid": [312.5, 204.1],
-      "box_xyxy": [298, 190, 327, 218],
-      "mask_idx": 77
-    }
-  }
-}
-```
-
-### Annotator 后端注意事项
-`io_sam3.py` 已同步支持 v2 schema（`_meta` 跳过，`label`/`tracker_score`/`box_xyxy` 字段读写），同时向后兼容 v1 的 `prompt`/`score`/`box`。
-
-### 已知 Bugfix（已入库）
-- **`torch.where unpack error`**：模型输出的 `obj_id_to_mask[obj_id]` 实际 shape 为 `[1, H, W]`（带 batch 维），直接解包到 `ys, xs` 会 crash。
-  修法：取 mask 时调用 `.squeeze()` 内联处理：
-  ```python
-  mask = obj_id_to_mask[obj_id].squeeze()  # Tensor[1,H,W] <BOOL> -> [H,W]
-  ```
+### 环境要求与输入输出
+- **输入**: 视频目录下的 `.mp4` 文件
+- **输出**: JSON 和 NPZ 文件（自动剔除错误目标，生成规范的 hit scores）
+- **特点**: 无隐式记忆污染、强制 no_grad 释放显存、合并 Rebuild、生命周期彻底收敛。
 
 ## SAM3 Web 标注工具
 - 启动无状态后端：
