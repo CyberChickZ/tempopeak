@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "time_unix": 1772531989.2555714,
+    "time_unix": 1772533712.603224,
     "hostname": "dgxh-1.hpc.engr.oregonstate.edu",
     "platform": "Linux-5.14.0-570.58.1.el9_6.x86_64-x86_64-with-glibc2.34",
     "python": "3.11.14",
@@ -30,7 +30,7 @@
     "post_process_rm": true,
     "post_process_fusion": true,
     "post_process_predict": false,
-    "rm_min_len": 15,
+    "rm_min_len": 30,
     "rm_static_px": 5.0,
     "fusion_max_gap": 5,
     "fusion_skip_unknown": false,
