@@ -51,7 +51,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument(
     "--hf_local_model",
     type=str,
-    required=True,
+    required=False,
     default="/nfs/hpc/share/zhanhaoc/hpe/tempopeak/models/models--facebook--sam3/snapshots/3c879f39826c281e95690f02c7821c4de09afae7",
     help=(
         "本地 HuggingFace SAM3 模型 snapshot 路径. "
@@ -62,7 +62,7 @@ parser.add_argument(
     "--video_dir",
     type=str,
     default="/nfs/hpc/share/zhanhaoc/hpe/tempopeak/datasets/serve",
-    required=True,
+    required=False,
     help=(
         "待处理视频目录. 目录内所有 .mp4 会被逐个处理. "
         "建议只放同一数据规格的视频, 便于产出一致的 json/npz."
@@ -72,7 +72,7 @@ parser.add_argument(
     "--out_dir",
     type=str,
     default="/nfs/hpc/share/zhanhaoc/hpe/tempopeak/outputs/sam3_prod_v1/serve",
-    required=True,
+    required=False,
     help=(
         "输出目录. 每个视频会生成: <name>.json, <name>.npz, "
         "如果开启 --vis 则额外生成 <name>_vis.mp4."
