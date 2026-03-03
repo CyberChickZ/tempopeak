@@ -759,70 +759,70 @@ for video_path in mp4_files:
     print("Tracking done. Total kept masks:", len(all_masks))
     print("Time (s):", round(time.time() - t0, 2))
 
-    # =============================================================================
+# =============================================================================
 # Postprocess (FORCED APPLY VERSION)
 # =============================================================================
 
-print("\n===== POST PROCESS START =====")
-orig_track_count = sum(len(v) for v in tracks.values())
-print("original total track entries:", orig_track_count)
+    print("\n===== POST PROCESS START =====")
+    orig_track_count = sum(len(v) for v in tracks.values())
+    print("original total track entries:", orig_track_count)
 
-dropped_old_mask_indices = set()
+    dropped_old_mask_indices = set()
 
-if args.post_process_rm or args.post_process_fusion:
+    if args.post_process_rm or args.post_process_fusion:
 
-    print("Building track history...")
-    track_history = build_track_history(tracks)
-    print("total unique track ids:", len(track_history))
+        print("Building track history...")
+        track_history = build_track_history(tracks)
+        print("total unique track ids:", len(track_history))
 
-    delete_set = set()
-    if args.post_process_rm:
-        print("Running rm stage ...")
-        delete_set = plan_deletions(
-            track_history,
-            int(args.rm_min_len),
-            float(args.rm_static_px),
-        )
-        print("rm delete tracks:", len(delete_set))
+        delete_set = set()
+        if args.post_process_rm:
+            print("Running rm stage ...")
+            delete_set = plan_deletions(
+                track_history,
+                int(args.rm_min_len),
+                float(args.rm_static_px),
+            )
+            print("rm delete tracks:", len(delete_set))
 
-    fusion_map = {}
-    if args.post_process_fusion:
-        print("Running fusion stage ...")
-        fusion_map = plan_fusions(
-            track_history,
+        fusion_map = {}
+        if args.post_process_fusion:
+            print("Running fusion stage ...")
+            fusion_map = plan_fusions(
+                track_history,
+                delete_set,
+                int(args.fusion_max_gap),
+                bool(args.fusion_skip_unknown),
+            )
+            print("fusion pairs:", len(fusion_map))
+
+        # 🔥 强制执行 apply
+        print("Applying delete/fusion ...")
+        tracks, dropped_old_mask_indices = apply_delete_and_fusion(
+            tracks,
             delete_set,
-            int(args.fusion_max_gap),
-            bool(args.fusion_skip_unknown),
+            fusion_map,
         )
-        print("fusion pairs:", len(fusion_map))
 
-    # 🔥 强制执行 apply
-    print("Applying delete/fusion ...")
-    tracks, dropped_old_mask_indices = apply_delete_and_fusion(
-        tracks,
-        delete_set,
-        fusion_map,
-    )
+        print("dropped mask count:", len(dropped_old_mask_indices))
 
-    print("dropped mask count:", len(dropped_old_mask_indices))
+        # 🔥 强制 rebuild
+        print("Rebuilding NPZ ...")
+        tracks, all_masks, mask_frame_indices, mask_object_ids = rebuild_npz_and_reindex(
+            tracks,
+            all_masks,
+            mask_frame_indices,
+            mask_object_ids,
+            dropped_old_mask_indices,
+        )
 
-    # 🔥 强制 rebuild
-    print("Rebuilding NPZ ...")
-    tracks, all_masks, mask_frame_indices, mask_object_ids = rebuild_npz_and_reindex(
-        tracks,
-        all_masks,
-        mask_frame_indices,
-        mask_object_ids,
-        dropped_old_mask_indices,
-    )
+    else:
+        print("Post-process disabled.")
 
-else:
-    print("Post-process disabled.")
-
-new_track_count = sum(len(v) for v in tracks.values())
-print("new total track entries:", new_track_count)
-print("POST PROCESS DELTA:", orig_track_count - new_track_count)
-print("===== POST PROCESS END =====\n")
+    new_track_count = sum(len(v) for v in tracks.values())
+    print("new total track entries:", new_track_count)
+    print("POST PROCESS DELTA:", orig_track_count - new_track_count)
+    print("===== POST PROCESS END =====\n")
 
     # =============================================================================
     # Hit score (always)
