@@ -61,7 +61,7 @@ parser.add_argument(
 parser.add_argument(
     "--video_dir",
     type=str,
-    default="/nfs/hpc/share/zhanhaoc/hpe/tempopeak/data/videos/test_videos",
+    default="/nfs/hpc/share/zhanhaoc/hpe/tempopeak/datasets/serve",
     required=True,
     help=(
         "待处理视频目录. 目录内所有 .mp4 会被逐个处理. "
