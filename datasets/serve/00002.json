@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "time_unix": 1772243408.2848816,
+    "time_unix": 1772527826.371758,
     "hostname": "dgxh-1.hpc.engr.oregonstate.edu",
     "platform": "Linux-5.14.0-570.58.1.el9_6.x86_64-x86_64-with-glibc2.34",
     "python": "3.11.14",
@@ -12,78 +12,59 @@
     "num_frames_total": 181,
     "num_frames_tracked": 181,
     "hf_local_model": "/nfs/hpc/share/zhanhaoc/hpe/tempopeak/models/models--facebook--sam3/snapshots/3c879f39826c281e95690f02c7821c4de09afae7",
-    "out_dir": "/nfs/hpc/share/zhanhaoc/hpe/tempopeak/datasets/serve/",
-    "out_json": "/nfs/hpc/share/zhanhaoc/hpe/tempopeak/datasets/serve/00002.json",
-    "out_npz": "/nfs/hpc/share/zhanhaoc/hpe/tempopeak/datasets/serve/00002.npz",
-    "out_mp4": "",
+    "out_dir": "/nfs/hpc/share/zhanhaoc/hpe/tempopeak/outputs/sam3_prod_v1",
     "prompts": [
-      "tennisball",
-      "tennisracket"
+      "ball",
+      "racket"
     ],
-    "label_aliases": {},
-    "tracker_score_min": 0.45,
+    "canonical_prompts": [
+      "ball",
+      "racket"
+    ],
+    "tracker_score_min": 0.1,
     "static_score_min": -1.0,
-    "mask_area_min": 20,
-    "max_jump_px": 200.0,
-    "max_lost": 4,
+    "mask_area_min": 1,
+    "max_jump_px": -1.0,
+    "max_lost": 0,
     "ema_alpha": 1.0,
-    "quality_score_mode": "mul",
-    "processing_device": "cpu",
-    "video_storage_device": "cpu",
-    "plan": "A_hard_remove_on_reject",
     "post_process_rm": true,
     "post_process_fusion": true,
-    "post_process_predict": true,
+    "post_process_predict": false,
     "rm_min_len": 15,
     "rm_static_px": 5.0,
     "fusion_max_gap": 5,
-    "fusion_skip_unknown": false,
-    "predict_max_gap": 30,
+    "fusion_skip_unknown": true,
+    "predict_max_gap": 15,
     "hit_debug": {
       "status": "ok",
-      "peak_frame": 22,
-      "peak_raw": 0.20366132074283616,
-      "peak_score": 0.20366132074283616,
-      "num_pair_frames": 154,
-      "params": {
-        "sigma_dist_px": 18.0,
-        "iou_ref": 0.02,
-        "w_iou": 0.65,
-        "max_peak_cap": 0.92,
-        "conf_mode": "quality",
-        "conf_floor": 0.15,
-        "sigma_t": 2.5,
-        "left_cut_frames": 8,
-        "right_cut_frames": 12
-      }
+      "peak_frame": 93,
+      "peak_raw": 0.45212921267617345
     }
   },
   "0": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.832031,
-      "static_score": 0.832031,
-      "quality_score": 0.692276,
+      "label": "racket",
+      "tracker_score": 0.847656,
+      "static_score": 0.847656,
       "centroid": [
-        750.33,
-        735.494
+        750.604,
+        735.371
       ],
       "box_xyxy": [
-        715,
+        716,
         716,
         783,
         758
       ],
       "mask_idx": 0,
-      "mask_area": 1335
+      "mask_area": 1314
     }
   },
   "1": {
     "1": {
-      "label": "tennisracket",
+      "label": "racket",
       "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "static_score": 0.847656,
       "centroid": [
         749.065,
         736.731
@@ -100,10 +81,9 @@
   },
   "2": {
     "1": {
-      "label": "tennisracket",
+      "label": "racket",
       "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "static_score": 0.847656,
       "centroid": [
         748.485,
         736.795
@@ -120,10 +100,9 @@
   },
   "3": {
     "1": {
-      "label": "tennisracket",
+      "label": "racket",
       "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "static_score": 0.847656,
       "centroid": [
         745.707,
         738.486
@@ -140,10 +119,9 @@
   },
   "4": {
     "1": {
-      "label": "tennisracket",
+      "label": "racket",
       "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "static_score": 0.847656,
       "centroid": [
         741.476,
         741.387
@@ -160,10 +138,9 @@
   },
   "5": {
     "1": {
-      "label": "tennisracket",
+      "label": "racket",
       "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "static_score": 0.847656,
       "centroid": [
         736.929,
         744.144
@@ -180,10 +157,9 @@
   },
   "6": {
     "1": {
-      "label": "tennisracket",
+      "label": "racket",
       "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "static_score": 0.847656,
       "centroid": [
         731.403,
         746.72
@@ -200,10 +176,9 @@
   },
   "7": {
     "1": {
-      "label": "tennisracket",
+      "label": "racket",
       "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "static_score": 0.847656,
       "centroid": [
         728.173,
         749.139
@@ -220,10 +195,9 @@
   },
   "8": {
     "1": {
-      "label": "tennisracket",
+      "label": "racket",
       "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "static_score": 0.847656,
       "centroid": [
         726.046,
         751.602
@@ -240,10 +214,9 @@
   },
   "9": {
     "1": {
-      "label": "tennisracket",
+      "label": "racket",
       "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "static_score": 0.847656,
       "centroid": [
         721.997,
         754.319
@@ -260,10 +233,9 @@
   },
   "10": {
     "1": {
-      "label": "tennisracket",
+      "label": "racket",
       "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "static_score": 0.847656,
       "centroid": [
         719.145,
         756.766
@@ -280,10 +252,9 @@
   },
   "11": {
     "1": {
-      "label": "tennisracket",
+      "label": "racket",
       "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "static_score": 0.847656,
       "centroid": [
         715.194,
         759.56
@@ -300,10 +271,9 @@
   },
   "12": {
     "1": {
-      "label": "tennisracket",
+      "label": "racket",
       "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "static_score": 0.847656,
       "centroid": [
         710.841,
         761.326
@@ -320,10 +290,9 @@
   },
   "13": {
     "1": {
-      "label": "tennisracket",
+      "label": "racket",
       "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "static_score": 0.847656,
       "centroid": [
         708.123,
         764.22
@@ -340,10 +309,9 @@
   },
   "14": {
     "1": {
-      "label": "tennisracket",
+      "label": "racket",
       "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "static_score": 0.847656,
       "centroid": [
         705.319,
         766.821
@@ -360,10 +328,9 @@
   },
   "15": {
     "1": {
-      "label": "tennisracket",
+      "label": "racket",
       "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "static_score": 0.847656,
       "centroid": [
         702.899,
         769.141
@@ -380,151 +347,143 @@
   },
   "16": {
     "1": {
-      "label": "tennisracket",
+      "label": "racket",
       "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "static_score": 0.847656,
       "centroid": [
-        702.516,
-        772.156
+        702.692,
+        772.847
       ],
       "box_xyxy": [
         666,
-        749,
-        746,
+        750,
+        745,
         796
       ],
       "mask_idx": 16,
-      "mask_area": 2957
+      "mask_area": 2883
     }
   },
   "17": {
     "1": {
-      "label": "tennisracket",
+      "label": "racket",
       "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "static_score": 0.847656,
       "centroid": [
-        700.567,
-        774.86
+        701.188,
+        775.348
       ],
       "box_xyxy": [
-        664,
+        663,
         750,
-        744,
-        799
+        745,
+        800
       ],
       "mask_idx": 17,
-      "mask_area": 3121
+      "mask_area": 3126
     }
   },
   "18": {
     "1": {
-      "label": "tennisracket",
+      "label": "racket",
       "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "static_score": 0.847656,
       "centroid": [
-        696.121,
-        775.782
+        696.813,
+        776.436
       ],
       "box_xyxy": [
-        653,
-        747,
+        655,
+        749,
         743,
-        802
+        803
       ],
       "mask_idx": 18,
-      "mask_area": 3561
+      "mask_area": 3631
     }
   },
   "19": {
     "1": {
-      "label": "tennisracket",
+      "label": "racket",
       "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "static_score": 0.847656,
       "centroid": [
-        694.161,
-        778.289
+        696.8,
+        780.258
       ],
       "box_xyxy": [
-        652,
-        740,
-        741,
+        659,
+        750,
+        742,
         806
       ],
       "mask_idx": 19,
-      "mask_area": 3781
+      "mask_area": 3551
     }
   },
   "20": {
     "1": {
-      "label": "tennisracket",
+      "label": "racket",
       "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "static_score": 0.847656,
       "centroid": [
-        692.749,
-        781.581
+        694.934,
+        783.416
       ],
       "box_xyxy": [
-        647,
-        747,
-        741,
-        810
+        656,
+        751,
+        742,
+        811
       ],
       "mask_idx": 20,
-      "mask_area": 3909
+      "mask_area": 3798
     }
   },
   "21": {
     "1": {
-      "label": "tennisracket",
+      "label": "racket",
       "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "static_score": 0.847656,
       "centroid": [
-        693.112,
-        785.928
+        693.27,
+        786.302
       ],
       "box_xyxy": [
-        651,
-        752,
+        654,
+        753,
         740,
         814
       ],
       "mask_idx": 21,
-      "mask_area": 3870
+      "mask_area": 3951
     }
   },
   "22": {
     "1": {
-      "label": "tennisracket",
+      "label": "racket",
       "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "static_score": 0.847656,
       "centroid": [
-        690.924,
-        788.829
+        690.661,
+        788.985
       ],
       "box_xyxy": [
         646,
-        752,
+        753,
         738,
         818
       ],
       "mask_idx": 22,
-      "mask_area": 3985
+      "mask_area": 4134
     },
     "2": {
-      "label": "tennisball",
-      "tracker_score": 0.78125,
-      "static_score": 0.78125,
-      "quality_score": 0.610352,
+      "label": "ball",
+      "tracker_score": 0.757812,
+      "static_score": 0.757812,
       "centroid": [
-        667.648,
-        746.676
+        667.655,
+        746.826
       ],
       "box_xyxy": [
         659,
@@ -533,34 +492,32 @@
         757
       ],
       "mask_idx": 23,
-      "mask_area": 318,
-      "hit_score": 0.20366132074283616
+      "mask_area": 316,
+      "hit_score": 1.0682678644151115e-122
     }
   },
   "23": {
     "1": {
-      "label": "tennisracket",
+      "label": "racket",
       "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "static_score": 0.847656,
       "centroid": [
-        686.063,
-        789.588
+        685.335,
+        789.211
       ],
       "box_xyxy": [
         632,
-        746,
+        744,
         736,
         822
       ],
       "mask_idx": 24,
-      "mask_area": 4513
+      "mask_area": 4793
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         669.691,
         743.669
@@ -573,33 +530,31 @@
       ],
       "mask_idx": 25,
       "mask_area": 353,
-      "hit_score": 0.18800309430440368
+      "hit_score": 2.6955885672549107e-119
     }
   },
   "24": {
     "1": {
-      "label": "tennisracket",
+      "label": "racket",
       "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "static_score": 0.847656,
       "centroid": [
-        682.175,
-        790.951
+        683.593,
+        792.656
       ],
       "box_xyxy": [
-        624,
-        741,
+        626,
+        744,
         735,
         827
       ],
       "mask_idx": 26,
-      "mask_area": 4983
+      "mask_area": 4852
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         673.796,
         738.793
@@ -612,33 +567,31 @@
       ],
       "mask_idx": 27,
       "mask_area": 334,
-      "hit_score": 0.1478884719465666
+      "hit_score": 6.08656276547895e-116
     }
   },
   "25": {
     "1": {
-      "label": "tennisracket",
+      "label": "racket",
       "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "static_score": 0.847656,
       "centroid": [
-        681.068,
-        794.748
+        679.827,
+        794.096
       ],
       "box_xyxy": [
-        622,
+        621,
         742,
-        733,
-        830
+        734,
+        831
       ],
       "mask_idx": 28,
-      "mask_area": 4909
+      "mask_area": 5404
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         679.638,
         732.531
@@ -651,33 +604,31 @@
       ],
       "mask_idx": 29,
       "mask_area": 337,
-      "hit_score": 0.09913260732336288
+      "hit_score": 1.2298033212724315e-112
     }
   },
   "26": {
     "1": {
-      "label": "tennisracket",
+      "label": "racket",
       "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "static_score": 0.847656,
       "centroid": [
-        678.373,
-        797.218
+        678.386,
+        797.605
       ],
       "box_xyxy": [
-        615,
+        616,
         742,
         731,
-        834
+        835
       ],
       "mask_idx": 30,
-      "mask_area": 5129
+      "mask_area": 5247
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         685.582,
         725.218
@@ -690,33 +641,31 @@
       ],
       "mask_idx": 31,
       "mask_area": 404,
-      "hit_score": 0.05662544382607028
+      "hit_score": 2.2235365662995557e-109
     }
   },
   "27": {
     "1": {
-      "label": "tennisracket",
+      "label": "racket",
       "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "static_score": 0.847656,
       "centroid": [
-        676.049,
-        800.167
+        675.789,
+        800.373
       ],
       "box_xyxy": [
-        609,
+        610,
         742,
         729,
-        838
+        839
       ],
       "mask_idx": 32,
-      "mask_area": 5232
+      "mask_area": 5416
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         694.172,
         717.028
@@ -729,33 +678,31 @@
       ],
       "mask_idx": 33,
       "mask_area": 354,
-      "hit_score": 0.02756256252707436
+      "hit_score": 3.5974763513339387e-106
     }
   },
   "28": {
     "1": {
-      "label": "tennisracket",
+      "label": "racket",
       "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "static_score": 0.847656,
       "centroid": [
-        671.087,
-        800.87
+        671.415,
+        801.397
       ],
       "box_xyxy": [
-        602,
-        740,
-        727,
-        843
+        603,
+        741,
+        728,
+        844
       ],
       "mask_idx": 34,
-      "mask_area": 5857
+      "mask_area": 5989
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         702.566,
         706.366
@@ -768,33 +715,31 @@
       ],
       "mask_idx": 35,
       "mask_area": 339,
-      "hit_score": 0.011432479938385547
+      "hit_score": 5.208308218602871e-103
     }
   },
   "29": {
     "1": {
-      "label": "tennisracket",
+      "label": "racket",
       "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "static_score": 0.847656,
       "centroid": [
-        670.471,
-        804.699
+        669.794,
+        804.173
       ],
       "box_xyxy": [
-        599,
+        598,
         741,
-        725,
+        726,
         847
       ],
       "mask_idx": 36,
-      "mask_area": 5706
+      "mask_area": 6076
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         711.745,
         693.634
@@ -807,33 +752,31 @@
       ],
       "mask_idx": 37,
       "mask_area": 322,
-      "hit_score": 0.004040863560622198
+      "hit_score": 6.74746225923962e-100
     }
   },
   "30": {
     "1": {
-      "label": "tennisracket",
+      "label": "racket",
       "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "static_score": 0.847656,
       "centroid": [
-        666.377,
-        805.748
+        668.054,
+        807.139
       ],
       "box_xyxy": [
-        592,
-        736,
-        723,
-        850
+        593,
+        738,
+        724,
+        851
       ],
       "mask_idx": 38,
-      "mask_area": 6119
+      "mask_area": 5968
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         721.131,
         679.618
@@ -846,33 +789,31 @@
       ],
       "mask_idx": 39,
       "mask_area": 359,
-      "hit_score": 0.0012170847155863376
+      "hit_score": 7.822207073288438e-97
     }
   },
   "31": {
     "1": {
-      "label": "tennisracket",
+      "label": "racket",
       "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "static_score": 0.847656,
       "centroid": [
-        664.131,
-        807.668
+        662.549,
+        806.769
       ],
       "box_xyxy": [
-        587,
-        737,
-        721,
-        853
+        586,
+        735,
+        722,
+        854
       ],
       "mask_idx": 40,
-      "mask_area": 6145
+      "mask_area": 6692
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         731.426,
         662.359
@@ -885,33 +826,31 @@
       ],
       "mask_idx": 41,
       "mask_area": 329,
-      "hit_score": 0.0003123779087206869
+      "hit_score": 8.114527020201711e-94
     }
   },
   "32": {
     "1": {
-      "label": "tennisracket",
+      "label": "racket",
       "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "static_score": 0.847656,
       "centroid": [
-        660.419,
-        808.819
+        660.482,
+        808.87
       ],
       "box_xyxy": [
         581,
         735,
-        720,
+        719,
         857
       ],
       "mask_idx": 42,
-      "mask_area": 6659
+      "mask_area": 6647
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         741.308,
         643.799
@@ -924,33 +863,31 @@
       ],
       "mask_idx": 43,
       "mask_area": 338,
-      "hit_score": 6.832076185848817e-05
+      "hit_score": 7.532552554161752e-91
     }
   },
   "33": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.996094,
+      "static_score": 0.847656,
       "centroid": [
-        658.932,
-        810.369
+        659.312,
+        810.651
       ],
       "box_xyxy": [
-        578,
-        734,
+        579,
+        735,
         720,
         860
       ],
       "mask_idx": 44,
-      "mask_area": 6914
+      "mask_area": 6897
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         749.733,
         623.67
@@ -963,33 +900,31 @@
       ],
       "mask_idx": 45,
       "mask_area": 345,
-      "hit_score": 1.273321203360811e-05
+      "hit_score": 6.257000470587722e-88
     }
   },
   "34": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.996094,
+      "static_score": 0.847656,
       "centroid": [
-        656.612,
-        811.347
+        656.514,
+        811.289
       ],
       "box_xyxy": [
-        574,
+        575,
         733,
-        717,
-        862
+        718,
+        863
       ],
       "mask_idx": 46,
-      "mask_area": 7123
+      "mask_area": 7323
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         757.276,
         600.383
@@ -1002,33 +937,31 @@
       ],
       "mask_idx": 47,
       "mask_area": 363,
-      "hit_score": 2.02225596125131e-06
+      "hit_score": 4.650881373632597e-85
     }
   },
   "35": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.996094,
+      "static_score": 0.847656,
       "centroid": [
-        654.443,
-        811.871
+        654.371,
+        811.826
       ],
       "box_xyxy": [
         571,
-        733,
-        715,
+        734,
+        716,
         864
       ],
       "mask_idx": 48,
-      "mask_area": 7239
+      "mask_area": 7412
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         762.757,
         575.611
@@ -1041,33 +974,31 @@
       ],
       "mask_idx": 49,
       "mask_area": 375,
-      "hit_score": 0.0
+      "hit_score": 3.0934948319535906e-82
     }
   },
   "36": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.992188,
+      "static_score": 0.847656,
       "centroid": [
-        653.126,
-        812.054
+        653.093,
+        812.001
       ],
       "box_xyxy": [
         567,
-        730,
+        731,
         715,
-        865
+        866
       ],
       "mask_idx": 50,
-      "mask_area": 7439
+      "mask_area": 7610
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         766.529,
         547.512
@@ -1080,33 +1011,31 @@
       ],
       "mask_idx": 51,
       "mask_area": 367,
-      "hit_score": 0.0
+      "hit_score": 1.8412322992004238e-79
     }
   },
   "37": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.992188,
+      "static_score": 0.847656,
       "centroid": [
-        651.781,
-        811.751
+        652.093,
+        811.964
       ],
       "box_xyxy": [
         564,
-        730,
+        731,
         714,
-        866
+        867
       ],
       "mask_idx": 52,
-      "mask_area": 7734
+      "mask_area": 7761
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         766.755,
         518.467
@@ -1119,33 +1048,31 @@
       ],
       "mask_idx": 53,
       "mask_area": 347,
-      "hit_score": 0.0
+      "hit_score": 9.806472894379805e-77
     }
   },
   "38": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.992188,
+      "static_score": 0.847656,
       "centroid": [
-        650.847,
-        810.775
+        651.101,
+        810.951
       ],
       "box_xyxy": [
         562,
-        730,
-        714,
-        866
+        732,
+        715,
+        867
       ],
       "mask_idx": 54,
-      "mask_area": 7996
+      "mask_area": 8080
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         764.53,
         491.537
@@ -1158,33 +1085,31 @@
       ],
       "mask_idx": 55,
       "mask_area": 402,
-      "hit_score": 0.0
+      "hit_score": 4.673714047057742e-74
     }
   },
   "39": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.992188,
+      "static_score": 0.847656,
       "centroid": [
-        650.981,
-        809.662
+        651.327,
+        809.92
       ],
       "box_xyxy": [
         560,
-        728,
+        729,
         715,
         866
       ],
       "mask_idx": 56,
-      "mask_area": 8171
+      "mask_area": 8191
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         760.447,
         464.658
@@ -1197,33 +1122,31 @@
       ],
       "mask_idx": 57,
       "mask_area": 445,
-      "hit_score": 0.0
+      "hit_score": 1.993225799952711e-71
     }
   },
   "40": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.988281,
+      "static_score": 0.847656,
       "centroid": [
-        652.215,
-        808.529
+        652.673,
+        808.82
       ],
       "box_xyxy": [
-        559,
-        728,
+        560,
+        729,
         717,
         865
       ],
       "mask_idx": 58,
-      "mask_area": 8299
+      "mask_area": 8296
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         758.07,
         437.154
@@ -1236,33 +1159,31 @@
       ],
       "mask_idx": 59,
       "mask_area": 371,
-      "hit_score": 0.0
+      "hit_score": 7.606693548809515e-69
     }
   },
   "41": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.988281,
+      "static_score": 0.847656,
       "centroid": [
-        653.2,
-        806.524
+        653.849,
+        807.021
       ],
       "box_xyxy": [
-        557,
+        559,
         728,
         719,
-        863
+        864
       ],
       "mask_idx": 60,
-      "mask_area": 8475
+      "mask_area": 8422
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         754.2,
         411.263
@@ -1275,33 +1196,31 @@
       ],
       "mask_idx": 61,
       "mask_area": 410,
-      "hit_score": 0.0
+      "hit_score": 2.5976485816222627e-66
     }
   },
   "42": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.988281,
+      "static_score": 0.847656,
       "centroid": [
-        655.287,
-        803.549
+        655.93,
+        803.948
       ],
       "box_xyxy": [
-        558,
-        727,
+        560,
+        728,
         721,
         861
       ],
       "mask_idx": 62,
-      "mask_area": 8532
+      "mask_area": 8447
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         750.779,
         385.195
@@ -1314,33 +1233,31 @@
       ],
       "mask_idx": 63,
       "mask_area": 385,
-      "hit_score": 0.0
+      "hit_score": 7.937978773880312e-64
     }
   },
   "43": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.984375,
+      "static_score": 0.847656,
       "centroid": [
-        657.704,
-        800.166
+        658.528,
+        800.672
       ],
       "box_xyxy": [
-        558,
-        722,
+        560,
+        723,
         724,
         857
       ],
       "mask_idx": 64,
-      "mask_area": 8769
+      "mask_area": 8620
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         746.953,
         360.605
@@ -1353,33 +1270,31 @@
       ],
       "mask_idx": 65,
       "mask_area": 423,
-      "hit_score": 0.0
+      "hit_score": 2.170623628125719e-61
     }
   },
   "44": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.980469,
+      "static_score": 0.847656,
       "centroid": [
-        661.166,
-        796.152
+        661.741,
+        796.516
       ],
       "box_xyxy": [
-        559,
-        720,
+        561,
+        721,
         727,
         853
       ],
       "mask_idx": 66,
-      "mask_area": 8909
+      "mask_area": 8856
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         743.281,
         336.815
@@ -1392,33 +1307,31 @@
       ],
       "mask_idx": 67,
       "mask_area": 438,
-      "hit_score": 0.0
+      "hit_score": 5.311340897844547e-59
     }
   },
   "45": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.976562,
+      "static_score": 0.847656,
       "centroid": [
-        665.605,
-        791.683
+        666.146,
+        792.133
       ],
       "box_xyxy": [
-        564,
+        565,
         720,
         732,
         848
       ],
       "mask_idx": 68,
-      "mask_area": 9053
+      "mask_area": 8928
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         739.366,
         313.43
@@ -1431,33 +1344,31 @@
       ],
       "mask_idx": 69,
       "mask_area": 421,
-      "hit_score": 0.0
+      "hit_score": 1.162970998491089e-56
     }
   },
   "46": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.980469,
+      "static_score": 0.847656,
       "centroid": [
-        669.335,
-        785.789
+        669.794,
+        786.047
       ],
       "box_xyxy": [
-        566,
-        718,
-        735,
+        567,
+        719,
+        736,
         842
       ],
       "mask_idx": 70,
-      "mask_area": 9213
+      "mask_area": 9128
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         736.113,
         291.106
@@ -1470,33 +1381,31 @@
       ],
       "mask_idx": 71,
       "mask_area": 415,
-      "hit_score": 0.0
+      "hit_score": 2.2786553909883007e-54
     }
   },
   "47": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.972656,
+      "static_score": 0.847656,
       "centroid": [
-        674.09,
-        779.61
+        674.251,
+        779.811
       ],
       "box_xyxy": [
         569,
-        715,
-        741,
-        834
+        716,
+        742,
+        835
       ],
       "mask_idx": 72,
-      "mask_area": 9337
+      "mask_area": 9394
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         732.845,
         268.981
@@ -1509,18 +1418,17 @@
       ],
       "mask_idx": 73,
       "mask_area": 375,
-      "hit_score": 0.0
+      "hit_score": 3.995153529468029e-52
     }
   },
   "48": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.972656,
+      "static_score": 0.847656,
       "centroid": [
-        679.846,
-        772.494
+        680.313,
+        772.585
       ],
       "box_xyxy": [
         572,
@@ -1529,52 +1437,49 @@
         826
       ],
       "mask_idx": 74,
-      "mask_area": 9270
+      "mask_area": 9192
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
-        729.554,
-        248.012
+        729.595,
+        247.99
       ],
       "box_xyxy": [
         719,
         236,
-        740,
+        741,
         259
       ],
       "mask_idx": 75,
-      "mask_area": 415,
-      "hit_score": 0.0
+      "mask_area": 417,
+      "hit_score": 6.268063018528756e-50
     }
   },
   "49": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.964844,
+      "static_score": 0.847656,
       "centroid": [
-        685.012,
-        763.675
+        685.889,
+        764.036
       ],
       "box_xyxy": [
-        576,
-        709,
+        578,
+        710,
         752,
         818
       ],
       "mask_idx": 76,
-      "mask_area": 9420
+      "mask_area": 9384
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         725.448,
         227.676
@@ -1587,33 +1492,31 @@
       ],
       "mask_idx": 77,
       "mask_area": 404,
-      "hit_score": 0.0
+      "hit_score": 8.799911256182886e-48
     }
   },
   "50": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.964844,
+      "static_score": 0.847656,
       "centroid": [
-        688.978,
-        753.021
+        689.903,
+        753.042
       ],
       "box_xyxy": [
-        578,
-        702,
+        579,
+        703,
         758,
-        807
+        806
       ],
       "mask_idx": 78,
-      "mask_area": 9712
+      "mask_area": 9564
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         722.379,
         208.261
@@ -1626,33 +1529,31 @@
       ],
       "mask_idx": 79,
       "mask_area": 372,
-      "hit_score": 0.0
+      "hit_score": 1.105524288040411e-45
     }
   },
   "51": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.96875,
+      "static_score": 0.847656,
       "centroid": [
-        694.283,
-        742.914
+        695.002,
+        742.749
       ],
       "box_xyxy": [
-        583,
+        584,
         701,
         763,
         795
       ],
       "mask_idx": 80,
-      "mask_area": 9875
+      "mask_area": 9827
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         718.596,
         191.458
@@ -1665,33 +1566,31 @@
       ],
       "mask_idx": 81,
       "mask_area": 428,
-      "hit_score": 0.0
+      "hit_score": 1.2428060014425146e-43
     }
   },
   "52": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.996094,
-      "static_score": 0.832031,
-      "quality_score": 0.828781,
+      "label": "racket",
+      "tracker_score": 0.960938,
+      "static_score": 0.847656,
       "centroid": [
-        697.948,
-        729.772
+        698.645,
+        729.763
       ],
       "box_xyxy": [
-        586,
+        587,
         688,
-        767,
-        781
+        768,
+        780
       ],
       "mask_idx": 82,
-      "mask_area": 9988
+      "mask_area": 9991
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         715.779,
         172.805
@@ -1704,33 +1603,31 @@
       ],
       "mask_idx": 83,
       "mask_area": 543,
-      "hit_score": 0.0
+      "hit_score": 1.2502113945015158e-41
     }
   },
   "53": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.996094,
-      "static_score": 0.832031,
-      "quality_score": 0.828781,
+      "label": "racket",
+      "tracker_score": 0.964844,
+      "static_score": 0.847656,
       "centroid": [
-        682.452,
-        698.132
+        708.353,
+        715.182
       ],
       "box_xyxy": [
-        0,
-        181,
+        594,
+        674,
         773,
         764
       ],
       "mask_idx": 84,
-      "mask_area": 9702
+      "mask_area": 9074
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         712.512,
         155.178
@@ -1743,33 +1640,31 @@
       ],
       "mask_idx": 85,
       "mask_area": 387,
-      "hit_score": 0.0
+      "hit_score": 1.1254044325225143e-39
     }
   },
   "54": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.960938,
+      "static_score": 0.847656,
       "centroid": [
-        712.384,
-        701.862
+        713.652,
+        702.048
       ],
       "box_xyxy": [
-        595,
+        596,
         657,
         776,
         748
       ],
       "mask_idx": 86,
-      "mask_area": 9138
+      "mask_area": 9026
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         709.018,
         139.808
@@ -1782,33 +1677,31 @@
       ],
       "mask_idx": 87,
       "mask_area": 386,
-      "hit_score": 0.0
+      "hit_score": 9.065230419971362e-38
     }
   },
   "55": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.996094,
-      "static_score": 0.832031,
-      "quality_score": 0.828781,
+      "label": "racket",
+      "tracker_score": 0.960938,
+      "static_score": 0.847656,
       "centroid": [
-        713.643,
-        685.212
+        713.975,
+        685.322
       ],
       "box_xyxy": [
-        596,
+        597,
         641,
-        779,
+        780,
         731
       ],
       "mask_idx": 88,
-      "mask_area": 9409
+      "mask_area": 9451
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         705.386,
         123.988
@@ -1821,33 +1714,31 @@
       ],
       "mask_idx": 89,
       "mask_area": 420,
-      "hit_score": 0.0
+      "hit_score": 6.534225695670965e-36
     }
   },
   "56": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.996094,
-      "static_score": 0.832031,
-      "quality_score": 0.828781,
+      "label": "racket",
+      "tracker_score": 0.964844,
+      "static_score": 0.847656,
       "centroid": [
-        717.083,
-        668.325
+        718.318,
+        668.409
       ],
       "box_xyxy": [
-        600,
+        602,
         623,
         782,
         713
       ],
       "mask_idx": 90,
-      "mask_area": 9305
+      "mask_area": 9265
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         701.388,
         110.763
@@ -1860,33 +1751,31 @@
       ],
       "mask_idx": 91,
       "mask_area": 389,
-      "hit_score": 0.0
+      "hit_score": 4.214581654775511e-34
     }
   },
   "57": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.996094,
-      "static_score": 0.832031,
-      "quality_score": 0.828781,
+      "label": "racket",
+      "tracker_score": 0.964844,
+      "static_score": 0.847656,
       "centroid": [
-        718.002,
-        650.842
+        717.766,
+        650.956
       ],
       "box_xyxy": [
-        601,
+        602,
         605,
         783,
         694
       ],
       "mask_idx": 92,
-      "mask_area": 9236
+      "mask_area": 9372
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         697.77,
         96.465
@@ -1899,33 +1788,31 @@
       ],
       "mask_idx": 93,
       "mask_area": 331,
-      "hit_score": 0.0
+      "hit_score": 2.4325393325816023e-32
     }
   },
   "58": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.96875,
+      "static_score": 0.847656,
       "centroid": [
-        718.211,
-        631.893
+        719.108,
+        631.881
       ],
       "box_xyxy": [
-        602,
+        605,
         585,
         784,
         673
       ],
       "mask_idx": 94,
-      "mask_area": 9213
+      "mask_area": 9222
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         694.826,
         83.625
@@ -1938,33 +1825,31 @@
       ],
       "mask_idx": 95,
       "mask_area": 344,
-      "hit_score": 0.0
+      "hit_score": 1.2563490845842602e-30
     }
   },
   "59": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.996094,
-      "static_score": 0.832031,
-      "quality_score": 0.828781,
+      "label": "racket",
+      "tracker_score": 0.964844,
+      "static_score": 0.847656,
       "centroid": [
-        717.715,
-        613.306
+        718.647,
+        613.262
       ],
       "box_xyxy": [
-        603,
+        607,
         565,
         782,
-        655
+        656
       ],
       "mask_idx": 96,
-      "mask_area": 9065
+      "mask_area": 9044
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         691.341,
         71.598
@@ -1977,33 +1862,31 @@
       ],
       "mask_idx": 97,
       "mask_area": 311,
-      "hit_score": 0.0
+      "hit_score": 5.806385169767463e-29
     }
   },
   "60": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.996094,
-      "static_score": 0.832031,
-      "quality_score": 0.828781,
+      "label": "racket",
+      "tracker_score": 0.96875,
+      "static_score": 0.847656,
       "centroid": [
-        662.867,
-        568.641
+        714.224,
+        595.114
       ],
       "box_xyxy": [
-        0,
-        179,
-        780,
+        600,
+        546,
+        781,
         636
       ],
       "mask_idx": 98,
-      "mask_area": 9807
+      "mask_area": 9138
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         688.395,
         59.708
@@ -2016,33 +1899,31 @@
       ],
       "mask_idx": 99,
       "mask_area": 342,
-      "hit_score": 0.0
+      "hit_score": 2.4012999572979363e-27
     }
   },
   "61": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.996094,
-      "static_score": 0.832031,
-      "quality_score": 0.828781,
+      "label": "racket",
+      "tracker_score": 0.96875,
+      "static_score": 0.847656,
       "centroid": [
-        644.552,
-        544.186
+        710.625,
+        576.46
       ],
       "box_xyxy": [
-        0,
-        168,
+        601,
+        526,
         777,
-        625
+        624
       ],
       "mask_idx": 100,
-      "mask_area": 9914
+      "mask_area": 8980
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         684.462,
         48.864
@@ -2055,18 +1936,17 @@
       ],
       "mask_idx": 101,
       "mask_area": 316,
-      "hit_score": 0.0
+      "hit_score": 8.886526539468767e-26
     }
   },
   "62": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.996094,
-      "static_score": 0.832031,
-      "quality_score": 0.828781,
+      "label": "racket",
+      "tracker_score": 0.960938,
+      "static_score": 0.847656,
       "centroid": [
-        705.8,
-        557.599
+        706.058,
+        557.589
       ],
       "box_xyxy": [
         600,
@@ -2075,13 +1955,12 @@
         614
       ],
       "mask_idx": 102,
-      "mask_area": 8944
+      "mask_area": 8972
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         680.886,
         39.188
@@ -2094,33 +1973,31 @@
       ],
       "mask_idx": 103,
       "mask_area": 298,
-      "hit_score": 0.0
+      "hit_score": 2.942813426974222e-24
     }
   },
   "63": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.996094,
-      "static_score": 0.832031,
-      "quality_score": 0.828781,
+      "label": "racket",
+      "tracker_score": 0.96875,
+      "static_score": 0.847656,
       "centroid": [
-        671.216,
-        525.529
+        700.281,
+        539.112
       ],
       "box_xyxy": [
-        0,
-        177,
+        598,
+        484,
         765,
         604
       ],
       "mask_idx": 104,
-      "mask_area": 9224
+      "mask_area": 8936
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         677.644,
         29.969
@@ -2133,36 +2010,34 @@
       ],
       "mask_idx": 105,
       "mask_area": 289,
-      "hit_score": 0.0
+      "hit_score": 8.720441502092154e-23
     }
   },
   "64": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.996094,
-      "static_score": 0.832031,
-      "quality_score": 0.828781,
+      "label": "racket",
+      "tracker_score": 0.960938,
+      "static_score": 0.847656,
       "centroid": [
-        694.803,
-        519.147
+        694.942,
+        519.008
       ],
       "box_xyxy": [
         598,
         465,
-        756,
+        755,
         592
       ],
       "mask_idx": 106,
-      "mask_area": 8119
+      "mask_area": 8071
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
-        674.734,
-        22.103
+        674.725,
+        22.134
       ],
       "box_xyxy": [
         666,
@@ -2171,34 +2046,32 @@
         32
       ],
       "mask_idx": 107,
-      "mask_area": 290,
-      "hit_score": 0.0
+      "mask_area": 291,
+      "hit_score": 2.3123803751527487e-21
     }
   },
   "65": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.996094,
-      "static_score": 0.832031,
-      "quality_score": 0.828781,
+      "label": "racket",
+      "tracker_score": 0.96875,
+      "static_score": 0.847656,
       "centroid": [
-        538.463,
-        430.327
+        462.655,
+        405.87
       ],
       "box_xyxy": [
         0,
-        26,
+        20,
         745,
         580
       ],
       "mask_idx": 108,
-      "mask_area": 11000
+      "mask_area": 13163
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.757812,
       "centroid": [
         671.926,
         14.155
@@ -2211,33 +2084,31 @@
       ],
       "mask_idx": 109,
       "mask_area": 284,
-      "hit_score": 0.0
+      "hit_score": 5.486875858021252e-20
     }
   },
   "66": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.996094,
-      "static_score": 0.832031,
-      "quality_score": 0.828781,
+      "label": "racket",
+      "tracker_score": 0.957031,
+      "static_score": 0.847656,
       "centroid": [
-        430.15,
-        371.953
+        527.053,
+        415.666
       ],
       "box_xyxy": [
         0,
-        0,
-        734,
+        30,
+        735,
         569
       ],
       "mask_idx": 110,
-      "mask_area": 13191
+      "mask_area": 10979
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 0.996094,
-      "static_score": 0.78125,
-      "quality_score": 0.778198,
+      "static_score": 0.757812,
       "centroid": [
         668.73,
         7.618
@@ -2250,33 +2121,31 @@
       ],
       "mask_idx": 111,
       "mask_area": 267,
-      "hit_score": 0.0
+      "hit_score": 1.1650271630199743e-18
     }
   },
   "67": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.992188,
-      "static_score": 0.832031,
-      "quality_score": 0.825531,
+      "label": "racket",
+      "tracker_score": 0.953125,
+      "static_score": 0.847656,
       "centroid": [
-        491.327,
-        384.986
+        550.727,
+        420.668
       ],
       "box_xyxy": [
         0,
-        28,
+        85,
         720,
         558
       ],
       "mask_idx": 112,
-      "mask_area": 11300
+      "mask_area": 10144
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 0.996094,
-      "static_score": 0.78125,
-      "quality_score": 0.778198,
+      "static_score": 0.757812,
       "centroid": [
         665.153,
         4.524
@@ -2289,33 +2158,31 @@
       ],
       "mask_idx": 113,
       "mask_area": 170,
-      "hit_score": 0.0
+      "hit_score": 2.21356370744593e-17
     }
   },
   "68": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.988281,
-      "static_score": 0.832031,
-      "quality_score": 0.822281,
+      "label": "racket",
+      "tracker_score": 0.945312,
+      "static_score": 0.847656,
       "centroid": [
-        462.524,
-        358.507
+        506.044,
+        384.935
       ],
       "box_xyxy": [
         0,
-        0,
+        27,
         707,
         546
       ],
       "mask_idx": 114,
-      "mask_area": 11855
+      "mask_area": 10838
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 0.988281,
-      "static_score": 0.78125,
-      "quality_score": 0.772095,
+      "static_score": 0.757812,
       "centroid": [
         662.61,
         2.667
@@ -2328,33 +2195,31 @@
       ],
       "mask_idx": 115,
       "mask_area": 105,
-      "hit_score": 0.0
+      "hit_score": 3.7635098563938366e-16
     }
   },
   "69": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.988281,
-      "static_score": 0.832031,
-      "quality_score": 0.822281,
+      "label": "racket",
+      "tracker_score": 0.941406,
+      "static_score": 0.847656,
       "centroid": [
-        480.802,
-        367.403
+        482.232,
+        367.042
       ],
       "box_xyxy": [
         0,
-        29,
+        30,
         691,
         541
       ],
       "mask_idx": 116,
-      "mask_area": 10869
+      "mask_area": 10863
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 0.890625,
-      "static_score": 0.78125,
-      "quality_score": 0.695801,
+      "static_score": 0.757812,
       "centroid": [
         660.5,
         0.5
@@ -2367,18 +2232,17 @@
       ],
       "mask_idx": 117,
       "mask_area": 20,
-      "hit_score": 0.0
+      "hit_score": 5.72583919891267e-15
     }
   },
   "70": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.988281,
-      "static_score": 0.832031,
-      "quality_score": 0.822281,
+      "label": "racket",
+      "tracker_score": 0.949219,
+      "static_score": 0.847656,
       "centroid": [
-        381.867,
-        313.612
+        386.852,
+        318.902
       ],
       "box_xyxy": [
         0,
@@ -2387,76 +2251,36 @@
         527
       ],
       "mask_idx": 118,
-      "mask_area": 12833
-    },
-    "2": {
-      "label": "tennisball",
-      "tracker_score": 0.890625,
-      "static_score": 0.78125,
-      "quality_score": 0.695801,
-      "centroid": [
-        657.50475,
-        0.84525
-      ],
-      "box_xyxy": [
-        652,
-        0,
-        662,
-        1
-      ],
-      "mask_idx": 302,
-      "mask_area": 20,
-      "hit_score": 0.0
+      "mask_area": 12492
     }
   },
   "71": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.984375,
-      "static_score": 0.832031,
-      "quality_score": 0.819031,
+      "label": "racket",
+      "tracker_score": 0.933594,
+      "static_score": 0.847656,
       "centroid": [
-        347.982,
-        310.197
+        340.241,
+        307.786
       ],
       "box_xyxy": [
         0,
         0,
-        655,
-        522
+        654,
+        514
       ],
       "mask_idx": 119,
-      "mask_area": 13102
-    },
-    "2": {
-      "label": "tennisball",
-      "tracker_score": 0.890625,
-      "static_score": 0.78125,
-      "quality_score": 0.695801,
-      "centroid": [
-        654.5095000000001,
-        1.1905
-      ],
-      "box_xyxy": [
-        649,
-        0,
-        660,
-        2
-      ],
-      "mask_idx": 303,
-      "mask_area": 20,
-      "hit_score": 0.0
+      "mask_area": 13638
     }
   },
   "72": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.988281,
-      "static_score": 0.832031,
-      "quality_score": 0.822281,
+      "label": "racket",
+      "tracker_score": 0.945312,
+      "static_score": 0.847656,
       "centroid": [
-        375.511,
-        313.349
+        342.59,
+        311.089
       ],
       "box_xyxy": [
         0,
@@ -2465,115 +2289,55 @@
         509
       ],
       "mask_idx": 120,
-      "mask_area": 11821
-    },
-    "2": {
-      "label": "tennisball",
-      "tracker_score": 0.890625,
-      "static_score": 0.78125,
-      "quality_score": 0.695801,
-      "centroid": [
-        651.51425,
-        1.53575
-      ],
-      "box_xyxy": [
-        645,
-        0,
-        657,
-        3
-      ],
-      "mask_idx": 304,
-      "mask_area": 20,
-      "hit_score": 0.0
+      "mask_area": 12848
     }
   },
   "73": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.988281,
-      "static_score": 0.832031,
-      "quality_score": 0.822281,
+      "label": "racket",
+      "tracker_score": 0.960938,
+      "static_score": 0.847656,
       "centroid": [
-        379.763,
-        309.611
+        410.679,
+        328.837
       ],
       "box_xyxy": [
         0,
-        0,
+        25,
         607,
-        504
+        503
       ],
       "mask_idx": 121,
-      "mask_area": 11380
-    },
-    "2": {
-      "label": "tennisball",
-      "tracker_score": 0.890625,
-      "static_score": 0.78125,
-      "quality_score": 0.695801,
-      "centroid": [
-        648.519,
-        1.8809999999999998
-      ],
-      "box_xyxy": [
-        642,
-        0,
-        655,
-        4
-      ],
-      "mask_idx": 305,
-      "mask_area": 20,
-      "hit_score": 0.0
+      "mask_area": 10405
     }
   },
   "74": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.992188,
-      "static_score": 0.832031,
-      "quality_score": 0.825531,
+      "label": "racket",
+      "tracker_score": 0.964844,
+      "static_score": 0.847656,
       "centroid": [
-        463.708,
-        361.88
+        464.549,
+        362.221
       ],
       "box_xyxy": [
         0,
-        116,
+        117,
         583,
         497
       ],
       "mask_idx": 122,
-      "mask_area": 8430
-    },
-    "2": {
-      "label": "tennisball",
-      "tracker_score": 0.890625,
-      "static_score": 0.78125,
-      "quality_score": 0.695801,
-      "centroid": [
-        645.5237500000001,
-        2.22625
-      ],
-      "box_xyxy": [
-        638,
-        0,
-        652,
-        5
-      ],
-      "mask_idx": 306,
-      "mask_area": 20,
-      "hit_score": 0.0
+      "mask_area": 8348
     }
   },
   "75": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.988281,
-      "static_score": 0.832031,
-      "quality_score": 0.822281,
+      "label": "racket",
+      "tracker_score": 0.964844,
+      "static_score": 0.847656,
       "centroid": [
-        396.18,
-        331.311
+        398.253,
+        332.473
       ],
       "box_xyxy": [
         0,
@@ -2582,37 +2346,17 @@
         489
       ],
       "mask_idx": 123,
-      "mask_area": 9051
-    },
-    "2": {
-      "label": "tennisball",
-      "tracker_score": 0.890625,
-      "static_score": 0.78125,
-      "quality_score": 0.695801,
-      "centroid": [
-        642.5285,
-        2.5715
-      ],
-      "box_xyxy": [
-        635,
-        0,
-        650,
-        6
-      ],
-      "mask_idx": 307,
-      "mask_area": 230,
-      "hit_score": 0.0
+      "mask_area": 9003
     }
   },
   "76": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.992188,
-      "static_score": 0.832031,
-      "quality_score": 0.825531,
+      "label": "racket",
+      "tracker_score": 0.96875,
+      "static_score": 0.847656,
       "centroid": [
-        325.421,
-        299.257
+        330.679,
+        302.486
       ],
       "box_xyxy": [
         0,
@@ -2621,208 +2365,107 @@
         486
       ],
       "mask_idx": 124,
-      "mask_area": 10107
-    },
-    "2": {
-      "label": "tennisball",
-      "tracker_score": 0.890625,
-      "static_score": 0.78125,
-      "quality_score": 0.695801,
-      "centroid": [
-        639.53325,
-        2.9167500000000004
-      ],
-      "box_xyxy": [
-        631,
-        0,
-        647,
-        6
-      ],
-      "mask_idx": 308,
-      "mask_area": 210,
-      "hit_score": 0.0
+      "mask_area": 9972
     }
   },
   "77": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.988281,
-      "static_score": 0.832031,
-      "quality_score": 0.822281,
+      "label": "racket",
+      "tracker_score": 0.96875,
+      "static_score": 0.847656,
       "centroid": [
-        321.521,
-        314.201
+        306.068,
+        301.763
       ],
       "box_xyxy": [
         0,
-        25,
+        0,
         534,
-        484
+        483
       ],
       "mask_idx": 125,
-      "mask_area": 9502
-    },
-    "2": {
-      "label": "tennisball",
-      "tracker_score": 0.890625,
-      "static_score": 0.78125,
-      "quality_score": 0.695801,
-      "centroid": [
-        636.538,
-        3.2619999999999996
-      ],
-      "box_xyxy": [
-        628,
-        0,
-        645,
-        7
-      ],
-      "mask_idx": 309,
-      "mask_area": 210,
-      "hit_score": 0.0
+      "mask_area": 9993
     }
   },
   "78": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.980469,
-      "static_score": 0.832031,
-      "quality_score": 0.815781,
+      "label": "racket",
+      "tracker_score": 0.949219,
+      "static_score": 0.847656,
       "centroid": [
-        238.723,
-        279.2
+        228.817,
+        276.723
       ],
       "box_xyxy": [
         0,
         0,
-        512,
+        511,
         476
       ],
       "mask_idx": 126,
-      "mask_area": 10978
-    },
-    "2": {
-      "label": "tennisball",
-      "tracker_score": 0.890625,
-      "static_score": 0.78125,
-      "quality_score": 0.695801,
-      "centroid": [
-        633.5427500000001,
-        3.6072499999999996
-      ],
-      "box_xyxy": [
-        624,
-        0,
-        642,
-        8
-      ],
-      "mask_idx": 310,
-      "mask_area": 210,
-      "hit_score": 0.0
+      "mask_area": 11495
     }
   },
   "79": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.980469,
-      "static_score": 0.832031,
-      "quality_score": 0.815781,
+      "label": "racket",
+      "tracker_score": 0.957031,
+      "static_score": 0.847656,
       "centroid": [
-        278.189,
-        323.312
+        243.885,
+        304.329
       ],
       "box_xyxy": [
         0,
         0,
         498,
-        482
+        483
       ],
       "mask_idx": 127,
-      "mask_area": 9312
-    },
-    "2": {
-      "label": "tennisball",
-      "tracker_score": 0.890625,
-      "static_score": 0.78125,
-      "quality_score": 0.695801,
-      "centroid": [
-        630.5475000000001,
-        3.9525
-      ],
-      "box_xyxy": [
-        621,
-        0,
-        640,
-        9
-      ],
-      "mask_idx": 311,
-      "mask_area": 210,
-      "hit_score": 0.0
+      "mask_area": 10859
     }
   },
   "80": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.980469,
-      "static_score": 0.832031,
-      "quality_score": 0.815781,
+      "label": "racket",
+      "tracker_score": 0.902344,
+      "static_score": 0.847656,
       "centroid": [
-        288.5955,
-        355.6845
+        94.39,
+        218.433
       ],
       "box_xyxy": [
         0,
-        14,
-        486,
-        502
-      ],
-      "mask_idx": 301,
-      "mask_area": 13880
-    },
-    "2": {
-      "label": "tennisball",
-      "tracker_score": 0.890625,
-      "static_score": 0.78125,
-      "quality_score": 0.695801,
-      "centroid": [
-        627.5522500000001,
-        4.29775
-      ],
-      "box_xyxy": [
-        617,
         0,
-        637,
-        10
+        480,
+        486
       ],
-      "mask_idx": 312,
-      "mask_area": 210,
-      "hit_score": 0.0
+      "mask_idx": 128,
+      "mask_area": 6975
     }
   },
   "81": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.894531,
-      "static_score": 0.832031,
-      "quality_score": 0.744278,
+      "label": "racket",
+      "tracker_score": 0.847656,
+      "static_score": 0.847656,
       "centroid": [
-        299.002,
-        388.057
+        281.689,
+        372.127
       ],
       "box_xyxy": [
         0,
-        29,
-        475,
-        523
+        28,
+        473,
+        524
       ],
-      "mask_idx": 128,
-      "mask_area": 8557
+      "mask_idx": 129,
+      "mask_area": 8996
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
       "tracker_score": 0.550781,
-      "static_score": 0.78125,
-      "quality_score": 0.430298,
+      "static_score": 0.757812,
       "centroid": [
         624.557,
         4.643
@@ -2833,38 +2476,54 @@
         635,
         11
       ],
-      "mask_idx": 129,
+      "mask_idx": 130,
       "mask_area": 210,
-      "hit_score": 0.0
+      "hit_score": 0.00015167245383584282
     }
   },
   "82": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.988281,
-      "static_score": 0.832031,
-      "quality_score": 0.822281,
+      "label": "racket",
+      "tracker_score": 0.96875,
+      "static_score": 0.847656,
       "centroid": [
-        411.885,
-        531.024
+        412.356,
+        530.52
       ],
       "box_xyxy": [
         367,
-        495,
-        471,
-        576
+        493,
+        473,
+        577
       ],
-      "mask_idx": 130,
-      "mask_area": 5847
+      "mask_idx": 131,
+      "mask_area": 5980
     },
     "2": {
-      "label": "tennisball",
-      "tracker_score": 0.78125,
-      "static_score": 0.78125,
-      "quality_score": 0.610352,
+      "label": "ball",
+      "tracker_score": 0.558594,
+      "static_score": 0.757812,
       "centroid": [
-        620.347,
-        7.819
+        6.548,
+        215.545
+      ],
+      "box_xyxy": [
+        0,
+        0,
+        24,
+        441
+      ],
+      "mask_idx": 132,
+      "mask_area": 5615,
+      "hit_score": 0.0005443002716340176
+    },
+    "4": {
+      "label": "ball",
+      "tracker_score": 0.769531,
+      "static_score": 0.769531,
+      "centroid": [
+        620.411,
+        7.821
       ],
       "box_xyxy": [
         612,
@@ -2872,35 +2531,51 @@
         629,
         17
       ],
-      "mask_idx": 131,
-      "mask_area": 282,
-      "hit_score": 0.0
+      "mask_idx": 133,
+      "mask_area": 285,
+      "hit_score": 0.0005443002716340176
     }
   },
   "83": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.988281,
-      "static_score": 0.832031,
-      "quality_score": 0.822281,
+      "label": "racket",
+      "tracker_score": 0.96875,
+      "static_score": 0.847656,
       "centroid": [
-        423.492,
-        566.117
+        423.459,
+        565.448
       ],
       "box_xyxy": [
         375,
         501,
-        474,
+        475,
         617
       ],
-      "mask_idx": 132,
-      "mask_area": 6693
+      "mask_idx": 134,
+      "mask_area": 6811
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
+      "tracker_score": 0.503906,
+      "static_score": 0.757812,
+      "centroid": [
+        7.518,
+        218.061
+      ],
+      "box_xyxy": [
+        0,
+        0,
+        24,
+        442
+      ],
+      "mask_idx": 135,
+      "mask_area": 6391,
+      "hit_score": 0.0017478954289288032
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         617.483,
         13.435
@@ -2911,35 +2586,33 @@
         626,
         23
       ],
-      "mask_idx": 133,
+      "mask_idx": 136,
       "mask_area": 294,
-      "hit_score": 0.0
+      "hit_score": 0.0017478954289288032
     }
   },
   "84": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.988281,
-      "static_score": 0.832031,
-      "quality_score": 0.822281,
+      "label": "racket",
+      "tracker_score": 0.976562,
+      "static_score": 0.847656,
       "centroid": [
-        443.57,
-        590.784
+        443.644,
+        590.539
       ],
       "box_xyxy": [
         399,
         499,
         481,
-        649
+        650
       ],
-      "mask_idx": 134,
-      "mask_area": 7676
+      "mask_idx": 137,
+      "mask_area": 7760
     },
-    "2": {
-      "label": "tennisball",
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         613.635,
         20.595
@@ -2950,35 +2623,33 @@
         623,
         30
       ],
-      "mask_idx": 135,
+      "mask_idx": 138,
       "mask_area": 304,
-      "hit_score": 0.0
+      "hit_score": 0.00502270185845783
     }
   },
   "85": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.988281,
-      "static_score": 0.832031,
-      "quality_score": 0.822281,
+      "label": "racket",
+      "tracker_score": 0.976562,
+      "static_score": 0.847656,
       "centroid": [
-        473.49,
-        600.457
+        473.458,
+        600.381
       ],
       "box_xyxy": [
         429,
-        493,
+        494,
         514,
         663
       ],
-      "mask_idx": 136,
-      "mask_area": 8294
+      "mask_idx": 139,
+      "mask_area": 8362
     },
-    "2": {
-      "label": "tennisball",
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         611.736,
         28.993
@@ -2989,35 +2660,33 @@
         620,
         38
       ],
-      "mask_idx": 137,
+      "mask_idx": 140,
       "mask_area": 299,
-      "hit_score": 0.0
+      "hit_score": 0.012915297379419377
     }
   },
   "86": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.992188,
-      "static_score": 0.832031,
-      "quality_score": 0.825531,
+      "label": "racket",
+      "tracker_score": 0.980469,
+      "static_score": 0.847656,
       "centroid": [
-        511.715,
-        583.899
+        511.533,
+        583.878
       ],
       "box_xyxy": [
-        468,
-        475,
+        467,
+        476,
         558,
         649
       ],
-      "mask_idx": 138,
-      "mask_area": 8951
+      "mask_idx": 141,
+      "mask_area": 9037
     },
-    "2": {
-      "label": "tennisball",
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         608.867,
         37.614
@@ -3028,35 +2697,33 @@
         618,
         47
       ],
-      "mask_idx": 139,
+      "mask_idx": 142,
       "mask_area": 324,
-      "hit_score": 0.0
+      "hit_score": 0.02971778789375526
     }
   },
   "87": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.992188,
-      "static_score": 0.832031,
-      "quality_score": 0.825531,
+      "label": "racket",
+      "tracker_score": 0.980469,
+      "static_score": 0.847656,
       "centroid": [
-        543.999,
-        543.534
+        543.974,
+        542.842
       ],
       "box_xyxy": [
-        508,
+        507,
         449,
         594,
-        608
+        609
       ],
-      "mask_idx": 140,
-      "mask_area": 8711
+      "mask_idx": 143,
+      "mask_area": 8927
     },
-    "2": {
-      "label": "tennisball",
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         606.209,
         47.5
@@ -3067,35 +2734,33 @@
         615,
         57
       ],
-      "mask_idx": 141,
+      "mask_idx": 144,
       "mask_area": 292,
-      "hit_score": 0.0
+      "hit_score": 0.06118903505707664
     }
   },
   "88": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.953125,
-      "static_score": 0.832031,
-      "quality_score": 0.79303,
+      "label": "racket",
+      "tracker_score": 0.925781,
+      "static_score": 0.847656,
       "centroid": [
-        579.286,
-        483.888
+        579.248,
+        483.468
       ],
       "box_xyxy": [
         536,
-        423,
+        422,
         615,
-        542
+        541
       ],
-      "mask_idx": 142,
-      "mask_area": 4381
+      "mask_idx": 145,
+      "mask_area": 4448
     },
-    "2": {
-      "label": "tennisball",
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         603.163,
         57.514
@@ -3106,35 +2771,33 @@
         612,
         67
       ],
-      "mask_idx": 143,
+      "mask_idx": 146,
       "mask_area": 294,
-      "hit_score": 0.0
+      "hit_score": 0.11273941783354377
     }
   },
   "89": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.984375,
-      "static_score": 0.832031,
-      "quality_score": 0.819031,
+      "label": "racket",
+      "tracker_score": 0.964844,
+      "static_score": 0.847656,
       "centroid": [
-        502.977,
-        382.516
+        574.662,
+        404.208
       ],
       "box_xyxy": [
-        0,
-        166,
-        614,
-        466
+        532,
+        336,
+        613,
+        464
       ],
-      "mask_idx": 144,
-      "mask_area": 4970
+      "mask_idx": 147,
+      "mask_area": 3453
     },
-    "2": {
-      "label": "tennisball",
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         600.34,
         68.55
@@ -3145,35 +2808,33 @@
         609,
         78
       ],
-      "mask_idx": 145,
+      "mask_idx": 148,
       "mask_area": 291,
-      "hit_score": 0.0
+      "hit_score": 0.18587587622851295
     }
   },
   "90": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.984375,
-      "static_score": 0.832031,
-      "quality_score": 0.819031,
+      "label": "racket",
+      "tracker_score": 0.96875,
+      "static_score": 0.847656,
       "centroid": [
-        566.744,
-        335.328
+        566.833,
+        335.66
       ],
       "box_xyxy": [
-        550,
+        549,
         285,
         585,
-        389
+        390
       ],
-      "mask_idx": 146,
-      "mask_area": 1980
+      "mask_idx": 149,
+      "mask_area": 2063
     },
-    "2": {
-      "label": "tennisball",
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         598.142,
         81.138
@@ -3184,35 +2845,33 @@
         607,
         90
       ],
-      "mask_idx": 147,
+      "mask_idx": 150,
       "mask_area": 289,
-      "hit_score": 0.0
+      "hit_score": 0.274230229639833
     }
   },
   "91": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.972656,
-      "static_score": 0.832031,
-      "quality_score": 0.80928,
+      "label": "racket",
+      "tracker_score": 0.953125,
+      "static_score": 0.847656,
       "centroid": [
-        501.34,
-        239.576
+        472.989,
+        233.856
       ],
       "box_xyxy": [
         0,
-        163,
+        118,
         603,
         284
       ],
-      "mask_idx": 148,
-      "mask_area": 5100
+      "mask_idx": 151,
+      "mask_area": 5663
     },
-    "2": {
-      "label": "tennisball",
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         595.595,
         93.123
@@ -3223,20 +2882,19 @@
         604,
         103
       ],
-      "mask_idx": 149,
+      "mask_idx": 152,
       "mask_area": 309,
-      "hit_score": 0.0
+      "hit_score": 0.3620367715411403
     }
   },
   "92": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.871094,
-      "static_score": 0.832031,
-      "quality_score": 0.724777,
+      "label": "racket",
+      "tracker_score": 0.84375,
+      "static_score": 0.847656,
       "centroid": [
-        629.305,
-        206.651
+        629.369,
+        206.643
       ],
       "box_xyxy": [
         616,
@@ -3244,14 +2902,13 @@
         645,
         219
       ],
-      "mask_idx": 150,
-      "mask_area": 410
+      "mask_idx": 153,
+      "mask_area": 420
     },
-    "2": {
-      "label": "tennisball",
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         592.959,
         106.251
@@ -3262,35 +2919,33 @@
         602,
         116
       ],
-      "mask_idx": 151,
+      "mask_idx": 154,
       "mask_area": 339,
-      "hit_score": 0.0
+      "hit_score": 0.42769590990038703
     }
   },
   "93": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.964844,
-      "static_score": 0.832031,
-      "quality_score": 0.80278,
+      "label": "racket",
+      "tracker_score": 0.941406,
+      "static_score": 0.847656,
       "centroid": [
-        635.797,
-        141.26
+        636.199,
+        142.525
       ],
       "box_xyxy": [
-        596,
-        71,
-        664,
+        595,
+        72,
+        665,
         225
       ],
-      "mask_idx": 152,
-      "mask_area": 2606
+      "mask_idx": 155,
+      "mask_area": 2762
     },
-    "2": {
-      "label": "tennisball",
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         616.455,
         126.866
@@ -3301,35 +2956,33 @@
         631,
         137
       ],
-      "mask_idx": 153,
+      "mask_idx": 156,
       "mask_area": 448,
-      "hit_score": 0.0
+      "hit_score": 0.45212921267617345
     }
   },
   "94": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.976562,
-      "static_score": 0.832031,
-      "quality_score": 0.812531,
+      "label": "racket",
+      "tracker_score": 0.957031,
+      "static_score": 0.847656,
       "centroid": [
-        684.645,
-        222.924
+        684.156,
+        222.11
       ],
       "box_xyxy": [
-        667,
-        188,
+        666,
+        187,
         704,
         257
       ],
-      "mask_idx": 154,
-      "mask_area": 1284
+      "mask_idx": 157,
+      "mask_area": 1441
     },
-    "2": {
-      "label": "tennisball",
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         675.182,
         160.114
@@ -3340,35 +2993,51 @@
         688,
         170
       ],
-      "mask_idx": 155,
+      "mask_idx": 158,
       "mask_area": 352,
-      "hit_score": 0.0
+      "hit_score": 0.42769590990038703
     }
   },
   "95": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.992188,
-      "static_score": 0.832031,
-      "quality_score": 0.825531,
+      "label": "racket",
+      "tracker_score": 0.976562,
+      "static_score": 0.847656,
       "centroid": [
-        714.79,
-        279.184
+        715.13,
+        278.515
       ],
       "box_xyxy": [
         692,
-        251,
+        249,
         736,
         304
       ],
-      "mask_idx": 156,
-      "mask_area": 1183
+      "mask_idx": 159,
+      "mask_area": 1263
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
+      "tracker_score": 0.585938,
+      "static_score": 0.757812,
+      "centroid": [
+        7.894,
+        228.429
+      ],
+      "box_xyxy": [
+        0,
+        0,
+        25,
+        511
+      ],
+      "mask_idx": 160,
+      "mask_area": 6934,
+      "hit_score": 0.3620367715411403
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         727.091,
         193.409
@@ -3379,35 +3048,51 @@
         742,
         203
       ],
-      "mask_idx": 157,
+      "mask_idx": 161,
       "mask_area": 438,
-      "hit_score": 0.0
+      "hit_score": 0.3620367715411403
     }
   },
   "96": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.996094,
-      "static_score": 0.832031,
-      "quality_score": 0.828781,
+      "label": "racket",
+      "tracker_score": 0.992188,
+      "static_score": 0.847656,
       "centroid": [
-        766.462,
-        343.161
+        764.792,
+        343.487
       ],
       "box_xyxy": [
-        707,
+        703,
         321,
-        817,
-        363
+        818,
+        364
       ],
-      "mask_idx": 158,
-      "mask_area": 2922
+      "mask_idx": 162,
+      "mask_area": 3180
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
+      "tracker_score": 0.6875,
+      "static_score": 0.757812,
+      "centroid": [
+        776.5,
+        216.562
+      ],
+      "box_xyxy": [
+        772,
+        210,
+        779,
+        225
+      ],
+      "mask_idx": 163,
+      "mask_area": 16,
+      "hit_score": 0.274230229639833
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         767.845,
         217.062
@@ -3418,35 +3103,51 @@
         779,
         225
       ],
-      "mask_idx": 159,
+      "mask_idx": 164,
       "mask_area": 291,
-      "hit_score": 0.0
+      "hit_score": 0.274230229639833
     }
   },
   "97": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.984375,
+      "static_score": 0.847656,
       "centroid": [
-        765.319,
-        408.715
+        767.564,
+        411.199
       ],
       "box_xyxy": [
-        709,
-        376,
-        819,
-        436
+        708,
+        374,
+        820,
+        438
       ],
-      "mask_idx": 160,
-      "mask_area": 2794
+      "mask_idx": 165,
+      "mask_area": 3569
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
+      "tracker_score": 0.726562,
+      "static_score": 0.757812,
+      "centroid": [
+        808.875,
+        237.375
+      ],
+      "box_xyxy": [
+        793,
+        234,
+        813,
+        241
+      ],
+      "mask_idx": 166,
+      "mask_area": 8,
+      "hit_score": 0.18587587622851295
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         802.69,
         240.201
@@ -3457,35 +3158,51 @@
         813,
         248
       ],
-      "mask_idx": 161,
+      "mask_idx": 167,
       "mask_area": 274,
-      "hit_score": 0.0
+      "hit_score": 0.18587587622851295
     }
   },
   "98": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.996094,
-      "static_score": 0.832031,
-      "quality_score": 0.828781,
+      "label": "racket",
+      "tracker_score": 0.984375,
+      "static_score": 0.847656,
       "centroid": [
-        756.623,
-        504.246
+        756.799,
+        503.674
       ],
       "box_xyxy": [
-        709,
-        431,
-        804,
+        708,
+        430,
+        807,
         548
       ],
-      "mask_idx": 162,
-      "mask_area": 6173
+      "mask_idx": 168,
+      "mask_area": 6419
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
+      "tracker_score": 0.664062,
+      "static_score": 0.757812,
+      "centroid": [
+        7.346,
+        210.994
+      ],
+      "box_xyxy": [
+        0,
+        0,
+        24,
+        441
+      ],
+      "mask_idx": 169,
+      "mask_area": 6156,
+      "hit_score": 0.11273941783354377
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         831.515,
         260.437
@@ -3496,35 +3213,51 @@
         841,
         268
       ],
-      "mask_idx": 163,
+      "mask_idx": 170,
       "mask_area": 270,
-      "hit_score": 0.0
+      "hit_score": 0.11273941783354377
     }
   },
   "99": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.992188,
+      "static_score": 0.847656,
       "centroid": [
-        730.587,
-        563.816
+        730.914,
+        564.044
       ],
       "box_xyxy": [
-        696,
+        697,
         472,
         771,
         623
       ],
-      "mask_idx": 164,
-      "mask_area": 6583
+      "mask_idx": 171,
+      "mask_area": 6339
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
+      "tracker_score": 0.75,
+      "static_score": 0.757812,
+      "centroid": [
+        7.656,
+        192.989
+      ],
+      "box_xyxy": [
+        0,
+        0,
+        24,
+        389
+      ],
+      "mask_idx": 172,
+      "mask_area": 5706,
+      "hit_score": 0.06118903505707664
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         856.822,
         277.854
@@ -3535,35 +3268,51 @@
         866,
         286
       ],
-      "mask_idx": 165,
+      "mask_idx": 173,
       "mask_area": 253,
-      "hit_score": 0.0
+      "hit_score": 0.06118903505707664
     }
   },
   "100": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.996094,
-      "static_score": 0.832031,
-      "quality_score": 0.828781,
+      "label": "racket",
+      "tracker_score": 0.980469,
+      "static_score": 0.847656,
       "centroid": [
-        705.214,
-        567.084
+        706.795,
+        568.862
       ],
       "box_xyxy": [
-        687,
-        512,
-        731,
-        623
+        686,
+        510,
+        735,
+        625
       ],
-      "mask_idx": 166,
-      "mask_area": 1852
+      "mask_idx": 174,
+      "mask_area": 2224
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
+      "tracker_score": 0.769531,
+      "static_score": 0.757812,
+      "centroid": [
+        883.5,
+        289.8
+      ],
+      "box_xyxy": [
+        875,
+        286,
+        888,
+        296
+      ],
+      "mask_idx": 175,
+      "mask_area": 10,
+      "hit_score": 0.02971778789375526
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         879.085,
         293.765
@@ -3574,35 +3323,51 @@
         887,
         301
       ],
-      "mask_idx": 167,
+      "mask_idx": 176,
       "mask_area": 213,
-      "hit_score": 0.0
+      "hit_score": 0.02971778789375526
     }
   },
   "101": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.988281,
-      "static_score": 0.832031,
-      "quality_score": 0.822281,
+      "label": "racket",
+      "tracker_score": 0.945312,
+      "static_score": 0.847656,
       "centroid": [
-        657.586,
-        673.585
+        666.522,
+        686.512
       ],
       "box_xyxy": [
-        632,
-        627,
-        686,
+        646,
+        670,
+        685,
         703
       ],
-      "mask_idx": 168,
-      "mask_area": 2224
+      "mask_idx": 177,
+      "mask_area": 625
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
+      "tracker_score": 0.800781,
+      "static_score": 0.757812,
+      "centroid": [
+        903.765,
+        305.412
+      ],
+      "box_xyxy": [
+        895,
+        301,
+        907,
+        314
+      ],
+      "mask_idx": 178,
+      "mask_area": 17,
+      "hit_score": 0.012915297379419377
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         898.395,
         308.267
@@ -3613,35 +3378,51 @@
         906,
         315
       ],
-      "mask_idx": 169,
+      "mask_idx": 179,
       "mask_area": 195,
-      "hit_score": 0.0
+      "hit_score": 0.012915297379419377
     }
   },
   "102": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.976562,
-      "static_score": 0.832031,
-      "quality_score": 0.812531,
+      "label": "racket",
+      "tracker_score": 0.917969,
+      "static_score": 0.847656,
       "centroid": [
-        645.004,
-        668.877
+        645.136,
+        669.352
       ],
       "box_xyxy": [
-        632,
-        634,
-        657,
+        633,
+        635,
+        656,
         710
       ],
-      "mask_idx": 170,
-      "mask_area": 1170
+      "mask_idx": 180,
+      "mask_area": 975
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
+      "tracker_score": 0.753906,
+      "static_score": 0.757812,
+      "centroid": [
+        6.808,
+        211.077
+      ],
+      "box_xyxy": [
+        0,
+        0,
+        24,
+        433
+      ],
+      "mask_idx": 181,
+      "mask_area": 5544,
+      "hit_score": 0.00502270185845783
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         915.949,
         322.029
@@ -3652,20 +3433,19 @@
         923,
         329
       ],
-      "mask_idx": 171,
+      "mask_idx": 182,
       "mask_area": 175,
-      "hit_score": 0.0
+      "hit_score": 0.00502270185845783
     }
   },
   "103": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.992188,
+      "static_score": 0.847656,
       "centroid": [
-        573.457,
-        700.226
+        573.609,
+        700.089
       ],
       "box_xyxy": [
         548,
@@ -3673,14 +3453,31 @@
         597,
         731
       ],
-      "mask_idx": 172,
-      "mask_area": 2429
+      "mask_idx": 183,
+      "mask_area": 2482
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
+      "tracker_score": 0.777344,
+      "static_score": 0.757812,
+      "centroid": [
+        6.863,
+        218.107
+      ],
+      "box_xyxy": [
+        0,
+        0,
+        24,
+        433
+      ],
+      "mask_idx": 184,
+      "mask_area": 5490,
+      "hit_score": 0.0017478954289288032
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         931.261,
         334.809
@@ -3691,20 +3488,19 @@
         938,
         341
       ],
-      "mask_idx": 173,
+      "mask_idx": 185,
       "mask_area": 157,
-      "hit_score": 0.0
+      "hit_score": 0.0017478954289288032
     }
   },
   "104": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.992188,
+      "static_score": 0.847656,
       "centroid": [
-        555.227,
-        701.882
+        554.867,
+        701.932
       ],
       "box_xyxy": [
         519,
@@ -3712,14 +3508,31 @@
         590,
         737
       ],
-      "mask_idx": 174,
-      "mask_area": 3986
+      "mask_idx": 186,
+      "mask_area": 3922
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
+      "tracker_score": 0.714844,
+      "static_score": 0.757812,
+      "centroid": [
+        8.23,
+        219.637
+      ],
+      "box_xyxy": [
+        0,
+        0,
+        25,
+        441
+      ],
+      "mask_idx": 187,
+      "mask_area": 6682,
+      "hit_score": 0.0005443002716340176
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         944.489,
         344.774
@@ -3730,35 +3543,51 @@
         952,
         350
       ],
-      "mask_idx": 175,
+      "mask_idx": 188,
       "mask_area": 133,
-      "hit_score": 0.0
+      "hit_score": 0.0005443002716340176
     }
   },
   "105": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.992188,
+      "static_score": 0.847656,
       "centroid": [
-        539.0,
-        702.506
+        538.689,
+        702.533
       ],
       "box_xyxy": [
         493,
         667,
-        586,
+        585,
         739
       ],
-      "mask_idx": 176,
-      "mask_area": 5139
+      "mask_idx": 189,
+      "mask_area": 5088
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
+      "tracker_score": 0.695312,
+      "static_score": 0.757812,
+      "centroid": [
+        8.337,
+        225.044
+      ],
+      "box_xyxy": [
+        0,
+        0,
+        25,
+        441
+      ],
+      "mask_idx": 190,
+      "mask_area": 6800,
+      "hit_score": 0.00015167245383584282
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         956.519,
         356.694
@@ -3769,35 +3598,51 @@
         962,
         362
       ],
-      "mask_idx": 177,
+      "mask_idx": 191,
       "mask_area": 108,
-      "hit_score": 0.0
+      "hit_score": 0.00015167245383584282
     }
   },
   "106": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.996094,
+      "static_score": 0.847656,
       "centroid": [
-        522.681,
-        703.273
+        523.243,
+        703.07
       ],
       "box_xyxy": [
         472,
         669,
-        579,
+        583,
         741
       ],
-      "mask_idx": 178,
-      "mask_area": 5659
+      "mask_idx": 192,
+      "mask_area": 5850
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
+      "tracker_score": 0.71875,
+      "static_score": 0.757812,
+      "centroid": [
+        8.753,
+        238.75
+      ],
+      "box_xyxy": [
+        0,
+        0,
+        25,
+        511
+      ],
+      "mask_idx": 193,
+      "mask_area": 7618,
+      "hit_score": 3.781986137463988e-05
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         968.583,
         368.894
@@ -3808,35 +3653,51 @@
         975,
         375
       ],
-      "mask_idx": 179,
+      "mask_idx": 194,
       "mask_area": 132,
-      "hit_score": 0.0
+      "hit_score": 3.781986137463988e-05
     }
   },
   "107": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.996094,
+      "static_score": 0.847656,
       "centroid": [
-        506.48,
-        705.53
+        507.396,
+        705.232
       ],
       "box_xyxy": [
         455,
         672,
-        566,
-        743
+        567,
+        744
       ],
-      "mask_idx": 180,
-      "mask_area": 5789
+      "mask_idx": 195,
+      "mask_area": 6054
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
+      "tracker_score": 0.6875,
+      "static_score": 0.757812,
+      "centroid": [
+        8.553,
+        224.609
+      ],
+      "box_xyxy": [
+        0,
+        0,
+        25,
+        442
+      ],
+      "mask_idx": 196,
+      "mask_area": 6986,
+      "hit_score": 8.438751725314813e-06
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         977.508,
         378.008
@@ -3847,35 +3708,51 @@
         984,
         383
       ],
-      "mask_idx": 181,
+      "mask_idx": 197,
       "mask_area": 122,
-      "hit_score": 0.0
+      "hit_score": 8.438751725314813e-06
     }
   },
   "108": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.996094,
+      "static_score": 0.847656,
       "centroid": [
-        497.973,
-        706.312
+        498.205,
+        706.327
       ],
       "box_xyxy": [
         442,
         674,
         581,
-        744
+        745
       ],
-      "mask_idx": 182,
-      "mask_area": 6291
+      "mask_idx": 198,
+      "mask_area": 6437
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
+      "tracker_score": 0.667969,
+      "static_score": 0.757812,
+      "centroid": [
+        8.058,
+        233.238
+      ],
+      "box_xyxy": [
+        0,
+        25,
+        25,
+        442
+      ],
+      "mask_idx": 199,
+      "mask_area": 6139,
+      "hit_score": 1.6849287646090939e-06
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         986.84,
         387.774
@@ -3886,35 +3763,51 @@
         992,
         393
       ],
-      "mask_idx": 183,
+      "mask_idx": 200,
       "mask_area": 106,
-      "hit_score": 0.0
+      "hit_score": 1.6849287646090939e-06
     }
   },
   "109": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.996094,
+      "static_score": 0.847656,
       "centroid": [
-        481.645,
-        709.977
+        480.374,
+        710.19
       ],
       "box_xyxy": [
         431,
         676,
-        551,
+        536,
         746
       ],
-      "mask_idx": 184,
-      "mask_area": 5805
+      "mask_idx": 201,
+      "mask_area": 5697
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
+      "tracker_score": 0.753906,
+      "static_score": 0.757812,
+      "centroid": [
+        998.647,
+        394.529
+      ],
+      "box_xyxy": [
+        991,
+        391,
+        1001,
+        401
+      ],
+      "mask_idx": 202,
+      "mask_area": 17,
+      "hit_score": 3.0104397290799567e-07
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         994.475,
         397.229
@@ -3925,35 +3818,51 @@
         1000,
         403
       ],
-      "mask_idx": 185,
+      "mask_idx": 203,
       "mask_area": 118,
-      "hit_score": 0.0
+      "hit_score": 3.0104397290799567e-07
     }
   },
   "110": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.992188,
+      "static_score": 0.847656,
       "centroid": [
-        478.605,
-        711.325
+        479.578,
+        711.356
       ],
       "box_xyxy": [
         422,
-        678,
-        590,
-        747
+        677,
+        589,
+        748
       ],
-      "mask_idx": 186,
-      "mask_area": 6046
+      "mask_idx": 204,
+      "mask_area": 6310
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
+      "tracker_score": 0.730469,
+      "static_score": 0.757812,
+      "centroid": [
+        1007.0,
+        406.75
+      ],
+      "box_xyxy": [
+        1006,
+        402,
+        1008,
+        411
+      ],
+      "mask_idx": 205,
+      "mask_area": 8,
+      "hit_score": 4.8130833947352485e-08
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         1000.897,
         406.262
@@ -3964,35 +3873,51 @@
         1007,
         412
       ],
-      "mask_idx": 187,
+      "mask_idx": 206,
       "mask_area": 126,
-      "hit_score": 0.0
+      "hit_score": 4.8130833947352485e-08
     }
   },
   "111": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.996094,
+      "static_score": 0.847656,
       "centroid": [
-        463.346,
-        714.808
+        471.504,
+        713.949
       ],
       "box_xyxy": [
-        416,
+        415,
         680,
-        524,
-        749
+        582,
+        750
       ],
-      "mask_idx": 188,
-      "mask_area": 5358
+      "mask_idx": 207,
+      "mask_area": 6067
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
+      "tracker_score": 0.660156,
+      "static_score": 0.757812,
+      "centroid": [
+        8.828,
+        254.635
+      ],
+      "box_xyxy": [
+        0,
+        18,
+        26,
+        511
+      ],
+      "mask_idx": 208,
+      "mask_area": 7631,
+      "hit_score": 6.88591875105099e-09
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         1008.539,
         414.904
@@ -4003,20 +3928,19 @@
         1014,
         420
       ],
-      "mask_idx": 189,
+      "mask_idx": 209,
       "mask_area": 104,
-      "hit_score": 0.0
+      "hit_score": 6.88591875105099e-09
     }
   },
   "112": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.992188,
+      "static_score": 0.847656,
       "centroid": [
-        469.486,
-        715.895
+        469.308,
+        715.886
       ],
       "box_xyxy": [
         412,
@@ -4024,14 +3948,31 @@
         576,
         751
       ],
-      "mask_idx": 190,
-      "mask_area": 6176
+      "mask_idx": 210,
+      "mask_area": 6151
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
+      "tracker_score": 0.648438,
+      "static_score": 0.757812,
+      "centroid": [
+        8.529,
+        236.356
+      ],
+      "box_xyxy": [
+        0,
+        25,
+        26,
+        443
+      ],
+      "mask_idx": 211,
+      "mask_area": 6586,
+      "hit_score": 8.815469739933364e-10
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         1015.416,
         423.143
@@ -4042,35 +3983,51 @@
         1020,
         428
       ],
-      "mask_idx": 191,
+      "mask_idx": 212,
       "mask_area": 77,
-      "hit_score": 0.0
+      "hit_score": 8.815469739933364e-10
     }
   },
   "113": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.992188,
+      "static_score": 0.847656,
       "centroid": [
-        469.519,
-        716.111
+        278.66,
+        502.903
       ],
       "box_xyxy": [
-        409,
-        682,
+        0,
+        0,
         573,
         752
       ],
-      "mask_idx": 192,
-      "mask_area": 6458
+      "mask_idx": 213,
+      "mask_area": 11060
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
+      "tracker_score": 0.609375,
+      "static_score": 0.757812,
+      "centroid": [
+        9.427,
+        258.151
+      ],
+      "box_xyxy": [
+        0,
+        26,
+        37,
+        512
+      ],
+      "mask_idx": 214,
+      "mask_area": 8182,
+      "hit_score": 1.0098900226592879e-10
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         1020.507,
         431.247
@@ -4081,35 +4038,51 @@
         1025,
         435
       ],
-      "mask_idx": 193,
+      "mask_idx": 215,
       "mask_area": 73,
-      "hit_score": 0.0
+      "hit_score": 1.0098900226592879e-10
     }
   },
   "114": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.988281,
+      "static_score": 0.847656,
       "centroid": [
-        468.832,
-        716.25
+        289.487,
+        510.474
       ],
       "box_xyxy": [
-        409,
-        683,
-        572,
-        752
+        0,
+        18,
+        573,
+        753
       ],
-      "mask_idx": 194,
-      "mask_area": 6413
+      "mask_idx": 216,
+      "mask_area": 10859
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
+      "tracker_score": 0.503906,
+      "static_score": 0.757812,
+      "centroid": [
+        9.777,
+        258.754
+      ],
+      "box_xyxy": [
+        0,
+        0,
+        38,
+        512
+      ],
+      "mask_idx": 217,
+      "mask_area": 8601,
+      "hit_score": 1.0352560129989234e-11
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 0.980469,
-      "static_score": 0.78125,
-      "quality_score": 0.765991,
+      "static_score": 0.769531,
       "centroid": [
         1026.654,
         437.154
@@ -4120,74 +4093,70 @@
         1030,
         439
       ],
-      "mask_idx": 195,
+      "mask_idx": 218,
       "mask_area": 26,
-      "hit_score": 0.0
+      "hit_score": 1.0352560129989234e-11
     }
   },
   "115": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.984375,
+      "static_score": 0.847656,
       "centroid": [
-        468.331,
-        715.777
+        265.79,
+        484.848
       ],
       "box_xyxy": [
-        411,
-        683,
+        0,
+        0,
         571,
         752
       ],
-      "mask_idx": 196,
-      "mask_area": 6256
-    },
-    "2": {
-      "label": "tennisball",
-      "tracker_score": 0.980469,
-      "static_score": 0.78125,
-      "quality_score": 0.765991,
-      "centroid": [
-        1030.3395,
-        445.3645
-      ],
-      "box_xyxy": [
-        1026,
-        443,
-        1033,
-        448
-      ],
-      "mask_idx": 313,
-      "mask_area": 66,
-      "hit_score": 0.0
+      "mask_idx": 219,
+      "mask_area": 11604
     }
   },
   "116": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.980469,
+      "static_score": 0.847656,
       "centroid": [
-        468.962,
-        714.484
+        276.665,
+        495.573
       ],
       "box_xyxy": [
-        414,
-        682,
-        561,
+        0,
+        19,
+        576,
         751
       ],
-      "mask_idx": 197,
-      "mask_area": 6042
+      "mask_idx": 220,
+      "mask_area": 11294
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
+      "tracker_score": 0.539062,
+      "static_score": 0.757812,
+      "centroid": [
+        8.848,
+        259.763
+      ],
+      "box_xyxy": [
+        0,
+        25,
+        26,
+        511
+      ],
+      "mask_idx": 221,
+      "mask_area": 7363,
+      "hit_score": 7.795254427246309e-14
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 0.996094,
-      "static_score": 0.78125,
-      "quality_score": 0.778198,
+      "static_score": 0.769531,
       "centroid": [
         1034.025,
         453.575
@@ -4198,35 +4167,51 @@
         1037,
         457
       ],
-      "mask_idx": 198,
+      "mask_idx": 222,
       "mask_area": 40,
-      "hit_score": 0.0
+      "hit_score": 7.795254427246309e-14
     }
   },
   "117": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.976562,
+      "static_score": 0.847656,
       "centroid": [
-        475.282,
-        711.789
+        262.82,
+        482.311
       ],
       "box_xyxy": [
-        418,
-        679,
-        582,
-        748
+        0,
+        17,
+        583,
+        749
       ],
-      "mask_idx": 199,
-      "mask_area": 6226
+      "mask_idx": 223,
+      "mask_area": 12280
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
+      "tracker_score": 0.507812,
+      "static_score": 0.757812,
+      "centroid": [
+        9.056,
+        253.483
+      ],
+      "box_xyxy": [
+        0,
+        26,
+        25,
+        511
+      ],
+      "mask_idx": 224,
+      "mask_area": 7721,
+      "hit_score": 5.72583919891267e-15
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         1037.393,
         461.786
@@ -4237,35 +4222,33 @@
         1041,
         464
       ],
-      "mask_idx": 200,
+      "mask_idx": 225,
       "mask_area": 28,
-      "hit_score": 0.0
+      "hit_score": 5.72583919891267e-15
     }
   },
   "118": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.96875,
+      "static_score": 0.847656,
       "centroid": [
-        481.143,
-        708.766
+        265.299,
+        483.093
       ],
       "box_xyxy": [
-        423,
-        677,
-        584,
-        745
+        0,
+        19,
+        586,
+        746
       ],
-      "mask_idx": 201,
-      "mask_area": 6295
+      "mask_idx": 226,
+      "mask_area": 12446
     },
-    "2": {
-      "label": "tennisball",
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         1041.412,
         469.676
@@ -4276,35 +4259,51 @@
         1045,
         472
       ],
-      "mask_idx": 202,
+      "mask_idx": 227,
       "mask_area": 34,
-      "hit_score": 0.0
+      "hit_score": 3.7635098563938366e-16
     }
   },
   "119": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.832031,
-      "quality_score": 0.832031,
+      "label": "racket",
+      "tracker_score": 0.96875,
+      "static_score": 0.847656,
       "centroid": [
-        486.313,
-        706.249
+        264.976,
+        476.678
       ],
       "box_xyxy": [
-        429,
-        673,
+        0,
+        18,
         589,
-        742
+        743
       ],
-      "mask_idx": 203,
-      "mask_area": 6099
+      "mask_idx": 228,
+      "mask_area": 12085
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
+      "tracker_score": 0.511719,
+      "static_score": 0.757812,
+      "centroid": [
+        9.12,
+        250.598
+      ],
+      "box_xyxy": [
+        0,
+        0,
+        36,
+        512
+      ],
+      "mask_idx": 229,
+      "mask_area": 8160,
+      "hit_score": 2.21356370744593e-17
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         1045.578,
         476.444
@@ -4315,35 +4314,33 @@
         1049,
         479
       ],
-      "mask_idx": 204,
+      "mask_idx": 230,
       "mask_area": 45,
-      "hit_score": 0.0
+      "hit_score": 2.21356370744593e-17
     }
   },
   "120": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.996094,
-      "static_score": 0.832031,
-      "quality_score": 0.828781,
+      "label": "racket",
+      "tracker_score": 0.960938,
+      "static_score": 0.847656,
       "centroid": [
-        486.224,
-        704.011
+        265.26,
+        470.397
       ],
       "box_xyxy": [
-        434,
-        671,
-        571,
-        739
+        0,
+        19,
+        573,
+        740
       ],
-      "mask_idx": 205,
-      "mask_area": 5701
+      "mask_idx": 231,
+      "mask_area": 11542
     },
-    "2": {
-      "label": "tennisball",
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         1047.844,
         471.867
@@ -4354,35 +4351,33 @@
         1051,
         475
       ],
-      "mask_idx": 206,
+      "mask_idx": 232,
       "mask_area": 45,
-      "hit_score": 0.0
+      "hit_score": 1.1650271630199743e-18
     }
   },
   "121": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.996094,
-      "static_score": 0.832031,
-      "quality_score": 0.828781,
+      "label": "racket",
+      "tracker_score": 0.957031,
+      "static_score": 0.847656,
       "centroid": [
-        497.777,
-        698.98
+        268.945,
+        471.612
       ],
       "box_xyxy": [
-        440,
-        667,
-        597,
-        735
+        0,
+        19,
+        596,
+        736
       ],
-      "mask_idx": 207,
-      "mask_area": 6178
+      "mask_idx": 233,
+      "mask_area": 12266
     },
-    "2": {
-      "label": "tennisball",
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         1049.98,
         459.92
@@ -4393,35 +4388,33 @@
         1053,
         464
       ],
-      "mask_idx": 208,
+      "mask_idx": 234,
       "mask_area": 50,
-      "hit_score": 0.0
+      "hit_score": 5.486875858021252e-20
     }
   },
   "122": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.996094,
-      "static_score": 0.832031,
-      "quality_score": 0.828781,
+      "label": "racket",
+      "tracker_score": 0.957031,
+      "static_score": 0.847656,
       "centroid": [
-        500.602,
-        696.424
+        244.074,
+        458.908
       ],
       "box_xyxy": [
-        445,
-        665,
-        587,
-        732
+        0,
+        19,
+        591,
+        733
       ],
-      "mask_idx": 209,
-      "mask_area": 5958
+      "mask_idx": 235,
+      "mask_area": 13293
     },
-    "2": {
-      "label": "tennisball",
+    "4": {
+      "label": "ball",
       "tracker_score": 0.6875,
-      "static_score": 0.78125,
-      "quality_score": 0.537109,
+      "static_score": 0.769531,
       "centroid": [
         1059.273,
         459.382
@@ -4432,35 +4425,33 @@
         1066,
         464
       ],
-      "mask_idx": 210,
+      "mask_idx": 236,
       "mask_area": 110,
-      "hit_score": 0.0
+      "hit_score": 2.3123803751527487e-21
     }
   },
   "123": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.996094,
-      "static_score": 0.832031,
-      "quality_score": 0.828781,
+      "label": "racket",
+      "tracker_score": 0.953125,
+      "static_score": 0.847656,
       "centroid": [
-        507.211,
-        693.176
+        248.008,
+        456.794
       ],
       "box_xyxy": [
-        452,
-        662,
-        594,
+        0,
+        19,
+        596,
         729
       ],
-      "mask_idx": 211,
-      "mask_area": 5931
+      "mask_idx": 237,
+      "mask_area": 13126
     },
-    "2": {
-      "label": "tennisball",
+    "4": {
+      "label": "ball",
       "tracker_score": 0.996094,
-      "static_score": 0.78125,
-      "quality_score": 0.778198,
+      "static_score": 0.769531,
       "centroid": [
         1053.59,
         437.949
@@ -4471,35 +4462,51 @@
         1057,
         440
       ],
-      "mask_idx": 212,
+      "mask_idx": 238,
       "mask_area": 39,
-      "hit_score": 0.0
+      "hit_score": 8.720441502092154e-23
     }
   },
   "124": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.996094,
-      "static_score": 0.832031,
-      "quality_score": 0.828781,
+      "label": "racket",
+      "tracker_score": 0.949219,
+      "static_score": 0.847656,
       "centroid": [
-        508.642,
-        691.426
+        249.0,
+        457.233
       ],
       "box_xyxy": [
-        458,
-        658,
+        0,
+        20,
         592,
-        726
+        727
       ],
-      "mask_idx": 213,
-      "mask_area": 5495
+      "mask_idx": 239,
+      "mask_area": 12176
     },
     "2": {
-      "label": "tennisball",
+      "label": "ball",
+      "tracker_score": 0.523438,
+      "static_score": 0.757812,
+      "centroid": [
+        5.679,
+        230.217
+      ],
+      "box_xyxy": [
+        0,
+        40,
+        23,
+        389
+      ],
+      "mask_idx": 240,
+      "mask_area": 3822,
+      "hit_score": 2.942813426974222e-24
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         1057.312,
         428.844
@@ -4510,35 +4517,33 @@
         1060,
         432
       ],
-      "mask_idx": 214,
+      "mask_idx": 241,
       "mask_area": 32,
-      "hit_score": 0.0
+      "hit_score": 2.942813426974222e-24
     }
   },
   "125": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.996094,
-      "static_score": 0.832031,
-      "quality_score": 0.828781,
+      "label": "racket",
+      "tracker_score": 0.949219,
+      "static_score": 0.847656,
       "centroid": [
-        514.907,
-        689.08
+        247.158,
+        454.887
       ],
       "box_xyxy": [
-        464,
-        656,
-        598,
-        724
+        0,
+        17,
+        597,
+        725
       ],
-      "mask_idx": 215,
-      "mask_area": 5475
+      "mask_idx": 242,
+      "mask_area": 12399
     },
-    "2": {
-      "label": "tennisball",
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         1057.55,
         421.533
@@ -4549,35 +4554,33 @@
         1061,
         428
       ],
-      "mask_idx": 216,
+      "mask_idx": 243,
       "mask_area": 60,
-      "hit_score": 0.0
+      "hit_score": 8.886526539468767e-26
     }
   },
   "126": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.996094,
-      "static_score": 0.832031,
-      "quality_score": 0.828781,
+      "label": "racket",
+      "tracker_score": 0.945312,
+      "static_score": 0.847656,
       "centroid": [
-        520.747,
-        686.917
+        251.908,
+        454.701
       ],
       "box_xyxy": [
-        470,
-        654,
-        596,
-        721
+        0,
+        18,
+        594,
+        722
       ],
-      "mask_idx": 217,
-      "mask_area": 5474
+      "mask_idx": 244,
+      "mask_area": 11973
     },
-    "2": {
-      "label": "tennisball",
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         1059.971,
         411.768
@@ -4588,35 +4591,33 @@
         1064,
         416
       ],
-      "mask_idx": 218,
+      "mask_idx": 245,
       "mask_area": 69,
-      "hit_score": 0.0
+      "hit_score": 2.4012999572979363e-27
     }
   },
   "127": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.992188,
-      "static_score": 0.832031,
-      "quality_score": 0.825531,
+      "label": "racket",
+      "tracker_score": 0.9375,
+      "static_score": 0.847656,
       "centroid": [
-        525.507,
-        685.672
+        230.98,
+        434.842
       ],
       "box_xyxy": [
-        476,
-        652,
-        588,
-        720
+        0,
+        0,
+        593,
+        721
       ],
-      "mask_idx": 219,
-      "mask_area": 5373
+      "mask_idx": 246,
+      "mask_area": 13156
     },
-    "2": {
-      "label": "tennisball",
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         1061.94,
         403.96
@@ -4627,35 +4628,33 @@
         1065,
         408
       ],
-      "mask_idx": 220,
+      "mask_idx": 247,
       "mask_area": 50,
-      "hit_score": 0.0
+      "hit_score": 5.806385169767463e-29
     }
   },
   "128": {
     "1": {
-      "label": "tennisracket",
-      "tracker_score": 0.992188,
-      "static_score": 0.832031,
-      "quality_score": 0.825531,
+      "label": "racket",
+      "tracker_score": 0.925781,
+      "static_score": 0.847656,
       "centroid": [
-        527.846,
-        685.296
+        217.446,
+        422.706
       ],
       "box_xyxy": [
-        482,
-        651,
-        583,
+        0,
+        0,
+        589,
         718
       ],
-      "mask_idx": 221,
-      "mask_area": 4905
+      "mask_idx": 248,
+      "mask_area": 13361
     },
-    "2": {
-      "label": "tennisball",
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         1063.714,
         396.961
@@ -4666,17 +4665,33 @@
         1068,
         402
       ],
-      "mask_idx": 222,
+      "mask_idx": 249,
       "mask_area": 77,
-      "hit_score": 0.0
+      "hit_score": 1.2563490845842602e-30
     }
   },
   "129": {
-    "2": {
-      "label": "tennisball",
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.914062,
+      "static_score": 0.847656,
+      "centroid": [
+        207.545,
+        416.908
+      ],
+      "box_xyxy": [
+        0,
+        0,
+        589,
+        717
+      ],
+      "mask_idx": 250,
+      "mask_area": 13838
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         1065.727,
         390.364
@@ -4687,17 +4702,33 @@
         1069,
         394
       ],
-      "mask_idx": 223,
+      "mask_idx": 251,
       "mask_area": 55,
-      "hit_score": 0.0
+      "hit_score": 2.4325393325816023e-32
     }
   },
   "130": {
-    "2": {
-      "label": "tennisball",
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.910156,
+      "static_score": 0.847656,
+      "centroid": [
+        225.791,
+        428.554
+      ],
+      "box_xyxy": [
+        0,
+        18,
+        593,
+        717
+      ],
+      "mask_idx": 252,
+      "mask_area": 12536
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         1066.945,
         384.2
@@ -4708,17 +4739,33 @@
         1071,
         387
       ],
-      "mask_idx": 224,
+      "mask_idx": 253,
       "mask_area": 55,
-      "hit_score": 0.0
+      "hit_score": 4.214581654775511e-34
     }
   },
   "131": {
-    "2": {
-      "label": "tennisball",
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.90625,
+      "static_score": 0.847656,
+      "centroid": [
+        344.029,
+        516.886
+      ],
+      "box_xyxy": [
+        0,
+        86,
+        597,
+        716
+      ],
+      "mask_idx": 254,
+      "mask_area": 8005
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         1068.718,
         379.359
@@ -4729,17 +4776,33 @@
         1072,
         383
       ],
-      "mask_idx": 225,
+      "mask_idx": 255,
       "mask_area": 39,
-      "hit_score": 0.0
+      "hit_score": 6.534225695670965e-36
     }
   },
   "132": {
-    "2": {
-      "label": "tennisball",
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.914062,
+      "static_score": 0.847656,
+      "centroid": [
+        411.079,
+        556.017
+      ],
+      "box_xyxy": [
+        0,
+        90,
+        598,
+        715
+      ],
+      "mask_idx": 256,
+      "mask_area": 6605
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         1069.5,
         375.077
@@ -4750,17 +4813,33 @@
         1072,
         378
       ],
-      "mask_idx": 226,
+      "mask_idx": 257,
       "mask_area": 26,
-      "hit_score": 0.0
+      "hit_score": 9.065230419971362e-38
     }
   },
   "133": {
-    "2": {
-      "label": "tennisball",
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.914062,
+      "static_score": 0.847656,
+      "centroid": [
+        414.244,
+        557.578
+      ],
+      "box_xyxy": [
+        0,
+        92,
+        598,
+        714
+      ],
+      "mask_idx": 258,
+      "mask_area": 6267
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 0.992188,
-      "static_score": 0.78125,
-      "quality_score": 0.775146,
+      "static_score": 0.769531,
       "centroid": [
         1073.531,
         373.438
@@ -4771,17 +4850,33 @@
         1078,
         375
       ],
-      "mask_idx": 227,
+      "mask_idx": 259,
       "mask_area": 32,
-      "hit_score": 0.0
+      "hit_score": 1.1254044325225143e-39
     }
   },
   "134": {
-    "2": {
-      "label": "tennisball",
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.910156,
+      "static_score": 0.847656,
+      "centroid": [
+        362.667,
+        524.443
+      ],
+      "box_xyxy": [
+        0,
+        90,
+        599,
+        712
+      ],
+      "mask_idx": 260,
+      "mask_area": 7096
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 0.996094,
-      "static_score": 0.78125,
-      "quality_score": 0.778198,
+      "static_score": 0.769531,
       "centroid": [
         1074.886,
         372.273
@@ -4792,74 +4887,70 @@
         1078,
         376
       ],
-      "mask_idx": 228,
+      "mask_idx": 261,
       "mask_area": 44,
-      "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 0.910156,
-      "static_score": 0.910156,
-      "quality_score": 0.828384,
-      "centroid": [
-        555.143,
-        678.263
-      ],
-      "box_xyxy": [
-        514,
-        644,
-        598,
-        712
-      ],
-      "mask_idx": 229,
-      "mask_area": 4471
+      "hit_score": 1.2502113945015158e-41
     }
   },
   "135": {
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.910156,
-      "quality_score": 0.910156,
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.910156,
+      "static_score": 0.847656,
       "centroid": [
-        558.617,
-        675.861
+        407.757,
+        544.101
       ],
       "box_xyxy": [
-        518,
-        642,
-        599,
-        709
+        0,
+        90,
+        598,
+        710
       ],
-      "mask_idx": 230,
-      "mask_area": 4404
+      "mask_idx": 262,
+      "mask_area": 6286
     },
-    "2": {
-      "label": "tennisball",
-      "tracker_score": 0.996094,
-      "static_score": 0.78125,
-      "quality_score": 0.778198,
+    "4": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
       "centroid": [
-        1074.943,
-        364.5115
+        1076.0,
+        366.5
       ],
       "box_xyxy": [
-        1071,
-        361,
-        1078,
+        1076,
+        365,
+        1076,
         368
       ],
-      "mask_idx": 314,
-      "mask_area": 88,
-      "hit_score": 0.0
+      "mask_idx": 263,
+      "mask_area": 4,
+      "hit_score": 1.2428060014425146e-43
     }
   },
   "136": {
-    "2": {
-      "label": "tennisball",
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.894531,
+      "static_score": 0.847656,
+      "centroid": [
+        360.043,
+        515.51
+      ],
+      "box_xyxy": [
+        0,
+        91,
+        599,
+        706
+      ],
+      "mask_idx": 264,
+      "mask_area": 7086
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         1075.0,
         356.75
@@ -4870,35 +4961,33 @@
         1079,
         360
       ],
-      "mask_idx": 231,
+      "mask_idx": 265,
       "mask_area": 44,
-      "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.910156,
-      "quality_score": 0.910156,
-      "centroid": [
-        560.747,
-        672.125
-      ],
-      "box_xyxy": [
-        520,
-        639,
-        599,
-        705
-      ],
-      "mask_idx": 232,
-      "mask_area": 4327
+      "hit_score": 1.105524288040411e-45
     }
   },
   "137": {
-    "2": {
-      "label": "tennisball",
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.894531,
+      "static_score": 0.847656,
+      "centroid": [
+        412.771,
+        540.673
+      ],
+      "box_xyxy": [
+        0,
+        91,
+        602,
+        702
+      ],
+      "mask_idx": 266,
+      "mask_area": 6158
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         1075.535,
         354.791
@@ -4909,35 +4998,33 @@
         1079,
         359
       ],
-      "mask_idx": 233,
+      "mask_idx": 267,
       "mask_area": 43,
-      "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.910156,
-      "quality_score": 0.910156,
-      "centroid": [
-        563.335,
-        667.884
-      ],
-      "box_xyxy": [
-        523,
-        635,
-        603,
-        701
-      ],
-      "mask_idx": 234,
-      "mask_area": 4346
+      "hit_score": 8.799911256182886e-48
     }
   },
   "138": {
-    "2": {
-      "label": "tennisball",
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.878906,
+      "static_score": 0.847656,
+      "centroid": [
+        423.117,
+        546.564
+      ],
+      "box_xyxy": [
+        0,
+        108,
+        603,
+        696
+      ],
+      "mask_idx": 268,
+      "mask_area": 5938
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         1075.622,
         351.757
@@ -4948,38 +5035,36 @@
         1078,
         355
       ],
-      "mask_idx": 235,
+      "mask_idx": 269,
       "mask_area": 37,
-      "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.910156,
-      "quality_score": 0.910156,
-      "centroid": [
-        564.678,
-        662.939
-      ],
-      "box_xyxy": [
-        525,
-        630,
-        604,
-        696
-      ],
-      "mask_idx": 236,
-      "mask_area": 4392
+      "hit_score": 6.268063018528756e-50
     }
   },
   "139": {
-    "2": {
-      "label": "tennisball",
-      "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.878906,
+      "static_score": 0.847656,
       "centroid": [
-        1075.757,
-        349.784
+        429.001,
+        546.208
+      ],
+      "box_xyxy": [
+        0,
+        114,
+        604,
+        690
+      ],
+      "mask_idx": 270,
+      "mask_area": 5839
+    },
+    "4": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        1075.694,
+        349.833
       ],
       "box_xyxy": [
         1073,
@@ -4987,35 +5072,33 @@
         1078,
         354
       ],
-      "mask_idx": 237,
-      "mask_area": 37,
-      "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.910156,
-      "quality_score": 0.910156,
-      "centroid": [
-        565.933,
-        656.93
-      ],
-      "box_xyxy": [
-        525,
-        624,
-        605,
-        690
-      ],
-      "mask_idx": 238,
-      "mask_area": 4361
+      "mask_idx": 271,
+      "mask_area": 36,
+      "hit_score": 3.995153529468029e-52
     }
   },
   "140": {
-    "2": {
-      "label": "tennisball",
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.890625,
+      "static_score": 0.847656,
+      "centroid": [
+        436.966,
+        547.665
+      ],
+      "box_xyxy": [
+        0,
+        122,
+        605,
+        683
+      ],
+      "mask_idx": 272,
+      "mask_area": 5594
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         1075.611,
         350.0
@@ -5026,77 +5109,73 @@
         1079,
         354
       ],
-      "mask_idx": 239,
+      "mask_idx": 273,
       "mask_area": 36,
-      "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.910156,
-      "quality_score": 0.910156,
-      "centroid": [
-        566.664,
-        650.01
-      ],
-      "box_xyxy": [
-        527,
-        617,
-        605,
-        683
-      ],
-      "mask_idx": 240,
-      "mask_area": 4224
+      "hit_score": 2.2786553909883007e-54
     }
   },
   "141": {
-    "2": {
-      "label": "tennisball",
-      "tracker_score": 0.996094,
-      "static_score": 0.78125,
-      "quality_score": 0.778198,
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.878906,
+      "static_score": 0.847656,
       "centroid": [
-        1076.509,
-        348.655
+        437.185,
+        540.972
       ],
       "box_xyxy": [
-        1072,
+        0,
+        116,
+        605,
+        676
+      ],
+      "mask_idx": 274,
+      "mask_area": 5525
+    },
+    "4": {
+      "label": "ball",
+      "tracker_score": 0.996094,
+      "static_score": 0.769531,
+      "centroid": [
+        1076.411,
+        348.679
+      ],
+      "box_xyxy": [
+        1071,
         345,
         1082,
         352
       ],
-      "mask_idx": 241,
-      "mask_area": 55,
-      "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.910156,
-      "quality_score": 0.910156,
-      "centroid": [
-        568.099,
-        643.021
-      ],
-      "box_xyxy": [
-        529,
-        610,
-        605,
-        675
-      ],
-      "mask_idx": 242,
-      "mask_area": 4140
+      "mask_idx": 275,
+      "mask_area": 56,
+      "hit_score": 1.162970998491089e-56
     }
   },
   "142": {
-    "2": {
-      "label": "tennisball",
-      "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.878906,
+      "static_score": 0.847656,
       "centroid": [
-        1078.426,
-        344.858
+        433.481,
+        532.646
+      ],
+      "box_xyxy": [
+        0,
+        115,
+        605,
+        669
+      ],
+      "mask_idx": 276,
+      "mask_area": 5423
+    },
+    "4": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        1078.397,
+        344.821
       ],
       "box_xyxy": [
         1071,
@@ -5104,38 +5183,36 @@
         1088,
         350
       ],
-      "mask_idx": 243,
-      "mask_area": 155,
-      "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.910156,
-      "quality_score": 0.910156,
-      "centroid": [
-        568.778,
-        636.124
-      ],
-      "box_xyxy": [
-        532,
-        604,
-        605,
-        668
-      ],
-      "mask_idx": 244,
-      "mask_area": 3921
+      "mask_idx": 277,
+      "mask_area": 156,
+      "hit_score": 5.311340897844547e-59
     }
   },
   "143": {
-    "2": {
-      "label": "tennisball",
-      "tracker_score": 0.996094,
-      "static_score": 0.78125,
-      "quality_score": 0.778198,
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.875,
+      "static_score": 0.847656,
       "centroid": [
-        1079.872,
-        342.333
+        430.896,
+        524.245
+      ],
+      "box_xyxy": [
+        0,
+        116,
+        605,
+        661
+      ],
+      "mask_idx": 278,
+      "mask_area": 5232
+    },
+    "4": {
+      "label": "ball",
+      "tracker_score": 0.996094,
+      "static_score": 0.769531,
+      "centroid": [
+        1079.828,
+        342.293
       ],
       "box_xyxy": [
         1068,
@@ -5143,57 +5220,19 @@
         1093,
         348
       ],
-      "mask_idx": 245,
+      "mask_idx": 279,
       "mask_area": 273,
-      "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.910156,
-      "quality_score": 0.910156,
-      "centroid": [
-        570.149,
-        628.877
-      ],
-      "box_xyxy": [
-        534,
-        597,
-        605,
-        661
-      ],
-      "mask_idx": 246,
-      "mask_area": 3885
+      "hit_score": 2.170623628125719e-61
     }
   },
   "144": {
-    "2": {
-      "label": "tennisball",
-      "tracker_score": 0.996094,
-      "static_score": 0.78125,
-      "quality_score": 0.778198,
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.878906,
+      "static_score": 0.847656,
       "centroid": [
-        1079.145,
-        340.609
-      ],
-      "box_xyxy": [
-        1069,
-        335,
-        1090,
-        346
-      ],
-      "mask_idx": 247,
-      "mask_area": 220,
-      "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.910156,
-      "quality_score": 0.910156,
-      "centroid": [
-        570.933,
-        621.972
+        570.945,
+        621.94
       ],
       "box_xyxy": [
         536,
@@ -5201,19 +5240,53 @@
         604,
         654
       ],
-      "mask_idx": 248,
-      "mask_area": 3775
+      "mask_idx": 280,
+      "mask_area": 3766
+    },
+    "4": {
+      "label": "ball",
+      "tracker_score": 0.996094,
+      "static_score": 0.769531,
+      "centroid": [
+        1079.128,
+        340.584
+      ],
+      "box_xyxy": [
+        1069,
+        335,
+        1090,
+        346
+      ],
+      "mask_idx": 281,
+      "mask_area": 219,
+      "hit_score": 7.937978773880312e-64
     }
   },
   "145": {
-    "2": {
-      "label": "tennisball",
-      "tracker_score": 0.992188,
-      "static_score": 0.78125,
-      "quality_score": 0.775146,
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.875,
+      "static_score": 0.847656,
       "centroid": [
-        1080.263,
-        340.402
+        419.427,
+        503.931
+      ],
+      "box_xyxy": [
+        0,
+        108,
+        605,
+        647
+      ],
+      "mask_idx": 282,
+      "mask_area": 4899
+    },
+    "4": {
+      "label": "ball",
+      "tracker_score": 0.992188,
+      "static_score": 0.769531,
+      "centroid": [
+        1080.305,
+        340.404
       ],
       "box_xyxy": [
         1071,
@@ -5221,38 +5294,36 @@
         1090,
         347
       ],
-      "mask_idx": 249,
-      "mask_area": 224,
-      "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.910156,
-      "quality_score": 0.910156,
-      "centroid": [
-        572.241,
-        615.292
-      ],
-      "box_xyxy": [
-        539,
-        584,
-        604,
-        647
-      ],
-      "mask_idx": 250,
-      "mask_area": 3417
+      "mask_idx": 283,
+      "mask_area": 223,
+      "hit_score": 2.5976485816222627e-66
     }
   },
   "146": {
-    "2": {
-      "label": "tennisball",
-      "tracker_score": 0.996094,
-      "static_score": 0.78125,
-      "quality_score": 0.778198,
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.851562,
+      "static_score": 0.847656,
       "centroid": [
-        1082.625,
-        336.69
+        261.616,
+        410.23
+      ],
+      "box_xyxy": [
+        0,
+        31,
+        604,
+        640
+      ],
+      "mask_idx": 284,
+      "mask_area": 7406
+    },
+    "4": {
+      "label": "ball",
+      "tracker_score": 0.996094,
+      "static_score": 0.769531,
+      "centroid": [
+        1082.654,
+        336.691
       ],
       "box_xyxy": [
         1074,
@@ -5260,35 +5331,33 @@
         1092,
         344
       ],
-      "mask_idx": 251,
-      "mask_area": 216,
-      "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.910156,
-      "quality_score": 0.910156,
-      "centroid": [
-        574.18,
-        608.428
-      ],
-      "box_xyxy": [
-        543,
-        576,
-        604,
-        640
-      ],
-      "mask_idx": 252,
-      "mask_area": 3297
+      "mask_idx": 285,
+      "mask_area": 217,
+      "hit_score": 7.606693548809515e-69
     }
   },
   "147": {
-    "2": {
-      "label": "tennisball",
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.84375,
+      "static_score": 0.847656,
+      "centroid": [
+        166.166,
+        357.464
+      ],
+      "box_xyxy": [
+        0,
+        18,
+        602,
+        634
+      ],
+      "mask_idx": 286,
+      "mask_area": 10413
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 0.996094,
-      "static_score": 0.78125,
-      "quality_score": 0.778198,
+      "static_score": 0.769531,
       "centroid": [
         1071.204,
         325.082
@@ -5299,38 +5368,36 @@
         1075,
         328
       ],
-      "mask_idx": 253,
+      "mask_idx": 287,
       "mask_area": 49,
-      "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.910156,
-      "quality_score": 0.910156,
-      "centroid": [
-        575.597,
-        602.491
-      ],
-      "box_xyxy": [
-        547,
-        571,
-        603,
-        634
-      ],
-      "mask_idx": 254,
-      "mask_area": 2849
+      "hit_score": 1.993225799952711e-71
     }
   },
   "148": {
-    "2": {
-      "label": "tennisball",
-      "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.824219,
+      "static_score": 0.847656,
       "centroid": [
-        1069.136,
-        321.136
+        182.142,
+        352.233
+      ],
+      "box_xyxy": [
+        0,
+        28,
+        602,
+        628
+      ],
+      "mask_idx": 288,
+      "mask_area": 8370
+    },
+    "4": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        1069.2,
+        321.108
       ],
       "box_xyxy": [
         1065,
@@ -5338,38 +5405,36 @@
         1073,
         325
       ],
-      "mask_idx": 255,
-      "mask_area": 66,
-      "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.910156,
-      "quality_score": 0.910156,
-      "centroid": [
-        577.292,
-        596.724
-      ],
-      "box_xyxy": [
-        552,
-        566,
-        601,
-        628
-      ],
-      "mask_idx": 256,
-      "mask_area": 2385
+      "mask_idx": 289,
+      "mask_area": 65,
+      "hit_score": 4.673714047057742e-74
     }
   },
   "149": {
-    "2": {
-      "label": "tennisball",
-      "tracker_score": 0.996094,
-      "static_score": 0.78125,
-      "quality_score": 0.778198,
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.820312,
+      "static_score": 0.847656,
       "centroid": [
-        1066.754,
-        316.446
+        151.194,
+        337.186
+      ],
+      "box_xyxy": [
+        0,
+        25,
+        599,
+        625
+      ],
+      "mask_idx": 290,
+      "mask_area": 8407
+    },
+    "4": {
+      "label": "ball",
+      "tracker_score": 0.996094,
+      "static_score": 0.769531,
+      "centroid": [
+        1066.797,
+        316.5
       ],
       "box_xyxy": [
         1062,
@@ -5377,38 +5442,36 @@
         1071,
         320
       ],
-      "mask_idx": 257,
-      "mask_area": 65,
-      "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.910156,
-      "quality_score": 0.910156,
-      "centroid": [
-        578.839,
-        592.57
-      ],
-      "box_xyxy": [
-        557,
-        561,
-        600,
-        624
-      ],
-      "mask_idx": 258,
-      "mask_area": 2062
+      "mask_idx": 291,
+      "mask_area": 64,
+      "hit_score": 9.806472894379805e-77
     }
   },
   "150": {
-    "2": {
-      "label": "tennisball",
-      "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.820312,
+      "static_score": 0.847656,
       "centroid": [
-        1064.514,
-        312.786
+        144.145,
+        329.55
+      ],
+      "box_xyxy": [
+        0,
+        27,
+        598,
+        620
+      ],
+      "mask_idx": 292,
+      "mask_area": 7538
+    },
+    "4": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        1064.451,
+        312.761
       ],
       "box_xyxy": [
         1060,
@@ -5416,35 +5479,33 @@
         1069,
         317
       ],
-      "mask_idx": 259,
-      "mask_area": 70,
-      "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.910156,
-      "quality_score": 0.910156,
-      "centroid": [
-        580.421,
-        588.802
-      ],
-      "box_xyxy": [
-        562,
-        557,
-        598,
-        620
-      ],
-      "mask_idx": 260,
-      "mask_area": 1724
+      "mask_idx": 293,
+      "mask_area": 71,
+      "hit_score": 1.8412322992004238e-79
     }
   },
   "151": {
-    "2": {
-      "label": "tennisball",
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.8125,
+      "static_score": 0.847656,
+      "centroid": [
+        110.553,
+        309.196
+      ],
+      "box_xyxy": [
+        0,
+        19,
+        597,
+        614
+      ],
+      "mask_idx": 294,
+      "mask_area": 8147
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         1062.662,
         308.882
@@ -5455,35 +5516,33 @@
         1067,
         313
       ],
-      "mask_idx": 261,
+      "mask_idx": 295,
       "mask_area": 68,
-      "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.910156,
-      "quality_score": 0.910156,
-      "centroid": [
-        581.707,
-        585.65
-      ],
-      "box_xyxy": [
-        566,
-        556,
-        597,
-        615
-      ],
-      "mask_idx": 262,
-      "mask_area": 1362
+      "hit_score": 3.0934948319535906e-82
     }
   },
   "152": {
-    "2": {
-      "label": "tennisball",
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.808594,
+      "static_score": 0.847656,
+      "centroid": [
+        102.691,
+        291.385
+      ],
+      "box_xyxy": [
+        0,
+        25,
+        596,
+        611
+      ],
+      "mask_idx": 296,
+      "mask_area": 6806
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 0.996094,
-      "static_score": 0.78125,
-      "quality_score": 0.778198,
+      "static_score": 0.769531,
       "centroid": [
         1060.459,
         304.59
@@ -5494,35 +5553,33 @@
         1065,
         308
       ],
-      "mask_idx": 263,
+      "mask_idx": 297,
       "mask_area": 61,
-      "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.910156,
-      "quality_score": 0.910156,
-      "centroid": [
-        582.763,
-        583.35
-      ],
-      "box_xyxy": [
-        570,
-        556,
-        596,
-        611
-      ],
-      "mask_idx": 264,
-      "mask_area": 1052
+      "hit_score": 4.650881373632597e-85
     }
   },
   "153": {
-    "2": {
-      "label": "tennisball",
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.808594,
+      "static_score": 0.847656,
+      "centroid": [
+        70.873,
+        281.872
+      ],
+      "box_xyxy": [
+        0,
+        17,
+        594,
+        606
+      ],
+      "mask_idx": 298,
+      "mask_area": 7515
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 0.996094,
-      "static_score": 0.78125,
-      "quality_score": 0.778198,
+      "static_score": 0.769531,
       "centroid": [
         1058.14,
         301.06
@@ -5533,74 +5590,70 @@
         1062,
         305
       ],
-      "mask_idx": 265,
+      "mask_idx": 299,
       "mask_area": 50,
-      "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.910156,
-      "quality_score": 0.910156,
-      "centroid": [
-        583.252,
-        580.034
-      ],
-      "box_xyxy": [
-        573,
-        556,
-        594,
-        607
-      ],
-      "mask_idx": 266,
-      "mask_area": 791
+      "hit_score": 6.257000470587722e-88
     }
   },
   "154": {
-    "2": {
-      "label": "tennisball",
-      "tracker_score": 0.996094,
-      "static_score": 0.78125,
-      "quality_score": 0.778198,
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.789062,
+      "static_score": 0.847656,
       "centroid": [
-        1056.391,
-        297.266
+        52.733,
+        267.838
       ],
       "box_xyxy": [
-        1053,
+        0,
+        17,
+        593,
+        603
+      ],
+      "mask_idx": 300,
+      "mask_area": 7097
+    },
+    "4": {
+      "label": "ball",
+      "tracker_score": 0.996094,
+      "static_score": 0.769531,
+      "centroid": [
+        1056.379,
+        297.303
+      ],
+      "box_xyxy": [
+        1052,
         293,
         1060,
         302
       ],
-      "mask_idx": 267,
-      "mask_area": 64,
-      "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 1.0,
-      "static_score": 0.910156,
-      "quality_score": 0.910156,
-      "centroid": [
-        584.057,
-        577.267
-      ],
-      "box_xyxy": [
-        575,
-        558,
-        594,
-        603
-      ],
-      "mask_idx": 268,
-      "mask_area": 562
+      "mask_idx": 301,
+      "mask_area": 66,
+      "hit_score": 7.532552554161752e-91
     }
   },
   "155": {
-    "2": {
-      "label": "tennisball",
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.769531,
+      "static_score": 0.847656,
+      "centroid": [
+        7.706,
+        237.682
+      ],
+      "box_xyxy": [
+        0,
+        0,
+        26,
+        511
+      ],
+      "mask_idx": 302,
+      "mask_area": 6865
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 0.996094,
-      "static_score": 0.78125,
-      "quality_score": 0.778198,
+      "static_score": 0.769531,
       "centroid": [
         1053.732,
         294.141
@@ -5611,35 +5664,33 @@
         1058,
         298
       ],
-      "mask_idx": 269,
+      "mask_idx": 303,
       "mask_area": 71,
-      "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 0.996094,
-      "static_score": 0.910156,
-      "quality_score": 0.906601,
-      "centroid": [
-        584.411,
-        574.479
-      ],
-      "box_xyxy": [
-        578,
-        559,
-        592,
-        592
-      ],
-      "mask_idx": 270,
-      "mask_area": 382
+      "hit_score": 8.114527020201711e-94
     }
   },
   "156": {
-    "2": {
-      "label": "tennisball",
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.726562,
+      "static_score": 0.847656,
+      "centroid": [
+        7.561,
+        232.712
+      ],
+      "box_xyxy": [
+        0,
+        0,
+        25,
+        511
+      ],
+      "mask_idx": 304,
+      "mask_area": 6619
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 0.992188,
-      "static_score": 0.78125,
-      "quality_score": 0.775146,
+      "static_score": 0.769531,
       "centroid": [
         1051.111,
         291.206
@@ -5650,35 +5701,33 @@
         1055,
         295
       ],
-      "mask_idx": 271,
+      "mask_idx": 305,
       "mask_area": 63,
-      "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 0.96875,
-      "static_score": 0.910156,
-      "quality_score": 0.881714,
-      "centroid": [
-        585.526,
-        573.258
-      ],
-      "box_xyxy": [
-        580,
-        560,
-        591,
-        592
-      ],
-      "mask_idx": 272,
-      "mask_area": 287
+      "hit_score": 7.822207073288438e-97
     }
   },
   "157": {
-    "2": {
-      "label": "tennisball",
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.679688,
+      "static_score": 0.847656,
+      "centroid": [
+        7.639,
+        229.054
+      ],
+      "box_xyxy": [
+        0,
+        17,
+        25,
+        511
+      ],
+      "mask_idx": 306,
+      "mask_area": 6077
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 0.992188,
-      "static_score": 0.78125,
-      "quality_score": 0.775146,
+      "static_score": 0.769531,
       "centroid": [
         1049.029,
         287.941
@@ -5689,38 +5738,36 @@
         1053,
         292
       ],
-      "mask_idx": 273,
+      "mask_idx": 307,
       "mask_area": 68,
-      "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 0.84375,
-      "static_score": 0.910156,
-      "quality_score": 0.767944,
-      "centroid": [
-        586.367,
-        573.692
-      ],
-      "box_xyxy": [
-        581,
-        561,
-        591,
-        595
-      ],
-      "mask_idx": 274,
-      "mask_area": 221
+      "hit_score": 6.74746225923962e-100
     }
   },
   "158": {
-    "2": {
-      "label": "tennisball",
-      "tracker_score": 0.996094,
-      "static_score": 0.78125,
-      "quality_score": 0.778198,
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.625,
+      "static_score": 0.847656,
       "centroid": [
-        1046.623,
-        284.468
+        7.535,
+        232.523
+      ],
+      "box_xyxy": [
+        0,
+        0,
+        25,
+        511
+      ],
+      "mask_idx": 308,
+      "mask_area": 6710
+    },
+    "4": {
+      "label": "ball",
+      "tracker_score": 0.996094,
+      "static_score": 0.769531,
+      "centroid": [
+        1046.566,
+        284.5
       ],
       "box_xyxy": [
         1042,
@@ -5728,35 +5775,33 @@
         1051,
         289
       ],
-      "mask_idx": 275,
-      "mask_area": 77,
-      "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 0.667969,
-      "static_score": 0.910156,
-      "quality_score": 0.607956,
-      "centroid": [
-        587.202,
-        583.764
-      ],
-      "box_xyxy": [
-        582,
-        566,
-        591,
-        599
-      ],
-      "mask_idx": 276,
-      "mask_area": 208
+      "mask_idx": 309,
+      "mask_area": 76,
+      "hit_score": 5.208308218602871e-103
     }
   },
   "159": {
-    "2": {
-      "label": "tennisball",
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.585938,
+      "static_score": 0.847656,
+      "centroid": [
+        8.919,
+        246.273
+      ],
+      "box_xyxy": [
+        0,
+        0,
+        26,
+        511
+      ],
+      "mask_idx": 310,
+      "mask_area": 8317
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 0.996094,
-      "static_score": 0.78125,
-      "quality_score": 0.778198,
+      "static_score": 0.769531,
       "centroid": [
         1044.267,
         281.48
@@ -5767,35 +5812,33 @@
         1049,
         286
       ],
-      "mask_idx": 277,
+      "mask_idx": 311,
       "mask_area": 75,
-      "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 0.667969,
-      "static_score": 0.910156,
-      "quality_score": 0.607956,
-      "centroid": [
-        590.1999047619048,
-        584.1990476190476
-      ],
-      "box_xyxy": [
-        584,
-        566,
-        594,
-        599
-      ],
-      "mask_idx": 315,
-      "mask_area": 208
+      "hit_score": 3.5974763513339387e-106
     }
   },
   "160": {
-    "2": {
-      "label": "tennisball",
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.539062,
+      "static_score": 0.847656,
+      "centroid": [
+        9.704,
+        253.98
+      ],
+      "box_xyxy": [
+        0,
+        0,
+        26,
+        512
+      ],
+      "mask_idx": 312,
+      "mask_area": 9389
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 0.996094,
-      "static_score": 0.78125,
-      "quality_score": 0.778198,
+      "static_score": 0.769531,
       "centroid": [
         1041.829,
         279.289
@@ -5806,35 +5849,33 @@
         1046,
         284
       ],
-      "mask_idx": 278,
+      "mask_idx": 313,
       "mask_area": 76,
-      "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 0.667969,
-      "static_score": 0.910156,
-      "quality_score": 0.607956,
-      "centroid": [
-        593.1978095238095,
-        584.6340952380953
-      ],
-      "box_xyxy": [
-        587,
-        567,
-        597,
-        599
-      ],
-      "mask_idx": 316,
-      "mask_area": 208
+      "hit_score": 2.2235365662995557e-109
     }
   },
   "161": {
-    "2": {
-      "label": "tennisball",
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.523438,
+      "static_score": 0.847656,
+      "centroid": [
+        9.742,
+        251.48
+      ],
+      "box_xyxy": [
+        0,
+        0,
+        27,
+        512
+      ],
+      "mask_idx": 314,
+      "mask_area": 9492
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 0.996094,
-      "static_score": 0.78125,
-      "quality_score": 0.778198,
+      "static_score": 0.769531,
       "centroid": [
         1039.352,
         276.634
@@ -5845,35 +5886,33 @@
         1044,
         280
       ],
-      "mask_idx": 279,
+      "mask_idx": 315,
       "mask_area": 71,
-      "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 0.667969,
-      "static_score": 0.910156,
-      "quality_score": 0.607956,
-      "centroid": [
-        596.1957142857143,
-        585.0691428571429
-      ],
-      "box_xyxy": [
-        590,
-        568,
-        600,
-        599
-      ],
-      "mask_idx": 317,
-      "mask_area": 208
+      "hit_score": 1.2298033212724315e-112
     }
   },
   "162": {
-    "2": {
-      "label": "tennisball",
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.507812,
+      "static_score": 0.847656,
+      "centroid": [
+        9.739,
+        256.281
+      ],
+      "box_xyxy": [
+        0,
+        0,
+        27,
+        512
+      ],
+      "mask_idx": 316,
+      "mask_area": 9571
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         1036.767,
         274.562
@@ -5884,35 +5923,16 @@
         1042,
         279
       ],
-      "mask_idx": 280,
+      "mask_idx": 317,
       "mask_area": 73,
-      "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 0.667969,
-      "static_score": 0.910156,
-      "quality_score": 0.607956,
-      "centroid": [
-        599.193619047619,
-        585.5041904761905
-      ],
-      "box_xyxy": [
-        593,
-        569,
-        603,
-        599
-      ],
-      "mask_idx": 318,
-      "mask_area": 208
+      "hit_score": 6.08656276547895e-116
     }
   },
   "163": {
-    "2": {
-      "label": "tennisball",
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         1033.378,
         272.5
@@ -5923,38 +5943,19 @@
         1038,
         276
       ],
-      "mask_idx": 281,
+      "mask_idx": 318,
       "mask_area": 74,
       "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 0.667969,
-      "static_score": 0.910156,
-      "quality_score": 0.607956,
-      "centroid": [
-        602.1915238095238,
-        585.9392380952381
-      ],
-      "box_xyxy": [
-        596,
-        570,
-        606,
-        599
-      ],
-      "mask_idx": 319,
-      "mask_area": 208
     }
   },
   "164": {
-    "2": {
-      "label": "tennisball",
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
-        1030.556,
-        270.358
+        1030.575,
+        270.425
       ],
       "box_xyxy": [
         1026,
@@ -5962,35 +5963,16 @@
         1035,
         275
       ],
-      "mask_idx": 282,
-      "mask_area": 81,
+      "mask_idx": 319,
+      "mask_area": 80,
       "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 0.667969,
-      "static_score": 0.910156,
-      "quality_score": 0.607956,
-      "centroid": [
-        605.1894285714286,
-        586.3742857142856
-      ],
-      "box_xyxy": [
-        599,
-        570,
-        609,
-        600
-      ],
-      "mask_idx": 320,
-      "mask_area": 208
     }
   },
   "165": {
-    "2": {
-      "label": "tennisball",
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         1027.438,
         268.75
@@ -6001,35 +5983,16 @@
         1032,
         273
       ],
-      "mask_idx": 283,
+      "mask_idx": 320,
       "mask_area": 80,
       "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 0.667969,
-      "static_score": 0.910156,
-      "quality_score": 0.607956,
-      "centroid": [
-        608.1873333333333,
-        586.8093333333334
-      ],
-      "box_xyxy": [
-        602,
-        571,
-        612,
-        600
-      ],
-      "mask_idx": 321,
-      "mask_area": 208
     }
   },
   "166": {
-    "2": {
-      "label": "tennisball",
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         1025.0,
         267.128
@@ -6040,35 +6003,16 @@
         1030,
         272
       ],
-      "mask_idx": 284,
+      "mask_idx": 321,
       "mask_area": 78,
       "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 0.667969,
-      "static_score": 0.910156,
-      "quality_score": 0.607956,
-      "centroid": [
-        611.1852380952381,
-        587.244380952381
-      ],
-      "box_xyxy": [
-        605,
-        572,
-        615,
-        600
-      ],
-      "mask_idx": 322,
-      "mask_area": 208
     }
   },
   "167": {
-    "2": {
-      "label": "tennisball",
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         1021.805,
         266.31
@@ -6079,35 +6023,16 @@
         1027,
         271
       ],
-      "mask_idx": 285,
+      "mask_idx": 322,
       "mask_area": 87,
       "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 0.667969,
-      "static_score": 0.910156,
-      "quality_score": 0.607956,
-      "centroid": [
-        614.1831428571429,
-        587.6794285714285
-      ],
-      "box_xyxy": [
-        608,
-        573,
-        618,
-        600
-      ],
-      "mask_idx": 323,
-      "mask_area": 208
     }
   },
   "168": {
-    "2": {
-      "label": "tennisball",
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         1018.979,
         265.255
@@ -6118,35 +6043,16 @@
         1024,
         270
       ],
-      "mask_idx": 286,
+      "mask_idx": 323,
       "mask_area": 94,
       "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 0.667969,
-      "static_score": 0.910156,
-      "quality_score": 0.607956,
-      "centroid": [
-        617.1810476190476,
-        588.1144761904761
-      ],
-      "box_xyxy": [
-        611,
-        574,
-        621,
-        600
-      ],
-      "mask_idx": 324,
-      "mask_area": 208
     }
   },
   "169": {
-    "2": {
-      "label": "tennisball",
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         1015.943,
         263.977
@@ -6157,35 +6063,16 @@
         1021,
         269
       ],
-      "mask_idx": 287,
+      "mask_idx": 324,
       "mask_area": 88,
       "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 0.667969,
-      "static_score": 0.910156,
-      "quality_score": 0.607956,
-      "centroid": [
-        620.1789523809524,
-        588.5495238095239
-      ],
-      "box_xyxy": [
-        614,
-        574,
-        625,
-        601
-      ],
-      "mask_idx": 325,
-      "mask_area": 190
     }
   },
   "170": {
-    "2": {
-      "label": "tennisball",
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         1012.693,
         263.507
@@ -6196,77 +6083,39 @@
         1018,
         267
       ],
-      "mask_idx": 288,
+      "mask_idx": 325,
       "mask_area": 75,
       "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 0.667969,
-      "static_score": 0.910156,
-      "quality_score": 0.607956,
-      "centroid": [
-        623.1768571428572,
-        588.9845714285714
-      ],
-      "box_xyxy": [
-        617,
-        575,
-        628,
-        601
-      ],
-      "mask_idx": 326,
-      "mask_area": 190
     }
   },
   "171": {
-    "2": {
-      "label": "tennisball",
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
-        1008.783,
-        263.467
+        1008.846,
+        263.462
       ],
       "box_xyxy": [
-        1003,
+        1004,
         259,
         1014,
         268
       ],
-      "mask_idx": 289,
-      "mask_area": 92,
+      "mask_idx": 326,
+      "mask_area": 91,
       "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 0.667969,
-      "static_score": 0.910156,
-      "quality_score": 0.607956,
-      "centroid": [
-        626.1747619047619,
-        589.4196190476191
-      ],
-      "box_xyxy": [
-        620,
-        576,
-        631,
-        601
-      ],
-      "mask_idx": 327,
-      "mask_area": 190
     }
   },
   "172": {
-    "2": {
-      "label": "tennisball",
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
-        1005.057,
-        264.057
+        1005.069,
+        264.0
       ],
       "box_xyxy": [
         1000,
@@ -6274,35 +6123,16 @@
         1010,
         269
       ],
-      "mask_idx": 290,
-      "mask_area": 88,
+      "mask_idx": 327,
+      "mask_area": 87,
       "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 0.667969,
-      "static_score": 0.910156,
-      "quality_score": 0.607956,
-      "centroid": [
-        629.1726666666667,
-        589.8546666666666
-      ],
-      "box_xyxy": [
-        623,
-        577,
-        634,
-        601
-      ],
-      "mask_idx": 328,
-      "mask_area": 190
     }
   },
   "173": {
-    "2": {
-      "label": "tennisball",
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         1001.554,
         264.185
@@ -6313,38 +6143,19 @@
         1007,
         269
       ],
-      "mask_idx": 291,
+      "mask_idx": 328,
       "mask_area": 92,
       "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 0.667969,
-      "static_score": 0.910156,
-      "quality_score": 0.607956,
-      "centroid": [
-        632.1705714285715,
-        590.2897142857142
-      ],
-      "box_xyxy": [
-        626,
-        578,
-        637,
-        601
-      ],
-      "mask_idx": 329,
-      "mask_area": 190
     }
   },
   "174": {
-    "2": {
-      "label": "tennisball",
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
-        997.989,
-        265.034
+        997.932,
+        265.068
       ],
       "box_xyxy": [
         993,
@@ -6352,35 +6163,16 @@
         1003,
         270
       ],
-      "mask_idx": 292,
-      "mask_area": 89,
+      "mask_idx": 329,
+      "mask_area": 88,
       "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 0.667969,
-      "static_score": 0.910156,
-      "quality_score": 0.607956,
-      "centroid": [
-        635.1684761904762,
-        590.7247619047619
-      ],
-      "box_xyxy": [
-        629,
-        578,
-        640,
-        602
-      ],
-      "mask_idx": 330,
-      "mask_area": 190
     }
   },
   "175": {
-    "2": {
-      "label": "tennisball",
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         994.1,
         266.24
@@ -6391,38 +6183,19 @@
         999,
         271
       ],
-      "mask_idx": 293,
+      "mask_idx": 330,
       "mask_area": 100,
       "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 0.667969,
-      "static_score": 0.910156,
-      "quality_score": 0.607956,
-      "centroid": [
-        638.1663809523809,
-        591.1598095238095
-      ],
-      "box_xyxy": [
-        632,
-        579,
-        643,
-        602
-      ],
-      "mask_idx": 331,
-      "mask_area": 190
     }
   },
   "176": {
-    "2": {
-      "label": "tennisball",
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
-        989.864,
-        267.835
+        989.914,
+        267.865
       ],
       "box_xyxy": [
         985,
@@ -6430,35 +6203,16 @@
         995,
         273
       ],
-      "mask_idx": 294,
-      "mask_area": 103,
+      "mask_idx": 331,
+      "mask_area": 104,
       "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 0.667969,
-      "static_score": 0.910156,
-      "quality_score": 0.607956,
-      "centroid": [
-        641.1642857142858,
-        591.5948571428571
-      ],
-      "box_xyxy": [
-        635,
-        580,
-        646,
-        602
-      ],
-      "mask_idx": 332,
-      "mask_area": 190
     }
   },
   "177": {
-    "2": {
-      "label": "tennisball",
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         985.262,
         269.803
@@ -6469,35 +6223,16 @@
         991,
         275
       ],
-      "mask_idx": 295,
+      "mask_idx": 332,
       "mask_area": 122,
       "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 0.667969,
-      "static_score": 0.910156,
-      "quality_score": 0.607956,
-      "centroid": [
-        644.1621904761905,
-        592.0299047619047
-      ],
-      "box_xyxy": [
-        638,
-        581,
-        649,
-        602
-      ],
-      "mask_idx": 333,
-      "mask_area": 190
     }
   },
   "178": {
-    "2": {
-      "label": "tennisball",
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         981.483,
         272.069
@@ -6508,35 +6243,33 @@
         987,
         277
       ],
-      "mask_idx": 296,
+      "mask_idx": 333,
       "mask_area": 116,
       "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 0.667969,
-      "static_score": 0.910156,
-      "quality_score": 0.607956,
-      "centroid": [
-        647.1600952380952,
-        592.4649523809524
-      ],
-      "box_xyxy": [
-        641,
-        582,
-        652,
-        602
-      ],
-      "mask_idx": 334,
-      "mask_area": 190
     }
   },
   "179": {
-    "2": {
-      "label": "tennisball",
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.546875,
+      "static_score": 0.847656,
+      "centroid": [
+        6.635,
+        264.68
+      ],
+      "box_xyxy": [
+        0,
+        19,
+        25,
+        509
+      ],
+      "mask_idx": 334,
+      "mask_area": 5936
+    },
+    "4": {
+      "label": "ball",
       "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+      "static_score": 0.769531,
       "centroid": [
         977.074,
         274.851
@@ -6547,66 +6280,46 @@
         983,
         280
       ],
-      "mask_idx": 297,
+      "mask_idx": 335,
       "mask_area": 121,
-      "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 0.550781,
-      "static_score": 0.910156,
-      "quality_score": 0.501297,
-      "centroid": [
-        650.158,
-        592.9
-      ],
-      "box_xyxy": [
-        644,
-        583,
-        656,
-        603
-      ],
-      "mask_idx": 298,
-      "mask_area": 190
+      "hit_score": 1.6161640738540387e-179
     }
   },
   "180": {
-    "2": {
-      "label": "tennisball",
-      "tracker_score": 1.0,
-      "static_score": 0.78125,
-      "quality_score": 0.78125,
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.503906,
+      "static_score": 0.847656,
       "centroid": [
-        973.051,
-        278.197
+        7.349,
+        259.516
       ],
       "box_xyxy": [
-        967,
+        0,
+        25,
+        26,
+        510
+      ],
+      "mask_idx": 336,
+      "mask_area": 6525
+    },
+    "4": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        973.103,
+        278.19
+      ],
+      "box_xyxy": [
+        968,
         273,
         979,
         284
       ],
-      "mask_idx": 299,
-      "mask_area": 117,
-      "hit_score": 0.0
-    },
-    "5": {
-      "label": "tennisracket",
-      "tracker_score": 0.683594,
-      "static_score": 0.910156,
-      "quality_score": 0.622177,
-      "centroid": [
-        651.013,
-        597.494
-      ],
-      "box_xyxy": [
-        642,
-        585,
-        660,
-        612
-      ],
-      "mask_idx": 300,
-      "mask_area": 308
+      "mask_idx": 337,
+      "mask_area": 116,
+      "hit_score": 1.082512520013941e-183
     }
   }
 }
