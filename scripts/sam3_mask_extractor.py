@@ -365,7 +365,7 @@ def apply_delete_and_fusion(tracks_dict: dict, delete_set: set, fusion_map: dict
     return new_tracks, dropped_old_mask_indices
 
 
-def _compute_sdf_torch(mask_tensor, max_iters: int=25) -> tuple[torch.Tensor, torch.Tensor]:
+def _compute_sdf_torch(mask_tensor, max_iters: int=15) -> tuple[torch.Tensor, torch.Tensor]:
     """
     Very fast pseudo-SDF using repeated max pooling.
     Returns: dist_in, dist_out
@@ -798,42 +798,50 @@ mp4_files = sorted(glob.glob(os.path.join(args.video_dir, "*.mp4")))
 print(f"Found {len(mp4_files)} videos in {args.video_dir}")
 
 for video_path in mp4_files:
+
     video_name = os.path.splitext(os.path.basename(video_path))[0]
     out_json = os.path.join(args.out_dir, f"{video_name}.json")
-    out_npz = os.path.join(args.out_dir, f"{video_name}.npz")
-    out_mp4 = os.path.join(args.out_dir, f"{video_name}_vis.mp4")
+    out_npz  = os.path.join(args.out_dir, f"{video_name}.npz")
+    out_mp4  = os.path.join(args.out_dir, f"{video_name}_vis.mp4")
 
-    print(f"\n=========================================")
-    print(f"Processing {video_name}...")
-    print(f"=========================================")
+    print("\n===================================================")
+    print("VIDEO:", video_name)
+    print("===================================================")
 
-    # EXTREMELY AGGRESSIVE MEMORY AND KV CACHE CLEARING
-    if 'session' in locals():
-        del session
+    # -------------------------------------------------
+    # HARD RESET ALL TRANSIENT STATE
+    # -------------------------------------------------
+    session = None
+    state = None
+    tracks = None
+    all_masks = None
+    mask_frame_indices = None
+    mask_object_ids = None
+    video_frames = None
+
     import gc
     gc.collect()
+
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
     elif torch.backends.mps.is_available():
         torch.mps.empty_cache()
 
-    print("Loading video...")
+    # -------------------------------------------------
+    # LOAD VIDEO
+    # -------------------------------------------------
     video_frames, _ = load_video(video_path)
     num_frames = len(video_frames)
+    num_track_frames = min(num_frames, args.max_frames) if args.max_frames > 0 else num_frames
 
-    if args.max_frames > 0:
-        num_track_frames = min(num_frames, args.max_frames)
-    else:
-        num_track_frames = num_frames
+    print("Frames:", num_frames, "Tracking:", num_track_frames)
 
-    print("Total frames:", num_frames, "Tracking frames:", num_track_frames)
-
-    # -------------------------
-    # Init session
-    # -------------------------
+    # -------------------------------------------------
+    # INIT SESSION
+    # -------------------------------------------------
     if hasattr(model, "reset_state"):
         model.reset_state()
-        
+
     session = processor.init_video_session(
         video=video_frames,
         inference_device=device,
@@ -841,28 +849,29 @@ for video_path in mp4_files:
         video_storage_device=args.video_storage_device,
         dtype=torch_dtype,
     )
+
     for p in args.prompts:
         session = processor.add_text_prompt(inference_session=session, text=p)
 
-    # -------------------------
-    # Tracking state (external gating)
-    # -------------------------
+    # -------------------------------------------------
+    # INIT STORAGE
+    # -------------------------------------------------
     state = {}
-
-    # -------------------------
-    # Main loop
-    # -------------------------
     tracks = {}
-
     all_masks = []
     mask_frame_indices = []
     mask_object_ids = []
     mask_counter = 0
 
+    # -------------------------------------------------
+    # TRACK LOOP
+    # -------------------------------------------------
+    print("Tracking...")
+
     t0 = time.time()
-    print("Propagating...")
 
     for frame_idx in range(num_track_frames):
+
         with torch.no_grad():
             model_outputs = model(
                 inference_session=session,
@@ -1002,52 +1011,54 @@ for video_path in mp4_files:
 
         tracks[str(frame_idx)] = frame_data
 
-        if args.print_every > 0 and (frame_idx % args.print_every == 0):
-            print("frame", frame_idx, "kept_masks", mask_counter, "kept_objs_this_frame", len(frame_data))
+        # -------------------------------------------------
+        # AFTER FRAME PROCESSING
+        # -------------------------------------------------
 
-    t1 = time.time()
-    print("Total kept masks before post-processing:", len(all_masks))
-    print("Time (s):", round(t1 - t0, 2))
+        if args.print_every > 0 and frame_idx % args.print_every == 0:
+            print("frame", frame_idx, "masks:", mask_counter)
 
+        # 显式释放本帧变量
+        model_outputs = None
+        pp = None
 
-    # -------------------------
-    # Post-processing: delete and fuse (JSON + NPZ consistent)
-    # -------------------------
+    print("Tracking done. Kept masks:", len(all_masks))
+    print("Time:", round(time.time() - t0, 2), "sec")
+
+    # -------------------------------------------------
+    # POST PROCESS
+    # -------------------------------------------------
+    dropped_old_mask_indices = set()
+
     if args.post_process_rm or args.post_process_fusion:
-        print("Post-processing tracks...")
+
         track_history = build_track_history(tracks)
 
         delete_set = set()
         if args.post_process_rm:
             delete_set = plan_deletions(track_history, args.rm_min_len, args.rm_static_px)
-            if delete_set:
-                print("Delete tracks:", len(delete_set))
 
         fusion_map = {}
         if args.post_process_fusion:
             fusion_map = plan_fusions(track_history, delete_set, args.fusion_max_gap, args.fusion_skip_unknown)
-            if fusion_map:
-                print("Fuse tracks:", len(fusion_map))
-
-        dropped_old_mask_indices = set()
 
         if delete_set or fusion_map:
-            tracks, dropped_old_mask_indices = apply_delete_and_fusion(tracks, delete_set, fusion_map)
-
-        if args.post_process_predict:
-            print(f"Applying Gap Prediction Phase (max_gap={args.predict_max_gap})...")
-            # Rebuild history after deletions and fusions, so gap logic works linearly!
-            track_history_updated = build_track_history(tracks)
-            tracks, all_masks, mask_frame_indices, mask_object_ids = apply_gap_prediction(
-                tracks_dict=tracks,
-                track_history=track_history_updated,
-                all_masks_list=all_masks,
-                mask_frame_indices_list=mask_frame_indices,
-                mask_object_ids_list=mask_object_ids,
-                predict_max_gap=int(args.predict_max_gap)
+            tracks, dropped_old_mask_indices = apply_delete_and_fusion(
+                tracks, delete_set, fusion_map
             )
 
-        # 👇 统一 rebuild（只做一次）
+        if args.post_process_predict:
+            track_history_updated = build_track_history(tracks)
+            with torch.no_grad():
+                tracks, all_masks, mask_frame_indices, mask_object_ids = apply_gap_prediction(
+                    tracks_dict=tracks,
+                    track_history=track_history_updated,
+                    all_masks_list=all_masks,
+                    mask_frame_indices_list=mask_frame_indices,
+                    mask_object_ids_list=mask_object_ids,
+                    predict_max_gap=int(args.predict_max_gap)
+                )
+
         tracks, all_masks, mask_frame_indices, mask_object_ids = rebuild_npz_and_reindex(
             tracks,
             all_masks,
@@ -1056,91 +1067,42 @@ for video_path in mp4_files:
             dropped_old_mask_indices,
         )
 
-        for fkey, frame_data in tracks.items():
-            for oid_str, info in frame_data.items():
-                midx = info["mask_idx"]
-                if mask_frame_indices[midx] != int(fkey):
-                    raise RuntimeError(
-                        f"Frame mismatch: frame={fkey}, mask_idx={midx}, "
-                        f"npz_frame={mask_frame_indices[midx]}"
-                    )
+    # -------------------------------------------------
+    # ALWAYS COMPUTE HIT SCORE
+    # -------------------------------------------------
+    print("Computing hit_score...")
 
-        print("Total kept masks after post-processing:", len(all_masks))
+    masks_for_scoring = np.array(all_masks, dtype=np.bool_)
 
-        print("Computing Hit Scores for tennis interactions...")
-        # Generate hit_score dynamically
-        masks_for_scoring = np.array(all_masks, dtype=np.bool_)
-        tracks, hit_dbg = compute_hit_scores(
-            tracks=tracks,
-            masks_np=masks_for_scoring,
-            ball_labels={"Tennis_Ball", "tennisball"},
-            racket_labels={"Tennis_Racket", "tennisracket"},
-            sigma_dist_px=18.0,
-            iou_ref=0.02,
-            w_iou=0.65,
-            max_peak_cap=0.92,
-            conf_mode="quality",
-            sigma_t=2.5,
-            left_cut_frames=8,
-            right_cut_frames=12,
-            return_debug=True,
-        )
+    tracks, hit_dbg = compute_hit_scores(
+        tracks=tracks,
+        masks_np=masks_for_scoring,
+        ball_labels={"tennisball", "Tennis_Ball"},
+        racket_labels={"tennisracket", "Tennis_Racket"},
+        return_debug=True,
+    )
 
-
-    # -------------------------
-    # Save JSON
-    # -------------------------
+    # -------------------------------------------------
+    # SAVE JSON
+    # -------------------------------------------------
     meta = {
-        "time_unix": time.time(),
-        "hostname": platform.node(),
-        "platform": platform.platform(),
-        "python": platform.python_version(),
-        "torch": torch.__version__,
-        "device": str(device),
-        "dtype": args.dtype,
         "video_name": video_name,
-        "video_path": video_path,
-        "num_frames_total": int(num_frames),
-        "num_frames_tracked": int(num_track_frames),
-        "hf_local_model": args.hf_local_model,
-        "out_dir": args.out_dir,
-        "out_json": out_json,
-        "out_npz": out_npz,
-        "out_mp4": out_mp4 if args.vis else "",
-        "prompts": list(args.prompts),
-        "label_aliases": dict(label_alias),
-        "tracker_score_min": float(args.tracker_score_min),
-        "static_score_min": float(args.static_score_min),
-        "mask_area_min": int(args.mask_area_min),
-        "max_jump_px": float(args.max_jump_px),
-        "max_lost": int(args.max_lost),
-        "ema_alpha": float(args.ema_alpha),
-        "quality_score_mode": str(args.quality_score_mode),
-        "processing_device": args.processing_device,
-        "video_storage_device": args.video_storage_device,
-        "plan": "A_hard_remove_on_reject",
-        "post_process_rm": bool(args.post_process_rm),
-        "post_process_fusion": bool(args.post_process_fusion),
-        "post_process_predict": bool(args.post_process_predict),
-        "rm_min_len": int(args.rm_min_len),
-        "rm_static_px": float(args.rm_static_px),
-        "fusion_max_gap": int(args.fusion_max_gap),
-        "fusion_skip_unknown": bool(args.fusion_skip_unknown),
-        "predict_max_gap": int(args.predict_max_gap),
+        "frames": int(num_track_frames),
+        "masks_total": int(len(all_masks)),
         "hit_debug": hit_dbg,
     }
 
-    json_payload = {"_meta": meta}
-    json_payload.update(tracks)
+    payload = {"_meta": meta}
+    payload.update(tracks)
 
     with open(out_json, "w") as f:
-        json.dump(json_payload, f, indent=2)
+        json.dump(payload, f, indent=2)
 
     print("Saved:", out_json)
 
-    # -------------------------
-    # Save NPZ
-    # -------------------------
+    # -------------------------------------------------
+    # SAVE NPZ
+    # -------------------------------------------------
     np.savez_compressed(
         out_npz,
         masks=np.array(all_masks, dtype=np.bool_),
@@ -1150,19 +1112,14 @@ for video_path in mp4_files:
 
     print("Saved:", out_npz)
 
-    # -------------------------
-    # Visualization (optional)
-    # -------------------------
+    # -------------------------------------------------
+    # VISUALIZATION (OPTIONAL)
+    # -------------------------------------------------
     if args.vis:
+        print("Rendering visualization mp4...")
         import cv2
-
-        print("Rendering video...")
-
-        data = np.load(out_npz)
-        masks_np = data["masks"]
-
         cap = cv2.VideoCapture(video_path)
-        fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
+        fps = cap.get(cv2.CAP_PROP_FPS)
         w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
@@ -1175,6 +1132,8 @@ for video_path in mp4_files:
             "unknown": (200, 200, 200),
             "tennisball": (0, 0, 255),
             "tennisracket": (255, 128, 0),
+            "Tennis_Ball": (0, 0, 255),
+            "Tennis_Racket": (255, 128, 0),
         }
 
         frame_idx = 0
@@ -1187,10 +1146,10 @@ for video_path in mp4_files:
 
             for obj_id_str, info in per_frame.items():
                 midx = int(info["mask_idx"])
-                if midx < 0 or midx >= masks_np.shape[0]:
+                if midx < 0 or midx >= masks_for_scoring.shape[0]:
                     continue
 
-                mask = masks_np[midx]
+                mask = masks_for_scoring[midx]
 
                 label = info.get("label", "unknown")
                 color = LABEL_COLORS.get(label, (200, 200, 200))
@@ -1199,14 +1158,15 @@ for video_path in mp4_files:
                 overlay[mask] = color
                 frame = cv2.addWeighted(frame, 1.0, overlay, 0.4, 0)
 
-                x0, y0, x1, y1 = info["box_xyxy"]
-                cv2.rectangle(frame, (x0, y0), (x1, y1), color, 2)
+                if "box_xyxy" in info and info["box_xyxy"]:
+                    x0, y0, x1, y1 = info["box_xyxy"]
+                    cv2.rectangle(frame, (x0, y0), (x1, y1), color, 2)
 
-                qs = float(info.get("quality_score", -1.0))
-                ts = float(info.get("tracker_score", 0.0))
-                ss = float(info.get("static_score", 0.0))
-                txt = f"id={obj_id_str} {label} q={qs:.3f} ts={ts:.3f} ss={ss:.3f}"
-                cv2.putText(frame, txt, (x0, max(0, y0 - 6)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, cv2.LINE_AA)
+                    qs = float(info.get("quality_score", -1.0))
+                    ts = float(info.get("tracker_score", 0.0))
+                    ss = float(info.get("static_score", 0.0))
+                    txt = f"id={obj_id_str} {label} q={qs:.3f} ts={ts:.3f} ss={ss:.3f}"
+                    cv2.putText(frame, txt, (x0, max(0, y0 - 6)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, cv2.LINE_AA)
 
             out.write(frame)
             frame_idx += 1
@@ -1217,9 +1177,9 @@ for video_path in mp4_files:
     else:
         print("Done (no visualization)")
 
-    # -------------------------
-    # FULL CLEANUP
-    # -------------------------
+    # -------------------------------------------------
+    # CLEANUP (CRITICAL FOR PRODUCTION)
+    # -------------------------------------------------
     del session
     del state
     del tracks
@@ -1227,8 +1187,8 @@ for video_path in mp4_files:
     del mask_frame_indices
     del mask_object_ids
     del video_frames
+    del masks_for_scoring
 
-    import gc
     gc.collect()
 
     if torch.cuda.is_available():
