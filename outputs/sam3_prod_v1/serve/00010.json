@@ -1,0 +1,4220 @@
+{
+  "_meta": {
+    "time_unix": 1772532263.408215,
+    "hostname": "dgxh-1.hpc.engr.oregonstate.edu",
+    "platform": "Linux-5.14.0-570.58.1.el9_6.x86_64-x86_64-with-glibc2.34",
+    "python": "3.11.14",
+    "torch": "2.9.1+cu126",
+    "device": "cuda",
+    "dtype": "bf16",
+    "video_name": "00010",
+    "video_path": "/nfs/hpc/share/zhanhaoc/hpe/tempopeak/datasets/serve/00010.mp4",
+    "num_frames_total": 144,
+    "num_frames_tracked": 144,
+    "hf_local_model": "/nfs/hpc/share/zhanhaoc/hpe/tempopeak/models/models--facebook--sam3/snapshots/3c879f39826c281e95690f02c7821c4de09afae7",
+    "out_dir": "/nfs/hpc/share/zhanhaoc/hpe/tempopeak/outputs/sam3_prod_v1/serve",
+    "prompts": [
+      "ball",
+      "racket"
+    ],
+    "canonical_prompts": [
+      "ball",
+      "racket"
+    ],
+    "tracker_score_min": 0.1,
+    "static_score_min": -1.0,
+    "mask_area_min": 1,
+    "max_jump_px": -1.0,
+    "max_lost": 0,
+    "ema_alpha": 1.0,
+    "post_process_rm": true,
+    "post_process_fusion": true,
+    "post_process_predict": false,
+    "rm_min_len": 15,
+    "rm_static_px": 5.0,
+    "fusion_max_gap": 5,
+    "fusion_skip_unknown": false,
+    "predict_max_gap": 15,
+    "hit_debug": {
+      "status": "ok",
+      "peak_frame": 90,
+      "peak_raw": 0.19165159854122085
+    }
+  },
+  "0": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.765625,
+      "static_score": 0.765625,
+      "centroid": [
+        1204.12,
+        811.409
+      ],
+      "box_xyxy": [
+        1178,
+        788,
+        1232,
+        839
+      ],
+      "mask_idx": 0,
+      "mask_area": 1655
+    }
+  },
+  "1": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1205.565,
+        810.735
+      ],
+      "box_xyxy": [
+        1181,
+        787,
+        1233,
+        837
+      ],
+      "mask_idx": 1,
+      "mask_area": 1575
+    }
+  },
+  "2": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1204.515,
+        814.679
+      ],
+      "box_xyxy": [
+        1178,
+        791,
+        1233,
+        843
+      ],
+      "mask_idx": 2,
+      "mask_area": 1681
+    }
+  },
+  "3": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1204.32,
+        817.892
+      ],
+      "box_xyxy": [
+        1179,
+        795,
+        1232,
+        847
+      ],
+      "mask_idx": 3,
+      "mask_area": 1758
+    }
+  },
+  "4": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1203.354,
+        826.04
+      ],
+      "box_xyxy": [
+        1174,
+        798,
+        1234,
+        860
+      ],
+      "mask_idx": 4,
+      "mask_area": 2298
+    }
+  },
+  "5": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1204.251,
+        832.805
+      ],
+      "box_xyxy": [
+        1172,
+        801,
+        1237,
+        868
+      ],
+      "mask_idx": 5,
+      "mask_area": 2642
+    }
+  },
+  "6": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1204.775,
+        840.0
+      ],
+      "box_xyxy": [
+        1173,
+        804,
+        1239,
+        878
+      ],
+      "mask_idx": 6,
+      "mask_area": 3162
+    }
+  },
+  "7": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1208.829,
+        846.06
+      ],
+      "box_xyxy": [
+        1174,
+        804,
+        1243,
+        885
+      ],
+      "mask_idx": 7,
+      "mask_area": 3485
+    }
+  },
+  "8": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1214.923,
+        851.028
+      ],
+      "box_xyxy": [
+        1184,
+        808,
+        1248,
+        892
+      ],
+      "mask_idx": 8,
+      "mask_area": 3637
+    }
+  },
+  "9": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1221.304,
+        856.031
+      ],
+      "box_xyxy": [
+        1190,
+        809,
+        1255,
+        898
+      ],
+      "mask_idx": 9,
+      "mask_area": 3986
+    }
+  },
+  "10": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1228.8,
+        860.324
+      ],
+      "box_xyxy": [
+        1200,
+        810,
+        1263,
+        905
+      ],
+      "mask_idx": 10,
+      "mask_area": 4261
+    }
+  },
+  "11": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1238.332,
+        865.003
+      ],
+      "box_xyxy": [
+        1209,
+        812,
+        1272,
+        909
+      ],
+      "mask_idx": 11,
+      "mask_area": 4283
+    }
+  },
+  "12": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1248.12,
+        868.017
+      ],
+      "box_xyxy": [
+        1219,
+        810,
+        1283,
+        918
+      ],
+      "mask_idx": 12,
+      "mask_area": 4842
+    }
+  },
+  "13": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1260.101,
+        869.86
+      ],
+      "box_xyxy": [
+        1231,
+        808,
+        1295,
+        920
+      ],
+      "mask_idx": 13,
+      "mask_area": 4932
+    }
+  },
+  "14": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1272.954,
+        870.575
+      ],
+      "box_xyxy": [
+        1239,
+        808,
+        1309,
+        922
+      ],
+      "mask_idx": 14,
+      "mask_area": 5254
+    }
+  },
+  "15": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1286.03,
+        869.775
+      ],
+      "box_xyxy": [
+        1245,
+        805,
+        1324,
+        922
+      ],
+      "mask_idx": 15,
+      "mask_area": 5523
+    }
+  },
+  "16": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1298.907,
+        866.95
+      ],
+      "box_xyxy": [
+        1233,
+        772,
+        1339,
+        922
+      ],
+      "mask_idx": 16,
+      "mask_area": 6056
+    }
+  },
+  "17": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1315.132,
+        864.998
+      ],
+      "box_xyxy": [
+        1263,
+        797,
+        1357,
+        919
+      ],
+      "mask_idx": 17,
+      "mask_area": 6170
+    }
+  },
+  "18": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1329.421,
+        860.186
+      ],
+      "box_xyxy": [
+        1269,
+        794,
+        1374,
+        915
+      ],
+      "mask_idx": 18,
+      "mask_area": 6741
+    }
+  },
+  "19": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1345.194,
+        854.473
+      ],
+      "box_xyxy": [
+        1281,
+        790,
+        1392,
+        908
+      ],
+      "mask_idx": 19,
+      "mask_area": 6810
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 0.769531,
+      "static_score": 0.769531,
+      "centroid": [
+        1270.677,
+        551.22
+      ],
+      "box_xyxy": [
+        1259,
+        540,
+        1283,
+        561
+      ],
+      "mask_idx": 20,
+      "mask_area": 428,
+      "hit_score": 4.5282463098001354e-123
+    }
+  },
+  "20": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1360.974,
+        847.491
+      ],
+      "box_xyxy": [
+        1289,
+        782,
+        1410,
+        902
+      ],
+      "mask_idx": 21,
+      "mask_area": 7091
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        1271.924,
+        519.065
+      ],
+      "box_xyxy": [
+        1258,
+        507,
+        1286,
+        531
+      ],
+      "mask_idx": 22,
+      "mask_area": 539,
+      "hit_score": 1.1426243725017939e-119
+    }
+  },
+  "21": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1376.543,
+        839.46
+      ],
+      "box_xyxy": [
+        1299,
+        777,
+        1429,
+        892
+      ],
+      "mask_idx": 23,
+      "mask_area": 7407
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        1273.72,
+        485.451
+      ],
+      "box_xyxy": [
+        1263,
+        472,
+        1286,
+        498
+      ],
+      "mask_idx": 24,
+      "mask_area": 486,
+      "hit_score": 2.58001352471996e-116
+    }
+  },
+  "22": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1389.647,
+        829.612
+      ],
+      "box_xyxy": [
+        1306,
+        768,
+        1446,
+        883
+      ],
+      "mask_idx": 25,
+      "mask_area": 8109
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        1273.002,
+        450.824
+      ],
+      "box_xyxy": [
+        1262,
+        439,
+        1283,
+        462
+      ],
+      "mask_idx": 26,
+      "mask_area": 420,
+      "hit_score": 5.212973765134128e-113
+    }
+  },
+  "23": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1405.198,
+        820.174
+      ],
+      "box_xyxy": [
+        1316,
+        765,
+        1462,
+        872
+      ],
+      "mask_idx": 27,
+      "mask_area": 8097
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        1273.115,
+        417.749
+      ],
+      "box_xyxy": [
+        1264,
+        407,
+        1283,
+        428
+      ],
+      "mask_idx": 28,
+      "mask_area": 374,
+      "hit_score": 9.425277672809491e-110
+    }
+  },
+  "24": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1417.796,
+        808.208
+      ],
+      "box_xyxy": [
+        1323,
+        755,
+        1478,
+        860
+      ],
+      "mask_idx": 29,
+      "mask_area": 8592
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        1273.546,
+        386.538
+      ],
+      "box_xyxy": [
+        1264,
+        376,
+        1284,
+        397
+      ],
+      "mask_idx": 30,
+      "mask_area": 357,
+      "hit_score": 1.524922686075581e-106
+    }
+  },
+  "25": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1431.566,
+        796.673
+      ],
+      "box_xyxy": [
+        1332,
+        748,
+        1493,
+        847
+      ],
+      "mask_idx": 31,
+      "mask_area": 8553
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        1273.265,
+        354.725
+      ],
+      "box_xyxy": [
+        1263,
+        343,
+        1284,
+        366
+      ],
+      "mask_idx": 32,
+      "mask_area": 407,
+      "hit_score": 2.2077330280924387e-103
+    }
+  },
+  "26": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1442.289,
+        783.628
+      ],
+      "box_xyxy": [
+        1337,
+        739,
+        1506,
+        833
+      ],
+      "mask_idx": 33,
+      "mask_area": 8804
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        1274.55,
+        324.895
+      ],
+      "box_xyxy": [
+        1264,
+        314,
+        1285,
+        336
+      ],
+      "mask_idx": 34,
+      "mask_area": 411,
+      "hit_score": 2.860160086594596e-100
+    }
+  },
+  "27": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1451.973,
+        770.125
+      ],
+      "box_xyxy": [
+        1345,
+        729,
+        1517,
+        820
+      ],
+      "mask_idx": 35,
+      "mask_area": 9257
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        1274.38,
+        295.873
+      ],
+      "box_xyxy": [
+        1264,
+        284,
+        1285,
+        307
+      ],
+      "mask_idx": 36,
+      "mask_area": 416,
+      "hit_score": 3.31573021093396e-97
+    }
+  },
+  "28": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1462.244,
+        756.502
+      ],
+      "box_xyxy": [
+        1348,
+        715,
+        1528,
+        805
+      ],
+      "mask_idx": 37,
+      "mask_area": 9381
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        1274.696,
+        267.717
+      ],
+      "box_xyxy": [
+        1264,
+        256,
+        1285,
+        279
+      ],
+      "mask_idx": 38,
+      "mask_area": 421,
+      "hit_score": 3.43964077353576e-94
+    }
+  },
+  "29": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1469.069,
+        741.083
+      ],
+      "box_xyxy": [
+        1355,
+        700,
+        1538,
+        789
+      ],
+      "mask_idx": 39,
+      "mask_area": 9663
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 0.859375,
+      "static_score": 0.769531,
+      "centroid": [
+        1275.44,
+        241.12
+      ],
+      "box_xyxy": [
+        1262,
+        226,
+        1289,
+        253
+      ],
+      "mask_idx": 40,
+      "mask_area": 568,
+      "hit_score": 3.1929494879482995e-91
+    }
+  },
+  "30": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1475.242,
+        725.882
+      ],
+      "box_xyxy": [
+        1357,
+        685,
+        1545,
+        773
+      ],
+      "mask_idx": 41,
+      "mask_area": 9692
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        1275.031,
+        212.895
+      ],
+      "box_xyxy": [
+        1264,
+        201,
+        1286,
+        226
+      ],
+      "mask_idx": 42,
+      "mask_area": 478,
+      "hit_score": 2.6522598156473915e-88
+    }
+  },
+  "31": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1480.09,
+        710.379
+      ],
+      "box_xyxy": [
+        1362,
+        668,
+        1551,
+        756
+      ],
+      "mask_idx": 43,
+      "mask_area": 9890
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        1274.817,
+        186.942
+      ],
+      "box_xyxy": [
+        1264,
+        175,
+        1286,
+        199
+      ],
+      "mask_idx": 44,
+      "mask_area": 480,
+      "hit_score": 1.9714471546891246e-85
+    }
+  },
+  "32": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1487.335,
+        695.159
+      ],
+      "box_xyxy": [
+        1363,
+        652,
+        1556,
+        740
+      ],
+      "mask_idx": 45,
+      "mask_area": 9602
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        1274.998,
+        160.985
+      ],
+      "box_xyxy": [
+        1264,
+        149,
+        1286,
+        173
+      ],
+      "mask_idx": 46,
+      "mask_area": 465,
+      "hit_score": 1.3112915799305852e-82
+    }
+  },
+  "33": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1487.245,
+        678.707
+      ],
+      "box_xyxy": [
+        1362,
+        635,
+        1559,
+        723
+      ],
+      "mask_idx": 47,
+      "mask_area": 10116
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        1274.641,
+        136.683
+      ],
+      "box_xyxy": [
+        1264,
+        125,
+        1286,
+        148
+      ],
+      "mask_idx": 48,
+      "mask_area": 426,
+      "hit_score": 7.804740404602586e-80
+    }
+  },
+  "34": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1489.09,
+        661.523
+      ],
+      "box_xyxy": [
+        1365,
+        616,
+        1560,
+        705
+      ],
+      "mask_idx": 49,
+      "mask_area": 9943
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 0.996094,
+      "static_score": 0.769531,
+      "centroid": [
+        1273.857,
+        114.231
+      ],
+      "box_xyxy": [
+        1264,
+        102,
+        1285,
+        126
+      ],
+      "mask_idx": 50,
+      "mask_area": 454,
+      "hit_score": 4.156834271191266e-77
+    }
+  },
+  "35": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1489.146,
+        645.539
+      ],
+      "box_xyxy": [
+        1364,
+        599,
+        1559,
+        689
+      ],
+      "mask_idx": 51,
+      "mask_area": 9942
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        1274.161,
+        90.699
+      ],
+      "box_xyxy": [
+        1262,
+        79,
+        1285,
+        102
+      ],
+      "mask_idx": 52,
+      "mask_area": 498,
+      "hit_score": 1.9811256232291188e-74
+    }
+  },
+  "36": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1486.882,
+        629.428
+      ],
+      "box_xyxy": [
+        1361,
+        582,
+        1558,
+        672
+      ],
+      "mask_idx": 53,
+      "mask_area": 10042
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        1274.196,
+        69.021
+      ],
+      "box_xyxy": [
+        1264,
+        56,
+        1285,
+        82
+      ],
+      "mask_idx": 54,
+      "mask_area": 479,
+      "hit_score": 8.449020768939841e-72
+    }
+  },
+  "37": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1484.276,
+        613.208
+      ],
+      "box_xyxy": [
+        1359,
+        564,
+        1555,
+        656
+      ],
+      "mask_idx": 55,
+      "mask_area": 10174
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 0.996094,
+      "static_score": 0.769531,
+      "centroid": [
+        1274.371,
+        47.837
+      ],
+      "box_xyxy": [
+        1263,
+        35,
+        1286,
+        63
+      ],
+      "mask_idx": 56,
+      "mask_area": 490,
+      "hit_score": 3.224376875834994e-69
+    }
+  },
+  "38": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1480.548,
+        597.513
+      ],
+      "box_xyxy": [
+        1357,
+        548,
+        1552,
+        640
+      ],
+      "mask_idx": 57,
+      "mask_area": 10181
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        1274.543,
+        26.538
+      ],
+      "box_xyxy": [
+        1263,
+        16,
+        1286,
+        37
+      ],
+      "mask_idx": 58,
+      "mask_area": 431,
+      "hit_score": 1.1011089068310435e-66
+    }
+  },
+  "39": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1386.795,
+        554.922
+      ],
+      "box_xyxy": [
+        0,
+        6,
+        1549,
+        632
+      ],
+      "mask_idx": 59,
+      "mask_area": 10765
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 0.996094,
+      "static_score": 0.769531,
+      "centroid": [
+        1274.033,
+        17.162
+      ],
+      "box_xyxy": [
+        1262,
+        6,
+        1286,
+        28
+      ],
+      "mask_idx": 60,
+      "mask_area": 457,
+      "hit_score": 3.3648043049367286e-64
+    }
+  },
+  "40": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1473.738,
+        575.283
+      ],
+      "box_xyxy": [
+        1354,
+        524,
+        1544,
+        619
+      ],
+      "mask_idx": 61,
+      "mask_area": 10139
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 0.992188,
+      "static_score": 0.769531,
+      "centroid": [
+        1274.028,
+        4.189
+      ],
+      "box_xyxy": [
+        1262,
+        0,
+        1285,
+        10
+      ],
+      "mask_idx": 62,
+      "mask_area": 217,
+      "hit_score": 9.200986720130178e-62
+    }
+  },
+  "41": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1466.985,
+        561.605
+      ],
+      "box_xyxy": [
+        1350,
+        508,
+        1537,
+        608
+      ],
+      "mask_idx": 63,
+      "mask_area": 10249
+    }
+  },
+  "42": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1460.251,
+        549.417
+      ],
+      "box_xyxy": [
+        1345,
+        494,
+        1529,
+        600
+      ],
+      "mask_idx": 64,
+      "mask_area": 10432
+    }
+  },
+  "43": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1454.297,
+        536.371
+      ],
+      "box_xyxy": [
+        1339,
+        482,
+        1521,
+        596
+      ],
+      "mask_idx": 65,
+      "mask_area": 10053
+    }
+  },
+  "44": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1444.843,
+        527.196
+      ],
+      "box_xyxy": [
+        1334,
+        470,
+        1513,
+        590
+      ],
+      "mask_idx": 66,
+      "mask_area": 10478
+    }
+  },
+  "45": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1438.124,
+        516.014
+      ],
+      "box_xyxy": [
+        1328,
+        458,
+        1505,
+        583
+      ],
+      "mask_idx": 67,
+      "mask_area": 10309
+    }
+  },
+  "46": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1427.085,
+        501.754
+      ],
+      "box_xyxy": [
+        1321,
+        443,
+        1491,
+        576
+      ],
+      "mask_idx": 68,
+      "mask_area": 9967
+    }
+  },
+  "47": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1422.013,
+        499.38
+      ],
+      "box_xyxy": [
+        1319,
+        440,
+        1488,
+        574
+      ],
+      "mask_idx": 69,
+      "mask_area": 10169
+    }
+  },
+  "48": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1415.193,
+        492.053
+      ],
+      "box_xyxy": [
+        1315,
+        433,
+        1478,
+        568
+      ],
+      "mask_idx": 70,
+      "mask_area": 9870
+    }
+  },
+  "49": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1406.88,
+        486.141
+      ],
+      "box_xyxy": [
+        1311,
+        425,
+        1470,
+        567
+      ],
+      "mask_idx": 71,
+      "mask_area": 9907
+    }
+  },
+  "50": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1400.173,
+        481.773
+      ],
+      "box_xyxy": [
+        1305,
+        420,
+        1463,
+        565
+      ],
+      "mask_idx": 72,
+      "mask_area": 9797
+    }
+  },
+  "51": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1391.575,
+        478.245
+      ],
+      "box_xyxy": [
+        1300,
+        416,
+        1453,
+        565
+      ],
+      "mask_idx": 73,
+      "mask_area": 9690
+    }
+  },
+  "52": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1385.066,
+        475.402
+      ],
+      "box_xyxy": [
+        1296,
+        413,
+        1447,
+        563
+      ],
+      "mask_idx": 74,
+      "mask_area": 9601
+    }
+  },
+  "53": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1378.641,
+        473.157
+      ],
+      "box_xyxy": [
+        1292,
+        410,
+        1439,
+        563
+      ],
+      "mask_idx": 75,
+      "mask_area": 9482
+    }
+  },
+  "54": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1371.613,
+        472.873
+      ],
+      "box_xyxy": [
+        1284,
+        408,
+        1431,
+        564
+      ],
+      "mask_idx": 76,
+      "mask_area": 9361
+    }
+  },
+  "55": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1365.519,
+        470.793
+      ],
+      "box_xyxy": [
+        1283,
+        407,
+        1422,
+        565
+      ],
+      "mask_idx": 77,
+      "mask_area": 8650
+    }
+  },
+  "56": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1359.123,
+        471.235
+      ],
+      "box_xyxy": [
+        1281,
+        406,
+        1416,
+        566
+      ],
+      "mask_idx": 78,
+      "mask_area": 8985
+    }
+  },
+  "57": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1353.024,
+        470.916
+      ],
+      "box_xyxy": [
+        1280,
+        405,
+        1407,
+        567
+      ],
+      "mask_idx": 79,
+      "mask_area": 8749
+    }
+  },
+  "58": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1346.81,
+        471.112
+      ],
+      "box_xyxy": [
+        1273,
+        405,
+        1400,
+        569
+      ],
+      "mask_idx": 80,
+      "mask_area": 8583
+    }
+  },
+  "59": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1340.48,
+        469.977
+      ],
+      "box_xyxy": [
+        1273,
+        406,
+        1393,
+        570
+      ],
+      "mask_idx": 81,
+      "mask_area": 7889
+    }
+  },
+  "60": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1332.5,
+        471.778
+      ],
+      "box_xyxy": [
+        1269,
+        405,
+        1383,
+        574
+      ],
+      "mask_idx": 82,
+      "mask_area": 8037
+    }
+  },
+  "61": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1325.708,
+        470.602
+      ],
+      "box_xyxy": [
+        1266,
+        405,
+        1372,
+        575
+      ],
+      "mask_idx": 83,
+      "mask_area": 7394
+    }
+  },
+  "62": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1316.86,
+        472.081
+      ],
+      "box_xyxy": [
+        1262,
+        404,
+        1364,
+        577
+      ],
+      "mask_idx": 84,
+      "mask_area": 7431
+    }
+  },
+  "63": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1309.358,
+        470.992
+      ],
+      "box_xyxy": [
+        1261,
+        405,
+        1351,
+        579
+      ],
+      "mask_idx": 85,
+      "mask_area": 6692
+    }
+  },
+  "64": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1299.647,
+        471.874
+      ],
+      "box_xyxy": [
+        1258,
+        402,
+        1339,
+        580
+      ],
+      "mask_idx": 86,
+      "mask_area": 6831
+    }
+  },
+  "65": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1290.111,
+        470.705
+      ],
+      "box_xyxy": [
+        1254,
+        399,
+        1326,
+        582
+      ],
+      "mask_idx": 87,
+      "mask_area": 6422
+    }
+  },
+  "66": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1279.815,
+        468.346
+      ],
+      "box_xyxy": [
+        1250,
+        398,
+        1312,
+        580
+      ],
+      "mask_idx": 88,
+      "mask_area": 5999
+    }
+  },
+  "67": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1269.168,
+        467.349
+      ],
+      "box_xyxy": [
+        1247,
+        397,
+        1297,
+        580
+      ],
+      "mask_idx": 89,
+      "mask_area": 5481
+    }
+  },
+  "68": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1254.239,
+        470.037
+      ],
+      "box_xyxy": [
+        1229,
+        394,
+        1281,
+        578
+      ],
+      "mask_idx": 90,
+      "mask_area": 5973
+    }
+  },
+  "69": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1241.359,
+        464.05
+      ],
+      "box_xyxy": [
+        1218,
+        392,
+        1265,
+        575
+      ],
+      "mask_idx": 91,
+      "mask_area": 5311
+    }
+  },
+  "70": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1226.849,
+        461.805
+      ],
+      "box_xyxy": [
+        1200,
+        392,
+        1252,
+        573
+      ],
+      "mask_idx": 92,
+      "mask_area": 5540
+    }
+  },
+  "71": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1210.824,
+        461.755
+      ],
+      "box_xyxy": [
+        1181,
+        391,
+        1240,
+        569
+      ],
+      "mask_idx": 93,
+      "mask_area": 5512
+    }
+  },
+  "72": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1195.146,
+        467.344
+      ],
+      "box_xyxy": [
+        1158,
+        393,
+        1238,
+        569
+      ],
+      "mask_idx": 94,
+      "mask_area": 6034
+    }
+  },
+  "73": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1170.872,
+        460.377
+      ],
+      "box_xyxy": [
+        1133,
+        396,
+        1223,
+        561
+      ],
+      "mask_idx": 95,
+      "mask_area": 5297
+    }
+  },
+  "74": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1150.518,
+        464.8
+      ],
+      "box_xyxy": [
+        1106,
+        402,
+        1214,
+        558
+      ],
+      "mask_idx": 96,
+      "mask_area": 5520
+    }
+  },
+  "75": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1129.663,
+        472.152
+      ],
+      "box_xyxy": [
+        1079,
+        413,
+        1208,
+        553
+      ],
+      "mask_idx": 97,
+      "mask_area": 5537
+    }
+  },
+  "76": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1108.94,
+        482.832
+      ],
+      "box_xyxy": [
+        1052,
+        430,
+        1196,
+        551
+      ],
+      "mask_idx": 98,
+      "mask_area": 5576
+    }
+  },
+  "77": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1088.733,
+        497.139
+      ],
+      "box_xyxy": [
+        1027,
+        454,
+        1185,
+        547
+      ],
+      "mask_idx": 99,
+      "mask_area": 5375
+    }
+  },
+  "78": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1071.273,
+        515.679
+      ],
+      "box_xyxy": [
+        1006,
+        483,
+        1176,
+        545
+      ],
+      "mask_idx": 100,
+      "mask_area": 5328
+    }
+  },
+  "79": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1062.331,
+        538.532
+      ],
+      "box_xyxy": [
+        993,
+        514,
+        1170,
+        564
+      ],
+      "mask_idx": 101,
+      "mask_area": 5361
+    }
+  },
+  "80": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1066.802,
+        564.367
+      ],
+      "box_xyxy": [
+        995,
+        532,
+        1169,
+        595
+      ],
+      "mask_idx": 102,
+      "mask_area": 5341
+    }
+  },
+  "81": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1080.475,
+        586.22
+      ],
+      "box_xyxy": [
+        1016,
+        525,
+        1171,
+        629
+      ],
+      "mask_idx": 103,
+      "mask_area": 5284
+    }
+  },
+  "82": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1109.829,
+        600.315
+      ],
+      "box_xyxy": [
+        1057,
+        517,
+        1181,
+        657
+      ],
+      "mask_idx": 104,
+      "mask_area": 4553
+    }
+  },
+  "83": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1153.834,
+        597.026
+      ],
+      "box_xyxy": [
+        1119,
+        497,
+        1196,
+        671
+      ],
+      "mask_idx": 105,
+      "mask_area": 3511
+    }
+  },
+  "84": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1199.212,
+        575.302
+      ],
+      "box_xyxy": [
+        1187,
+        479,
+        1213,
+        657
+      ],
+      "mask_idx": 106,
+      "mask_area": 2367
+    }
+  },
+  "85": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1239.499,
+        536.222
+      ],
+      "box_xyxy": [
+        1220,
+        437,
+        1259,
+        621
+      ],
+      "mask_idx": 107,
+      "mask_area": 2814
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 0.9375,
+      "static_score": 0.769531,
+      "centroid": [
+        1239.188,
+        7.425
+      ],
+      "box_xyxy": [
+        1229,
+        0,
+        1249,
+        16
+      ],
+      "mask_idx": 108,
+      "mask_area": 313,
+      "hit_score": 0.04778874941195306
+    }
+  },
+  "86": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1273.981,
+        493.286
+      ],
+      "box_xyxy": [
+        1241,
+        393,
+        1306,
+        560
+      ],
+      "mask_idx": 109,
+      "mask_area": 4813
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 0.949219,
+      "static_score": 0.769531,
+      "centroid": [
+        1237.925,
+        24.49
+      ],
+      "box_xyxy": [
+        1227,
+        13,
+        1249,
+        35
+      ],
+      "mask_idx": 110,
+      "mask_area": 388,
+      "hit_score": 0.07879032765564525
+    }
+  },
+  "87": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1295.693,
+        424.794
+      ],
+      "box_xyxy": [
+        1249,
+        335,
+        1332,
+        485
+      ],
+      "mask_idx": 111,
+      "mask_area": 5618
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 0.945312,
+      "static_score": 0.769531,
+      "centroid": [
+        1236.607,
+        44.888
+      ],
+      "box_xyxy": [
+        1226,
+        34,
+        1247,
+        56
+      ],
+      "mask_idx": 112,
+      "mask_area": 412,
+      "hit_score": 0.11624257049818745
+    }
+  },
+  "88": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1297.407,
+        333.586
+      ],
+      "box_xyxy": [
+        1255,
+        283,
+        1337,
+        387
+      ],
+      "mask_idx": 113,
+      "mask_area": 5587
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 0.941406,
+      "static_score": 0.769531,
+      "centroid": [
+        1234.686,
+        64.495
+      ],
+      "box_xyxy": [
+        1222,
+        51,
+        1246,
+        77
+      ],
+      "mask_idx": 114,
+      "mask_area": 497,
+      "hit_score": 0.1534626032807519
+    }
+  },
+  "89": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1281.043,
+        215.642
+      ],
+      "box_xyxy": [
+        1248,
+        179,
+        1313,
+        253
+      ],
+      "mask_idx": 115,
+      "mask_area": 1656
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 0.960938,
+      "static_score": 0.769531,
+      "centroid": [
+        1233.478,
+        86.713
+      ],
+      "box_xyxy": [
+        1220,
+        74,
+        1246,
+        98
+      ],
+      "mask_idx": 116,
+      "mask_area": 506,
+      "hit_score": 0.1812946443711859
+    }
+  },
+  "90": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1246.187,
+        143.135
+      ],
+      "box_xyxy": [
+        1212,
+        76,
+        1284,
+        249
+      ],
+      "mask_idx": 117,
+      "mask_area": 6412
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 0.960938,
+      "static_score": 0.769531,
+      "centroid": [
+        1231.316,
+        109.961
+      ],
+      "box_xyxy": [
+        1217,
+        98,
+        1244,
+        121
+      ],
+      "mask_idx": 118,
+      "mask_area": 484,
+      "hit_score": 0.19165159854122085
+    }
+  },
+  "91": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1233.557,
+        150.114
+      ],
+      "box_xyxy": [
+        1194,
+        89,
+        1270,
+        256
+      ],
+      "mask_idx": 119,
+      "mask_area": 6999
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 0.972656,
+      "static_score": 0.769531,
+      "centroid": [
+        1178.339,
+        134.099
+      ],
+      "box_xyxy": [
+        1165,
+        123,
+        1192,
+        145
+      ],
+      "mask_idx": 120,
+      "mask_area": 513,
+      "hit_score": 0.1812946443711859
+    }
+  },
+  "92": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1233.719,
+        199.498
+      ],
+      "box_xyxy": [
+        1196,
+        152,
+        1272,
+        282
+      ],
+      "mask_idx": 121,
+      "mask_area": 5785
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 0.988281,
+      "static_score": 0.769531,
+      "centroid": [
+        1095.952,
+        159.29
+      ],
+      "box_xyxy": [
+        1082,
+        149,
+        1109,
+        170
+      ],
+      "mask_idx": 122,
+      "mask_area": 482,
+      "hit_score": 0.1534626032807519
+    }
+  },
+  "93": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1231.542,
+        276.352
+      ],
+      "box_xyxy": [
+        1197,
+        246,
+        1268,
+        312
+      ],
+      "mask_idx": 123,
+      "mask_area": 3278
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 0.988281,
+      "static_score": 0.769531,
+      "centroid": [
+        1025.667,
+        181.979
+      ],
+      "box_xyxy": [
+        1013,
+        171,
+        1037,
+        192
+      ],
+      "mask_idx": 124,
+      "mask_area": 436,
+      "hit_score": 0.11624257049818745
+    }
+  },
+  "94": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1243.352,
+        348.579
+      ],
+      "box_xyxy": [
+        1228,
+        337,
+        1261,
+        361
+      ],
+      "mask_idx": 125,
+      "mask_area": 503
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 0.992188,
+      "static_score": 0.769531,
+      "centroid": [
+        964.171,
+        201.532
+      ],
+      "box_xyxy": [
+        953,
+        192,
+        975,
+        211
+      ],
+      "mask_idx": 126,
+      "mask_area": 363,
+      "hit_score": 0.07879032765564525
+    }
+  },
+  "95": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1233.403,
+        439.003
+      ],
+      "box_xyxy": [
+        1216,
+        413,
+        1249,
+        466
+      ],
+      "mask_idx": 127,
+      "mask_area": 1173
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 0.992188,
+      "static_score": 0.769531,
+      "centroid": [
+        910.794,
+        219.763
+      ],
+      "box_xyxy": [
+        901,
+        210,
+        920,
+        229
+      ],
+      "mask_idx": 128,
+      "mask_area": 316,
+      "hit_score": 0.04778874941195306
+    }
+  },
+  "96": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.992188,
+      "static_score": 0.765625,
+      "centroid": [
+        1222.477,
+        449.596
+      ],
+      "box_xyxy": [
+        1212,
+        434,
+        1231,
+        468
+      ],
+      "mask_idx": 129,
+      "mask_area": 478
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 0.992188,
+      "static_score": 0.769531,
+      "centroid": [
+        862.891,
+        236.376
+      ],
+      "box_xyxy": [
+        853,
+        227,
+        873,
+        246
+      ],
+      "mask_idx": 130,
+      "mask_area": 338,
+      "hit_score": 0.025937223371325716
+    }
+  },
+  "97": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 0.710938,
+      "static_score": 0.765625,
+      "centroid": [
+        1220.928,
+        468.277
+      ],
+      "box_xyxy": [
+        1214,
+        457,
+        1229,
+        479
+      ],
+      "mask_idx": 131,
+      "mask_area": 249
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 0.980469,
+      "static_score": 0.769531,
+      "centroid": [
+        819.498,
+        250.722
+      ],
+      "box_xyxy": [
+        810,
+        243,
+        828,
+        259
+      ],
+      "mask_idx": 132,
+      "mask_area": 259,
+      "hit_score": 0.012596977579120445
+    }
+  },
+  "98": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1173.072,
+        651.396
+      ],
+      "box_xyxy": [
+        1158,
+        624,
+        1189,
+        680
+      ],
+      "mask_idx": 133,
+      "mask_area": 1254
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 0.992188,
+      "static_score": 0.769531,
+      "centroid": [
+        780.358,
+        265.089
+      ],
+      "box_xyxy": [
+        772,
+        257,
+        789,
+        273
+      ],
+      "mask_idx": 134,
+      "mask_area": 246,
+      "hit_score": 0.005474623888489578
+    }
+  },
+  "99": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1165.222,
+        682.158
+      ],
+      "box_xyxy": [
+        1140,
+        636,
+        1187,
+        726
+      ],
+      "mask_idx": 135,
+      "mask_area": 3498
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 0.992188,
+      "static_score": 0.769531,
+      "centroid": [
+        744.965,
+        279.578
+      ],
+      "box_xyxy": [
+        736,
+        272,
+        754,
+        287
+      ],
+      "mask_idx": 136,
+      "mask_area": 256,
+      "hit_score": 0.0021290569447430267
+    }
+  },
+  "100": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1158.917,
+        713.199
+      ],
+      "box_xyxy": [
+        1122,
+        643,
+        1188,
+        767
+      ],
+      "mask_idx": 137,
+      "mask_area": 5508
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 0.992188,
+      "static_score": 0.769531,
+      "centroid": [
+        711.824,
+        291.57
+      ],
+      "box_xyxy": [
+        704,
+        284,
+        720,
+        300
+      ],
+      "mask_idx": 138,
+      "mask_area": 221,
+      "hit_score": 0.000740909774562663
+    }
+  },
+  "101": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1148.202,
+        740.716
+      ],
+      "box_xyxy": [
+        1105,
+        654,
+        1185,
+        802
+      ],
+      "mask_idx": 139,
+      "mask_area": 6490
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 0.996094,
+      "static_score": 0.769531,
+      "centroid": [
+        681.727,
+        303.5
+      ],
+      "box_xyxy": [
+        674,
+        296,
+        689,
+        311
+      ],
+      "mask_idx": 140,
+      "mask_area": 198,
+      "hit_score": 0.00023072169242865096
+    }
+  },
+  "102": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1129.438,
+        776.29
+      ],
+      "box_xyxy": [
+        1089,
+        678,
+        1179,
+        832
+      ],
+      "mask_idx": 141,
+      "mask_area": 5227
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 0.996094,
+      "static_score": 0.769531,
+      "centroid": [
+        654.462,
+        314.274
+      ],
+      "box_xyxy": [
+        647,
+        307,
+        662,
+        321
+      ],
+      "mask_idx": 142,
+      "mask_area": 186,
+      "hit_score": 6.429194888835515e-05
+    }
+  },
+  "103": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1116.112,
+        801.196
+      ],
+      "box_xyxy": [
+        1071,
+        707,
+        1172,
+        857
+      ],
+      "mask_idx": 143,
+      "mask_area": 5746
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 0.996094,
+      "static_score": 0.769531,
+      "centroid": [
+        629.124,
+        324.889
+      ],
+      "box_xyxy": [
+        623,
+        318,
+        635,
+        331
+      ],
+      "mask_idx": 144,
+      "mask_area": 153,
+      "hit_score": 1.6031339461908384e-05
+    }
+  },
+  "104": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1101.745,
+        825.66
+      ],
+      "box_xyxy": [
+        1056,
+        733,
+        1166,
+        879
+      ],
+      "mask_idx": 145,
+      "mask_area": 5960
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 0.996094,
+      "static_score": 0.769531,
+      "centroid": [
+        604.935,
+        336.074
+      ],
+      "box_xyxy": [
+        599,
+        331,
+        611,
+        341
+      ],
+      "mask_idx": 146,
+      "mask_area": 108,
+      "hit_score": 3.5770753415294606e-06
+    }
+  },
+  "105": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1091.678,
+        841.339
+      ],
+      "box_xyxy": [
+        1042,
+        749,
+        1162,
+        897
+      ],
+      "mask_idx": 147,
+      "mask_area": 7014
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        582.678,
+        345.139
+      ],
+      "box_xyxy": [
+        577,
+        339,
+        588,
+        351
+      ],
+      "mask_idx": 148,
+      "mask_area": 115,
+      "hit_score": 7.142190376375887e-07
+    }
+  },
+  "106": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1082.489,
+        854.949
+      ],
+      "box_xyxy": [
+        1031,
+        764,
+        1151,
+        911
+      ],
+      "mask_idx": 149,
+      "mask_area": 7335
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        562.075,
+        355.542
+      ],
+      "box_xyxy": [
+        557,
+        350,
+        567,
+        361
+      ],
+      "mask_idx": 150,
+      "mask_area": 107,
+      "hit_score": 1.2760856193634274e-07
+    }
+  },
+  "107": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1075.391,
+        864.501
+      ],
+      "box_xyxy": [
+        1022,
+        775,
+        1145,
+        921
+      ],
+      "mask_idx": 151,
+      "mask_area": 7522
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        541.246,
+        363.895
+      ],
+      "box_xyxy": [
+        535,
+        359,
+        548,
+        369
+      ],
+      "mask_idx": 152,
+      "mask_area": 114,
+      "hit_score": 2.0402024479977318e-08
+    }
+  },
+  "108": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1068.632,
+        870.568
+      ],
+      "box_xyxy": [
+        1017,
+        783,
+        1141,
+        925
+      ],
+      "mask_idx": 153,
+      "mask_area": 6986
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        523.957,
+        373.196
+      ],
+      "box_xyxy": [
+        519,
+        368,
+        529,
+        378
+      ],
+      "mask_idx": 154,
+      "mask_area": 92,
+      "hit_score": 2.91884996382459e-09
+    }
+  },
+  "109": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1066.957,
+        870.88
+      ],
+      "box_xyxy": [
+        1014,
+        789,
+        1141,
+        925
+      ],
+      "mask_idx": 155,
+      "mask_area": 7256
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        506.651,
+        381.361
+      ],
+      "box_xyxy": [
+        502,
+        377,
+        511,
+        386
+      ],
+      "mask_idx": 156,
+      "mask_area": 83,
+      "hit_score": 3.736761129743793e-10
+    }
+  },
+  "110": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1067.24,
+        866.811
+      ],
+      "box_xyxy": [
+        1016,
+        792,
+        1140,
+        919
+      ],
+      "mask_idx": 157,
+      "mask_area": 6726
+    }
+  },
+  "111": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1067.909,
+        861.582
+      ],
+      "box_xyxy": [
+        1021,
+        795,
+        1140,
+        910
+      ],
+      "mask_idx": 158,
+      "mask_area": 6155
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 0.996094,
+      "static_score": 0.769531,
+      "centroid": [
+        474.527,
+        399.451
+      ],
+      "box_xyxy": [
+        470,
+        395,
+        479,
+        404
+      ],
+      "mask_idx": 159,
+      "mask_area": 91,
+      "hit_score": 4.388313434035058e-12
+    }
+  },
+  "112": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1070.954,
+        854.982
+      ],
+      "box_xyxy": [
+        1026,
+        797,
+        1138,
+        903
+      ],
+      "mask_idx": 160,
+      "mask_area": 5833
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        459.5,
+        407.239
+      ],
+      "box_xyxy": [
+        454,
+        402,
+        464,
+        412
+      ],
+      "mask_idx": 161,
+      "mask_area": 92,
+      "hit_score": 4.025467985429713e-13
+    }
+  },
+  "113": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1072.648,
+        848.052
+      ],
+      "box_xyxy": [
+        1031,
+        798,
+        1137,
+        895
+      ],
+      "mask_idx": 162,
+      "mask_area": 5183
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        445.362,
+        415.101
+      ],
+      "box_xyxy": [
+        440,
+        412,
+        450,
+        419
+      ],
+      "mask_idx": 163,
+      "mask_area": 69,
+      "hit_score": 3.304305340445466e-14
+    }
+  },
+  "114": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1075.742,
+        838.828
+      ],
+      "box_xyxy": [
+        1036,
+        799,
+        1142,
+        884
+      ],
+      "mask_idx": 164,
+      "mask_area": 4930
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        432.431,
+        423.578
+      ],
+      "box_xyxy": [
+        426,
+        419,
+        438,
+        428
+      ],
+      "mask_idx": 165,
+      "mask_area": 109,
+      "hit_score": 2.4271075716745566e-15
+    }
+  },
+  "115": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1074.371,
+        832.707
+      ],
+      "box_xyxy": [
+        1039,
+        796,
+        1122,
+        876
+      ],
+      "mask_idx": 166,
+      "mask_area": 4469
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        420.057,
+        431.591
+      ],
+      "box_xyxy": [
+        415,
+        427,
+        425,
+        436
+      ],
+      "mask_idx": 167,
+      "mask_area": 88,
+      "hit_score": 1.5953020948020904e-16
+    }
+  },
+  "116": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1074.931,
+        826.591
+      ],
+      "box_xyxy": [
+        1041,
+        790,
+        1138,
+        869
+      ],
+      "mask_idx": 168,
+      "mask_area": 4474
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        407.422,
+        439.361
+      ],
+      "box_xyxy": [
+        402,
+        435,
+        413,
+        443
+      ],
+      "mask_idx": 169,
+      "mask_area": 83,
+      "hit_score": 9.383004042003593e-18
+    }
+  },
+  "117": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1073.904,
+        821.879
+      ],
+      "box_xyxy": [
+        1039,
+        785,
+        1140,
+        865
+      ],
+      "mask_idx": 170,
+      "mask_area": 4575
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        398.379,
+        424.864
+      ],
+      "box_xyxy": [
+        394,
+        421,
+        403,
+        428
+      ],
+      "mask_idx": 171,
+      "mask_area": 66,
+      "hit_score": 4.938396190220072e-19
+    }
+  },
+  "118": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1069.857,
+        819.17
+      ],
+      "box_xyxy": [
+        1035,
+        782,
+        1121,
+        861
+      ],
+      "mask_idx": 172,
+      "mask_area": 4597
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        389.719,
+        408.585
+      ],
+      "box_xyxy": [
+        385,
+        404,
+        395,
+        413
+      ],
+      "mask_idx": 173,
+      "mask_area": 82,
+      "hit_score": 2.325814169278564e-20
+    }
+  },
+  "119": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1070.854,
+        814.632
+      ],
+      "box_xyxy": [
+        1030,
+        778,
+        1141,
+        858
+      ],
+      "mask_idx": 174,
+      "mask_area": 5114
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        380.598,
+        394.5
+      ],
+      "box_xyxy": [
+        376,
+        390,
+        386,
+        399
+      ],
+      "mask_idx": 175,
+      "mask_area": 92,
+      "hit_score": 9.801874838173374e-22
+    }
+  },
+  "120": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1066.304,
+        811.806
+      ],
+      "box_xyxy": [
+        1024,
+        775,
+        1141,
+        856
+      ],
+      "mask_idx": 176,
+      "mask_area": 5312
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        376.303,
+        378.121
+      ],
+      "box_xyxy": [
+        373,
+        375,
+        380,
+        380
+      ],
+      "mask_idx": 177,
+      "mask_area": 33,
+      "hit_score": 3.6964799154842154e-23
+    }
+  },
+  "121": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1061.21,
+        809.643
+      ],
+      "box_xyxy": [
+        1016,
+        774,
+        1136,
+        852
+      ],
+      "mask_idx": 178,
+      "mask_area": 5377
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        368.548,
+        365.786
+      ],
+      "box_xyxy": [
+        365,
+        362,
+        372,
+        369
+      ],
+      "mask_idx": 179,
+      "mask_area": 42,
+      "hit_score": 1.247419723556163e-24
+    }
+  },
+  "122": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1058.511,
+        806.823
+      ],
+      "box_xyxy": [
+        1011,
+        772,
+        1138,
+        850
+      ],
+      "mask_idx": 180,
+      "mask_area": 5800
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 0.996094,
+      "static_score": 0.769531,
+      "centroid": [
+        357.514,
+        354.936
+      ],
+      "box_xyxy": [
+        351,
+        350,
+        364,
+        359
+      ],
+      "mask_idx": 181,
+      "mask_area": 109,
+      "hit_score": 3.7668811680788005e-26
+    }
+  },
+  "123": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1055.418,
+        804.909
+      ],
+      "box_xyxy": [
+        1005,
+        768,
+        1141,
+        848
+      ],
+      "mask_idx": 182,
+      "mask_area": 6051
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 0.992188,
+      "static_score": 0.769531,
+      "centroid": [
+        351.938,
+        343.773
+      ],
+      "box_xyxy": [
+        347,
+        339,
+        357,
+        350
+      ],
+      "mask_idx": 183,
+      "mask_area": 97,
+      "hit_score": 1.0178793196508874e-27
+    }
+  },
+  "124": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1045.318,
+        805.329
+      ],
+      "box_xyxy": [
+        1001,
+        769,
+        1119,
+        847
+      ],
+      "mask_idx": 184,
+      "mask_area": 5363
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 0.816406,
+      "static_score": 0.769531,
+      "centroid": [
+        348.688,
+        335.812
+      ],
+      "box_xyxy": [
+        347,
+        334,
+        350,
+        338
+      ],
+      "mask_idx": 185,
+      "mask_area": 16,
+      "hit_score": 2.4612499443361347e-29
+    }
+  },
+  "125": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1040.371,
+        802.25
+      ],
+      "box_xyxy": [
+        993,
+        766,
+        1130,
+        843
+      ],
+      "mask_idx": 186,
+      "mask_area": 5677
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 0.996094,
+      "static_score": 0.769531,
+      "centroid": [
+        338.369,
+        322.298
+      ],
+      "box_xyxy": [
+        334,
+        317,
+        343,
+        327
+      ],
+      "mask_idx": 187,
+      "mask_area": 84,
+      "hit_score": 5.3254977478932935e-31
+    }
+  },
+  "126": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1038.556,
+        797.151
+      ],
+      "box_xyxy": [
+        989,
+        757,
+        1138,
+        838
+      ],
+      "mask_idx": 188,
+      "mask_area": 5976
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        331.49,
+        313.406
+      ],
+      "box_xyxy": [
+        326,
+        308,
+        336,
+        318
+      ],
+      "mask_idx": 189,
+      "mask_area": 96,
+      "hit_score": 1.0311212780174038e-32
+    }
+  },
+  "127": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1036.037,
+        790.212
+      ],
+      "box_xyxy": [
+        982,
+        747,
+        1134,
+        832
+      ],
+      "mask_idx": 190,
+      "mask_area": 6367
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        325.369,
+        305.117
+      ],
+      "box_xyxy": [
+        320,
+        300,
+        331,
+        310
+      ],
+      "mask_idx": 191,
+      "mask_area": 103,
+      "hit_score": 1.7865054693971928e-34
+    }
+  },
+  "128": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1028.712,
+        785.962
+      ],
+      "box_xyxy": [
+        977,
+        747,
+        1124,
+        826
+      ],
+      "mask_idx": 192,
+      "mask_area": 6039
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        318.649,
+        297.068
+      ],
+      "box_xyxy": [
+        314,
+        293,
+        323,
+        301
+      ],
+      "mask_idx": 193,
+      "mask_area": 74,
+      "hit_score": 2.7697719251363368e-36
+    }
+  },
+  "129": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1020.034,
+        779.308
+      ],
+      "box_xyxy": [
+        972,
+        745,
+        1082,
+        818
+      ],
+      "mask_idx": 194,
+      "mask_area": 5697
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        311.762,
+        289.851
+      ],
+      "box_xyxy": [
+        306,
+        285,
+        317,
+        295
+      ],
+      "mask_idx": 195,
+      "mask_area": 101,
+      "hit_score": 3.8426313815213715e-38
+    }
+  },
+  "130": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1015.508,
+        770.402
+      ],
+      "box_xyxy": [
+        967,
+        737,
+        1072,
+        808
+      ],
+      "mask_idx": 196,
+      "mask_area": 5637
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        306.393,
+        282.934
+      ],
+      "box_xyxy": [
+        302,
+        279,
+        311,
+        286
+      ],
+      "mask_idx": 197,
+      "mask_area": 61,
+      "hit_score": 4.7704406716315165e-40
+    }
+  },
+  "131": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1011.455,
+        761.879
+      ],
+      "box_xyxy": [
+        963,
+        730,
+        1068,
+        797
+      ],
+      "mask_idx": 198,
+      "mask_area": 5394
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        300.616,
+        276.945
+      ],
+      "box_xyxy": [
+        296,
+        273,
+        305,
+        281
+      ],
+      "mask_idx": 199,
+      "mask_area": 73,
+      "hit_score": 5.299480890704482e-42
+    }
+  },
+  "132": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1007.564,
+        752.876
+      ],
+      "box_xyxy": [
+        959,
+        721,
+        1063,
+        788
+      ],
+      "mask_idx": 200,
+      "mask_area": 5439
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        294.198,
+        272.088
+      ],
+      "box_xyxy": [
+        289,
+        268,
+        300,
+        277
+      ],
+      "mask_idx": 201,
+      "mask_area": 91,
+      "hit_score": 5.26809040812135e-44
+    }
+  },
+  "133": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1004.176,
+        745.761
+      ],
+      "box_xyxy": [
+        955,
+        717,
+        1059,
+        778
+      ],
+      "mask_idx": 202,
+      "mask_area": 5063
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        289.522,
+        266.985
+      ],
+      "box_xyxy": [
+        285,
+        263,
+        294,
+        271
+      ],
+      "mask_idx": 203,
+      "mask_area": 67,
+      "hit_score": 4.686171366255879e-46
+    }
+  },
+  "134": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1002.452,
+        736.438
+      ],
+      "box_xyxy": [
+        953,
+        706,
+        1059,
+        768
+      ],
+      "mask_idx": 204,
+      "mask_area": 5271
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        282.908,
+        262.171
+      ],
+      "box_xyxy": [
+        278,
+        257,
+        287,
+        267
+      ],
+      "mask_idx": 205,
+      "mask_area": 76,
+      "hit_score": 3.7301660940812947e-48
+    }
+  },
+  "135": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        998.967,
+        729.794
+      ],
+      "box_xyxy": [
+        948,
+        699,
+        1056,
+        761
+      ],
+      "mask_idx": 206,
+      "mask_area": 5282
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        278.0,
+        258.568
+      ],
+      "box_xyxy": [
+        273,
+        254,
+        283,
+        264
+      ],
+      "mask_idx": 207,
+      "mask_area": 74,
+      "hit_score": 2.656949083532315e-50
+    }
+  },
+  "136": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1003.761,
+        725.134
+      ],
+      "box_xyxy": [
+        946,
+        695,
+        1114,
+        753
+      ],
+      "mask_idx": 208,
+      "mask_area": 5515
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        271.646,
+        254.521
+      ],
+      "box_xyxy": [
+        269,
+        251,
+        276,
+        261
+      ],
+      "mask_idx": 209,
+      "mask_area": 48,
+      "hit_score": 1.6934927867369324e-52
+    }
+  },
+  "137": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        1001.798,
+        721.187
+      ],
+      "box_xyxy": [
+        943,
+        690,
+        1110,
+        748
+      ],
+      "mask_idx": 210,
+      "mask_area": 5314
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        266.348,
+        252.36
+      ],
+      "box_xyxy": [
+        259,
+        248,
+        272,
+        257
+      ],
+      "mask_idx": 211,
+      "mask_area": 89,
+      "hit_score": 9.65891908692615e-55
+    }
+  },
+  "138": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        991.968,
+        716.038
+      ],
+      "box_xyxy": [
+        941,
+        687,
+        1048,
+        742
+      ],
+      "mask_idx": 212,
+      "mask_area": 4570
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        260.183,
+        250.2
+      ],
+      "box_xyxy": [
+        251,
+        245,
+        267,
+        256
+      ],
+      "mask_idx": 213,
+      "mask_area": 120,
+      "hit_score": 4.9296803804962963e-57
+    }
+  },
+  "139": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        990.246,
+        711.854
+      ],
+      "box_xyxy": [
+        940,
+        683,
+        1045,
+        738
+      ],
+      "mask_idx": 214,
+      "mask_area": 4534
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        251.643,
+        245.335
+      ],
+      "box_xyxy": [
+        241,
+        240,
+        262,
+        253
+      ],
+      "mask_idx": 215,
+      "mask_area": 221,
+      "hit_score": 2.251407219286085e-59
+    }
+  },
+  "140": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        988.783,
+        707.477
+      ],
+      "box_xyxy": [
+        937,
+        678,
+        1044,
+        734
+      ],
+      "mask_idx": 216,
+      "mask_area": 4586
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 0.988281,
+      "static_score": 0.769531,
+      "centroid": [
+        254.249,
+        243.643
+      ],
+      "box_xyxy": [
+        243,
+        237,
+        265,
+        249
+      ],
+      "mask_idx": 217,
+      "mask_area": 185,
+      "hit_score": 9.200986720130178e-62
+    }
+  },
+  "141": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        987.416,
+        702.126
+      ],
+      "box_xyxy": [
+        937,
+        672,
+        1042,
+        729
+      ],
+      "mask_idx": 218,
+      "mask_area": 4568
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        271.08,
+        242.28
+      ],
+      "box_xyxy": [
+        268,
+        239,
+        275,
+        246
+      ],
+      "mask_idx": 219,
+      "mask_area": 50,
+      "hit_score": 3.3648043049367286e-64
+    }
+  },
+  "142": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        986.719,
+        696.895
+      ],
+      "box_xyxy": [
+        937,
+        667,
+        1041,
+        724
+      ],
+      "mask_idx": 220,
+      "mask_area": 4488
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        281.977,
+        240.568
+      ],
+      "box_xyxy": [
+        277,
+        236,
+        287,
+        245
+      ],
+      "mask_idx": 221,
+      "mask_area": 88,
+      "hit_score": 1.1011089068310435e-66
+    }
+  },
+  "143": {
+    "1": {
+      "label": "racket",
+      "tracker_score": 1.0,
+      "static_score": 0.765625,
+      "centroid": [
+        984.219,
+        684.706
+      ],
+      "box_xyxy": [
+        935,
+        657,
+        1038,
+        711
+      ],
+      "mask_idx": 222,
+      "mask_area": 3931
+    },
+    "3": {
+      "label": "ball",
+      "tracker_score": 1.0,
+      "static_score": 0.769531,
+      "centroid": [
+        305.86,
+        238.128
+      ],
+      "box_xyxy": [
+        301,
+        234,
+        311,
+        243
+      ],
+      "mask_idx": 223,
+      "mask_area": 86,
+      "hit_score": 3.224376875834994e-69
+    }
+  }
+}
