@@ -864,7 +864,11 @@ for video_path in mp4_files:
 
     for frame_idx in range(num_track_frames):
         with torch.no_grad():
-            model_outputs = model(inference_session=session, frame_idx=int(frame_idx), reverse=False)
+            model_outputs = model(
+                inference_session=session,
+                frame_idx=int(frame_idx),
+                reverse=False,
+            )
 
         pp = processor.postprocess_outputs(session, model_outputs)
 
@@ -1030,36 +1034,38 @@ for video_path in mp4_files:
         if delete_set or fusion_map:
             tracks, dropped_old_mask_indices = apply_delete_and_fusion(tracks, delete_set, fusion_map)
 
-    if args.post_process_predict:
-        print(f"Applying Gap Prediction Phase (max_gap={args.predict_max_gap})...")
-        track_history_updated = build_track_history(tracks)
-        tracks, all_masks, mask_frame_indices, mask_object_ids = apply_gap_prediction(
-            tracks_dict=tracks,
-            track_history=track_history_updated,
-            all_masks_list=all_masks,
-            mask_frame_indices_list=mask_frame_indices,
-            mask_object_ids_list=mask_object_ids,
-            predict_max_gap=int(args.predict_max_gap)
-        )
-        print("Total kept masks after gap prediction:", len(all_masks))
+        if args.post_process_predict:
+            print(f"Applying Gap Prediction Phase (max_gap={args.predict_max_gap})...")
+            # Rebuild history after deletions and fusions, so gap logic works linearly!
+            track_history_updated = build_track_history(tracks)
+            tracks, all_masks, mask_frame_indices, mask_object_ids = apply_gap_prediction(
+                tracks_dict=tracks,
+                track_history=track_history_updated,
+                all_masks_list=all_masks,
+                mask_frame_indices_list=mask_frame_indices,
+                mask_object_ids_list=mask_object_ids,
+                predict_max_gap=int(args.predict_max_gap)
+            )
 
-    # 👇 统一 rebuild（只做一次）
-    tracks, all_masks, mask_frame_indices, mask_object_ids = rebuild_npz_and_reindex(
-        tracks,
-        all_masks,
-        mask_frame_indices,
-        mask_object_ids,
-        dropped_old_mask_indices if 'dropped_old_mask_indices' in locals() else set(),
-    )
-    
-    for fkey, frame_data in tracks.items():
-        for oid_str, info in frame_data.items():
-            midx = info["mask_idx"]
-            if mask_frame_indices[midx] != int(fkey):
-                raise RuntimeError(
-                    f"Frame mismatch: frame={fkey}, mask_idx={midx}, "
-                    f"npz_frame={mask_frame_indices[midx]}"
-                )
+        # 👇 统一 rebuild（只做一次）
+        tracks, all_masks, mask_frame_indices, mask_object_ids = rebuild_npz_and_reindex(
+            tracks,
+            all_masks,
+            mask_frame_indices,
+            mask_object_ids,
+            dropped_old_mask_indices,
+        )
+
+        for fkey, frame_data in tracks.items():
+            for oid_str, info in frame_data.items():
+                midx = info["mask_idx"]
+                if mask_frame_indices[midx] != int(fkey):
+                    raise RuntimeError(
+                        f"Frame mismatch: frame={fkey}, mask_idx={midx}, "
+                        f"npz_frame={mask_frame_indices[midx]}"
+                    )
+
+        print("Total kept masks after post-processing:", len(all_masks))
 
         print("Computing Hit Scores for tennis interactions...")
         # Generate hit_score dynamically
@@ -1221,13 +1227,13 @@ for video_path in mp4_files:
     del mask_frame_indices
     del mask_object_ids
     del video_frames
-    
+
     import gc
     gc.collect()
-    
+
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
     elif torch.backends.mps.is_available():
         torch.mps.empty_cache()
-    
+
     print("Memory cleared.")
