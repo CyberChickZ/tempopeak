@@ -62,8 +62,9 @@ python scripts/sam3_mask_extractor.py
 ### 自定义视频 + 渲染可视化
 ```bash
 python scripts/sam3_mask_extractor.py \
-  --video_name 00002 \
-  --video_path /nfs/hpc/share/zhanhaoc/hpe/tempopeak/datasets/serve/00002.mp4 \
+  --hf_local_model /nfs/hpc/share/zhanhaoc/hpe/tempopeak/models/models--facebook--sam3/snapshots/3c879f39826c281e95690f02c7821c4de09afae7 \
+  --video_dir /nfs/hpc/share/zhanhaoc/hpe/tempopeak/datasets/serve \
+  --out_dir /nfs/hpc/share/zhanhaoc/hpe/tempopeak/outputs/sam3_mask_extractor \
   --vis
 ```
 
@@ -74,14 +75,22 @@ python scripts/sam3_mask_extractor.py \
   --vis
 ```
 
-### 开启空间跳变拦截（抗 ID Switch）
+### 开启空间跳变拦截和后处理（全量参数基准测试）
 ```bash
 python scripts/sam3_mask_extractor.py \
-  --max_jump_px 300 \
-  --ema_alpha 0.7 \
-  --predict_on_reject \
-  --max_lost 3 \
-  --vis
+  --hf_local_model /nfs/hpc/share/zhanhaoc/hpe/tempopeak/models/models--facebook--sam3/snapshots/3c879f39826c281e95690f02c7821c4de09afae7 \
+  --video_dir /nfs/hpc/share/zhanhaoc/hpe/tempopeak/datasets/serve \
+  --out_dir /nfs/hpc/share/zhanhaoc/hpe/tempopeak/outputs/sam3_mask_extractor \
+  --prompts tennisball tennisracket \
+  --dtype bf16 \
+  --max_jump_px 200 \
+  --tracker_score_min 0.45 \
+  --mask_area_min 20 \
+  --max_lost 4 \
+  --post_process_rm \
+  --post_process_fusion \
+  --post_process_predict \
+  --predict_max_gap 30
 ```
 
 ### 完整参数表
@@ -89,9 +98,8 @@ python scripts/sam3_mask_extractor.py \
 | 参数 | 默认值 | 说明 |
 |---|---|---|
 | `--hf_local_model` | HPC Snapshots 路径 | SAM3 本地权重目录 |
-| `--video_name` | `00001` | 输出文件名前缀 |
-| `--video_path` | HPC serve/00001.mp4 | 输入视频 |
-| `--out_dir` | `outputs/sam3_mask_extractor/` | 输出目录 |
+| `--video_dir` | HPC serve | 输入视频所在的目录 |
+| `--out_dir` | `outputs/sam3_mask_extractor/` | 对应每个视频的输出目录 |
 | `--vis` | off | 是否渲染带标注 MP4 |
 | `--prompts` | `ball racket` | 传给 SAM3 PCS 的文字 prompt 列表 |
 | `--dtype` | `bf16` | 推理精度（bf16/fp16/fp32） |
