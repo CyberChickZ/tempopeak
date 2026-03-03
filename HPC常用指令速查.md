@@ -69,6 +69,15 @@ CUDA_VISIBLE_DEVICES=0 python /nfs/hpc/share/zhanhaoc/hpe/tempopeak/scripts/sam3
   --print_every 30
 ```
 
+```bash
+CUDA_VISIBLE_DEVICES=0 python scripts/sam3_mask_extractor_production_v1.py \
+  --post_process_rm \
+  --post_process_fusion \
+  --rm_min_len 15 \
+  --rm_static_px 5 \
+  --fusion_max_gap 5
+```
+
 ### 环境要求与输入输出
 - **输入**: 视频目录下的 `.mp4` 文件
 - **输出**: JSON 和 NPZ 文件（自动剔除错误目标，生成规范的 hit scores）

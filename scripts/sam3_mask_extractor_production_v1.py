@@ -52,6 +52,7 @@ parser.add_argument(
     "--hf_local_model",
     type=str,
     required=True,
+    default="/nfs/hpc/share/zhanhaoc/hpe/tempopeak/models/models--facebook--sam3/snapshots/3c879f39826c281e95690f02c7821c4de09afae7",
     help=(
         "本地 HuggingFace SAM3 模型 snapshot 路径. "
         "必须是目录, 且已下载到本机/HPC (例如 .../models--facebook--sam3/snapshots/<hash>)."
@@ -60,6 +61,7 @@ parser.add_argument(
 parser.add_argument(
     "--video_dir",
     type=str,
+    default="/nfs/hpc/share/zhanhaoc/hpe/tempopeak/data/videos/test_videos",
     required=True,
     help=(
         "待处理视频目录. 目录内所有 .mp4 会被逐个处理. "
@@ -69,6 +71,7 @@ parser.add_argument(
 parser.add_argument(
     "--out_dir",
     type=str,
+    default="/nfs/hpc/share/zhanhaoc/hpe/tempopeak/outputs/sam3_prod_v1/serve",
     required=True,
     help=(
         "输出目录. 每个视频会生成: <name>.json, <name>.npz, "
