@@ -55,16 +55,16 @@ conda activate sam_3d_body
 脚本：`scripts/sam3_mask_extractor_production_v1.py`
 
 ### 生产环境批量运行命令
-```
+```bash
 CUDA_VISIBLE_DEVICES=0 python scripts/sam3_mask_extractor_production_v1.py \
-  --hf_local_model /nfs/hpc/share/zhanhaoc/hpe/tempopeak/models/models--facebook--sam3/snapshots/3c879f39826c281e95690f02c7821c4de09afae7 \
-  --video_dir /nfs/hpc/share/zhanhaoc/hpe/tempopeak/datasets/serve \
-  --out_dir /nfs/hpc/share/zhanhaoc/hpe/tempopeak/outputs/sam3_prod_v1 \
-  --prompts ball racket \
-  --dtype bf16 \
-  --tracker_score_min 0.1 \
-  --mask_area_min 1 \
-  --print_every 30
+--hf_local_model /nfs/hpc/share/zhanhaoc/hpe/tempopeak/models/models--facebook--sam3/snapshots/3c879f39826c281e95690f02c7821c4de09afae7 \
+--video_dir /nfs/hpc/share/zhanhaoc/hpe/tempopeak/datasets/serve \
+--out_dir /nfs/hpc/share/zhanhaoc/hpe/tempopeak/outputs/sam3_prod_v1 \
+--prompts ball racket \
+--dtype bf16 \
+--tracker_score_min 0.1 \
+--mask_area_min 1 \
+--print_every 30
 ```
 
 ### 环境要求与输入输出
