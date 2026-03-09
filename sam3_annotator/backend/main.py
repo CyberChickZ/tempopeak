@@ -1,13 +1,21 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException, Response
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import JSONResponse, FileResponse, StreamingResponse
 import subprocess
 import os
+import sys
+import json
+import queue
+import threading
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import os
 
 from io_sam3 import SAM3DataStore
+from io_clips import ClipStore
+
+_scripts_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../scripts"))
+if _scripts_dir not in sys.path:
+    sys.path.insert(0, _scripts_dir)
 
 app = FastAPI()
 
@@ -20,6 +28,9 @@ app.add_middleware(
 )
 
 data_store = SAM3DataStore()
+clip_store = ClipStore()
+_sse_queue: queue.Queue = queue.Queue()
+_clip_processing: bool = False
 
 class EditRequest(BaseModel):
     frame_idx: int
@@ -180,6 +191,97 @@ def download_npz():
         media_type="application/octet-stream",
         headers={"Content-Disposition": "attachment; filename=edited.npz"}
     )
+
+# ─── Clip Review ─────────────────────────────────────────────────────
+
+class ClipStartRequest(BaseModel):
+    folder: str
+    model: str = "yolo26x.pt"
+    conf: float = 0.25
+
+class ClipAnnotateRequest(BaseModel):
+    clip_id: str
+    hit_frame: int
+
+class ClipActionRequest(BaseModel):
+    clip_id: str
+
+def _run_extraction(folder, model_name, conf):
+    global _clip_processing
+    _clip_processing = True
+    tmp_dir = "/tmp/clips"
+    os.makedirs(tmp_dir, exist_ok=True)
+    def callback(**kwargs):
+        if kwargs.get("type") == "clip":
+            clip_store.add_clip(kwargs["clip_id"], kwargs["path"], kwargs["num_frames"])
+        _sse_queue.put(kwargs)
+    try:
+        from yolo_clip_extractor import process_folder
+        process_folder(folder, tmp_dir, callback, model_name=model_name, conf=conf)
+    except Exception as e:
+        _sse_queue.put({"type": "error", "message": str(e)})
+    _clip_processing = False
+    _sse_queue.put({"type": "done"})
+
+@app.post("/api/clips/start")
+def clips_start(req: ClipStartRequest):
+    global _clip_processing
+    if _clip_processing:
+        raise HTTPException(status_code=409, detail="Already processing")
+    if not os.path.isdir(req.folder):
+        raise HTTPException(status_code=400, detail=f"Folder not found: {req.folder}")
+    clip_store.reset()
+    while not _sse_queue.empty():
+        try: _sse_queue.get_nowait()
+        except queue.Empty: break
+    t = threading.Thread(target=_run_extraction, args=(req.folder, req.model, req.conf), daemon=True)
+    t.start()
+    return {"ok": True}
+
+@app.get("/api/clips/stream")
+def clips_stream():
+    def gen():
+        while True:
+            try:
+                item = _sse_queue.get(timeout=30)
+                yield f"data: {json.dumps(item)}\n\n"
+                if item.get("type") in ("done", "error"): break
+            except queue.Empty:
+                yield 'data: {"type": "ping"}\n\n'
+    return StreamingResponse(gen(), media_type="text/event-stream")
+
+@app.get("/api/clips/video/{clip_id}")
+def clips_video(clip_id: str):
+    path = clip_store.get_clip_path(clip_id)
+    if not path or not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="Clip not found")
+    return FileResponse(path, media_type="video/mp4")
+
+@app.get("/api/clips/list")
+def clips_list():
+    return {"ok": True, "clips": clip_store.get_all()}
+
+@app.post("/api/clips/annotate")
+def clips_annotate(req: ClipAnnotateRequest):
+    if not clip_store.annotate(req.clip_id, req.hit_frame):
+        raise HTTPException(status_code=400, detail="Invalid clip_id or hit_frame")
+    return {"ok": True}
+
+@app.post("/api/clips/reject")
+def clips_reject(req: ClipActionRequest):
+    clip_store.reject(req.clip_id)
+    return {"ok": True}
+
+@app.post("/api/clips/undo")
+def clips_undo(req: ClipActionRequest):
+    clip_store.undo(req.clip_id)
+    return {"ok": True}
+
+@app.post("/api/clips/export")
+def clips_export():
+    out_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../outputs/final"))
+    result = clip_store.export(out_dir)
+    return {"ok": True, **result}
 
 # Serve Frontend
 frontend_dir = os.path.join(os.path.dirname(__file__), "..", "frontend")
