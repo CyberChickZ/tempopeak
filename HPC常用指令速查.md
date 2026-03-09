@@ -71,7 +71,7 @@ CUDA_VISIBLE_DEVICES=0 python /nfs/hpc/share/zhanhaoc/hpe/tempopeak/scripts/sam3
   --print_every 30
 ```
 
-### 开启后处理
+### 开启后处理（含 mask IoU 静态检测）
 ```bash
 CUDA_VISIBLE_DEVICES=0 python /nfs/hpc/share/zhanhaoc/hpe/tempopeak/scripts/sam3_mask_extractor.py \
   --hf_local_model /nfs/hpc/share/zhanhaoc/hpe/tempopeak/models/models--facebook--sam3/snapshots/3c879f39826c281e95690f02c7821c4de09afae7 \
@@ -82,14 +82,24 @@ CUDA_VISIBLE_DEVICES=0 python /nfs/hpc/share/zhanhaoc/hpe/tempopeak/scripts/sam3
   --dtype bf16 \
   --tracker_score_min 0.10 \
   --mask_area_min 1 \
-  --post_process_rm --rm_min_len 15 --rm_static_px 5.0 \
+  --post_process_rm --rm_min_len 15 --rm_static_px 5.0 --rm_static_iou 0.85 \
   --post_process_fusion --fusion_max_gap 5 --fusion_skip_unknown \
   --post_process_predict --predict_max_gap 15 \
   --print_every 30 \
   --vis
 ```
 
+### 后处理关键参数
+
+| 参数 | 默认值 | 说明 |
+|---|---|---|
+| `--rm_min_len` | 15 | track 帧数少于此值直接删除 |
+| `--rm_static_px` | 5.0 | centroid 逐帧平均移动 ≤ 此值视为静止（兜底） |
+| `--rm_static_iou` | 0.85 | **相邻帧 mask IoU ≥ 此值视为静止并删除**（主判断）。设为 1.0 可禁用 |
+| `--fusion_max_gap` | 5 | 同 label track 间隔 < 此帧数则合并 |
+
 ### 输出文件
+
 | 文件 | 内容 |
 |---|---|
 | `{video_name}.json` | 含 `_meta` + 每帧 track 数据 |
