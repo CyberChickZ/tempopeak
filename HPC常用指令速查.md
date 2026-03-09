@@ -106,6 +106,19 @@ CUDA_VISIBLE_DEVICES=0 python /nfs/hpc/share/zhanhaoc/hpe/tempopeak/scripts/sam3
 | `{video_name}.npz` | `masks [M,H,W] bool` + `frame_indices [M]` + `object_ids [M]` |
 | `{video_name}_vis.mp4` | 可视化视频（仅 `--vis` 时生成） |
 
+## YOLO Clip Extractor (自动截取击球片段)
+此脚本会自动扫描文件夹中的 mp4，使用 YOLO 识别球和球拍的距离，检测击球事件 (hit event)，并自动切出包含击球瞬间的前后短视频 (clip)。
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python scripts/yolo_clip_extractor.py \
+  --folder /nfs/hpc/share/zhanhaoc/hpe/tempopeak/datasets/serve \
+  --tmp_dir /nfs/hpc/share/zhanhaoc/hpe/tempopeak/outputs/yolo_clips \
+  --model yolo26x.pt \
+  --conf 0.25
+```
+- 默认会跳过非 15/30/60 fps 的视频。
+- 切好的 clip 会存放在 `--tmp_dir` 目录下。
+
 ## SAM3 Web 标注工具
 - 启动无状态后端：
   ```bash
