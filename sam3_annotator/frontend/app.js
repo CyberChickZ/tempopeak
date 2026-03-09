@@ -769,3 +769,318 @@ document.getElementById('save-as-btn').addEventListener('click', () => {
         hasUnsavedChanges = false; // Usually downloading counts as resolving dirty state
     }, 500);
 });
+
+// ============================================================================
+// CLIP REVIEW TAB LOGIC
+// ============================================================================
+
+const tabBtns = document.querySelectorAll('.tab-btn');
+const screens = document.querySelectorAll('.screen');
+
+tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        tabBtns.forEach(b => b.classList.remove('active'));
+        screens.forEach(s => s.classList.remove('active'));
+        btn.classList.add('active');
+        const tabId = btn.getAttribute('data-tab');
+        document.getElementById(`${tabId}-screen`).classList.add('active');
+        
+        // Pause annotator video if switching away
+        if (tabId === 'clipreview') {
+            if (elements.video && !elements.video.paused) elements.video.pause();
+            loadClipsList(); // auto refresh list
+        } else {
+            if (clipVideoEl && !clipVideoEl.paused) clipVideoEl.pause();
+        }
+    });
+});
+
+let clips = [];
+let currentClipIdx = -1;
+let clipFrame = 0;
+let clipTotalFrames = 0;
+let clipEventSource = null;
+
+const clipListEl = document.getElementById('clip-list');
+const clipProgressEl = document.getElementById('clip-progress');
+const clipCanvas = document.getElementById('clip-canvas');
+const clipCtx = clipCanvas.getContext('2d');
+const clipVideoEl = document.getElementById('clip-video-el');
+const clipInfoEl = document.getElementById('clip-info');
+const clipFilmstripEl = document.getElementById('clip-filmstrip');
+
+document.getElementById('clip-start-btn').addEventListener('click', async () => {
+    const folder = document.getElementById('clip-folder-input').value.trim();
+    if (!folder) return alert("Please enter a folder path");
+
+    try {
+        const res = await fetch('/api/clips/start', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ folder })
+        });
+        if (!res.ok) throw new Error(await res.text());
+
+        clipProgressEl.textContent = "Starting...";
+        if (clipEventSource) clipEventSource.close();
+        clipEventSource = new EventSource('/api/clips/stream');
+        
+        clipEventSource.onmessage = (e) => {
+            const data = JSON.parse(e.data);
+            if (data.type === "ping") return;
+            if (data.type === "progress") {
+                clipProgressEl.textContent = `[YOLO] ${data.video_name}: frame ${data.frame}/${data.total}`;
+            } else if (data.type === "clip") {
+                clipProgressEl.textContent = `Cut clip ${data.clip_id}`;
+                loadClipsList();
+            } else if (data.type === "skip") {
+                clipProgressEl.textContent = `Skipped ${data.video_name}: ${data.reason}`;
+            } else if (data.type === "done") {
+                clipProgressEl.textContent = "Extraction Complete";
+                clipEventSource.close();
+                clipEventSource = null;
+                loadClipsList();
+            } else if (data.type === "error") {
+                clipProgressEl.textContent = `Error: ${data.message}`;
+                clipEventSource.close();
+                clipEventSource = null;
+            }
+        };
+    } catch (e) {
+        alert(e.message);
+    }
+});
+
+async function loadClipsList() {
+    try {
+        const res = await fetch('/api/clips/list');
+        const data = await res.json();
+        clips = data.clips;
+        renderClipList();
+        if (clips.length > 0 && currentClipIdx === -1) {
+            selectClip(0);
+        } else if (clips.length === 0) {
+            clipListEl.innerHTML = '<div style="padding:10px;color:#94a3b8;font-size:0.85rem">No clips</div>';
+            clearClipView();
+        }
+    } catch(e) { console.error("Error loading clips:", e); }
+}
+
+function renderClipList() {
+    clipListEl.innerHTML = '';
+    clips.forEach((c, idx) => {
+        const div = document.createElement('div');
+        div.className = `clip-list-item ${idx === currentClipIdx ? 'selected' : ''} ${c.reviewed ? 'annotated' : ''}`;
+        
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = c.id;
+        
+        const badgeSpan = document.createElement('span');
+        badgeSpan.className = 'hit-badge';
+        if (c.reviewed) {
+            badgeSpan.textContent = c.label === 'hit' ? `✓ Hit f${c.hit_frame}` : (c.label === 'reject' ? '❌' : '');
+        }
+
+        div.appendChild(nameSpan);
+        div.appendChild(badgeSpan);
+        div.onclick = () => selectClip(idx);
+        clipListEl.appendChild(div);
+    });
+}
+
+function clearClipView() {
+    clipCtx.clearRect(0, 0, clipCanvas.width, clipCanvas.height);
+    clipInfoEl.textContent = "No clip loaded";
+    clipFilmstripEl.innerHTML = "";
+    clipVideoEl.removeAttribute('src');
+    clipVideoEl.load();
+    currentClipIdx = -1;
+}
+
+async function selectClip(idx) {
+    if (idx < 0 || idx >= clips.length) return;
+    currentClipIdx = idx;
+    const clip = clips[idx];
+    
+    renderClipList();
+    
+    clipInfoEl.textContent = `Loading ${clip.id}...`;
+    clipVideoEl.src = `/api/clips/video/${clip.id}`;
+    
+    clipVideoEl.onloadedmetadata = () => {
+        clipCanvas.width = clipVideoEl.videoWidth;
+        clipCanvas.height = clipVideoEl.videoHeight;
+        clipTotalFrames = clip.num_frames;
+        clipFrame = clip.reviewed && clip.label === 'hit' ? clip.hit_frame : Math.floor(clipTotalFrames / 2);
+        
+        clipInfoEl.textContent = `${clip.id} • ${clipTotalFrames} frames • Status: ${clip.reviewed ? clip.label + (clip.hit_frame !== null ? ' (f'+clip.hit_frame+')' : '') : 'unreviewed'}`;
+        
+        renderFilmstrip();
+        seekClipTo(clipFrame);
+    };
+}
+
+function seekClipTo(f) {
+    if (f < 0) f = 0;
+    if (f >= clipTotalFrames) f = clipTotalFrames - 1;
+    clipFrame = f;
+    
+    // Convert frame to time (assuming source fps logic handled by backend, we just estimate time)
+    // Actually HTMLVideoElement frame seeking is unreliable without knowing exact fps.
+    // For local mp4 without audio, fps is usually 30.
+    // Better: use requestAnimationFrame to draw whenever seeked.
+    const fps = 30; // Approximation for UI seeking
+    clipVideoEl.currentTime = clipFrame / fps;
+    
+    updateFilmstripHighlight();
+}
+
+clipVideoEl.addEventListener('seeked', () => {
+    clipCtx.drawImage(clipVideoEl, 0, 0, clipCanvas.width, clipCanvas.height);
+    
+    // Draw crosshair/info
+    clipCtx.fillStyle = 'white';
+    clipCtx.font = '24px sans-serif';
+    clipCtx.fillText(`Frame: ${clipFrame}`, 20, 40);
+});
+
+function renderFilmstrip() {
+    clipFilmstripEl.innerHTML = '';
+    // Draw 1 thumbnail for every frame is too much if >30. Just draw small divs
+    for (let i = 0; i < clipTotalFrames; i++) {
+        const c = document.createElement('canvas');
+        c.width = 80; c.height = 55;
+        c.onclick = () => seekClipTo(i);
+        // We defer drawing the actual frame content to avoid 30 seeks. Just leave it blank/grey for speed, 
+        // or just let it act as a timeline track.
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(0,0,80,55);
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '12px sans';
+        ctx.fillText(i.toString(), 30, 32);
+        
+        clipFilmstripEl.appendChild(c);
+    }
+}
+
+function updateFilmstripHighlight() {
+    const canvases = clipFilmstripEl.querySelectorAll('canvas');
+    const clip = clips[currentClipIdx];
+    canvases.forEach((c, i) => {
+        c.className = '';
+        if (i === clipFrame) c.classList.add('active-frame');
+        if (clip && clip.reviewed && clip.label === 'hit' && clip.hit_frame === i) {
+            c.classList.add('hit-frame');
+        }
+    });
+}
+
+async function markClipHit() {
+    if (currentClipIdx < 0) return;
+    const clip = clips[currentClipIdx];
+    try {
+        await fetch('/api/clips/annotate', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({clip_id: clip.id, hit_frame: clipFrame})
+        });
+        clip.reviewed = true;
+        clip.label = 'hit';
+        clip.hit_frame = clipFrame;
+        renderClipList();
+        updateFilmstripHighlight();
+        clipInfoEl.textContent = `${clip.id} • ${clipTotalFrames} frames • Status: hit (f${clip.hit_frame})`;
+        
+        // Auto advance after short delay
+        setTimeout(() => {
+            if (currentClipIdx < clips.length - 1 && document.getElementById('clipreview-screen').classList.contains('active')) {
+                selectClip(currentClipIdx + 1);
+            }
+        }, 300);
+    } catch(e) { console.error(e); }
+}
+
+async function markClipReject() {
+    if (currentClipIdx < 0) return;
+    const clip = clips[currentClipIdx];
+    try {
+        await fetch('/api/clips/reject', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({clip_id: clip.id})
+        });
+        clip.reviewed = true;
+        clip.label = 'reject';
+        clip.hit_frame = null;
+        renderClipList();
+        clipInfoEl.textContent = `${clip.id} • ${clipTotalFrames} frames • Status: reject`;
+        
+        setTimeout(() => {
+            if (currentClipIdx < clips.length - 1 && document.getElementById('clipreview-screen').classList.contains('active')) {
+                selectClip(currentClipIdx + 1);
+            }
+        }, 150);
+    } catch(e) { console.error(e); }
+}
+
+async function markClipUndo() {
+    if (currentClipIdx < 0) return;
+    const clip = clips[currentClipIdx];
+    try {
+        await fetch('/api/clips/undo', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({clip_id: clip.id})
+        });
+        clip.reviewed = false;
+        clip.label = null;
+        clip.hit_frame = null;
+        renderClipList();
+        updateFilmstripHighlight();
+        clipInfoEl.textContent = `${clip.id} • ${clipTotalFrames} frames • Status: unreviewed`;
+    } catch(e) { console.error(e); }
+}
+
+document.getElementById('clip-export-btn').addEventListener('click', async () => {
+    try {
+        const res = await fetch('/api/clips/export', {method: 'POST'});
+        const data = await res.json();
+        if (data.ok) {
+            alert(`Exported successfully!\nTotal: ${data.total_exported}\nTo: ${data.out_dir}`);
+        } else {
+            alert(data.detail || 'Export failed');
+        }
+    } catch(e) { alert(e.message); }
+});
+
+// Clip Review Keyboard Shortcuts
+window.addEventListener('keydown', (e) => {
+    const isClipTab = document.getElementById('clipreview-screen').classList.contains('active');
+    if (!isClipTab) return;
+    if (e.target.tagName === 'INPUT') return;
+    
+    if (e.key === 'ArrowRight') {
+        seekClipTo(clipFrame + 1);
+        e.preventDefault();
+    } else if (e.key === 'ArrowLeft') {
+        seekClipTo(clipFrame - 1);
+        e.preventDefault();
+    } else if (e.key === 'ArrowDown') {
+        selectClip(currentClipIdx + 1);
+        e.preventDefault();
+    } else if (e.key === 'ArrowUp') {
+        selectClip(currentClipIdx - 1);
+        e.preventDefault();
+    } else if (e.key === ' ') {
+        markClipHit();
+        e.preventDefault();
+    } else if (e.key === 'Delete' || e.key === 'Backspace') {
+        // Backspace to undo, Delete to reject (macOS fn+Backspace = Delete)
+        if (e.key === 'Backspace') markClipUndo();
+        else markClipReject();
+        e.preventDefault();
+    } else if (e.key === 'r') { // fallback for reject if no del key
+        markClipReject();
+    }
+});
