@@ -115,6 +115,8 @@ parser.add_argument(
 # Post-processing params (explicit, stable defaults)
 parser.add_argument("--rm_min_len", type=int, default=15)
 parser.add_argument("--rm_static_px", type=float, default=5.0)
+parser.add_argument("--rm_static_iou", type=float, default=0.85,
+    help="If avg consecutive-frame mask IoU >= this, treat track as static and delete. Set to 1.0 to disable.")
 parser.add_argument("--fusion_max_gap", type=int, default=5)
 parser.add_argument("--fusion_skip_unknown", action="store_true", help="Do not fuse label=unknown tracks.")
 
@@ -294,16 +296,40 @@ def compute_track_stats(history_list):
     }
 
 
-def plan_deletions(track_history: dict, rm_min_len: int, rm_static_px: float):
+def plan_deletions(track_history: dict, rm_min_len: int, rm_static_px: float,
+                   rm_static_iou: float = 0.85,
+                   tracks_dict: dict = None, all_masks_list: list = None):
     delete_set = set()
     for oid_str, hist in track_history.items():
         st = compute_track_stats(hist)
         if st["len"] < int(rm_min_len):
             delete_set.add(oid_str)
             continue
+        # Centroid-based static check (legacy fallback)
         if st["avg_move"] <= float(rm_static_px):
             delete_set.add(oid_str)
             continue
+        # Mask-level IoU static check (primary)
+        if rm_static_iou < 1.0 and tracks_dict is not None and all_masks_list is not None:
+            mask_indices = []
+            for f, c, lbl in hist:
+                f_str = str(f)
+                if f_str in tracks_dict and oid_str in tracks_dict[f_str]:
+                    mask_indices.append(int(tracks_dict[f_str][oid_str]["mask_idx"]))
+            if len(mask_indices) >= 2:
+                ious = []
+                for i in range(1, len(mask_indices)):
+                    m1 = all_masks_list[mask_indices[i - 1]]
+                    m2 = all_masks_list[mask_indices[i]]
+                    inter = np.logical_and(m1, m2).sum()
+                    union = np.logical_or(m1, m2).sum()
+                    iou = float(inter) / float(union) if union > 0 else 0.0
+                    ious.append(iou)
+                avg_iou = float(np.mean(ious))
+                if avg_iou >= rm_static_iou:
+                    print(f"  [rm] obj {oid_str} avg_iou={avg_iou:.4f} >= {rm_static_iou} → static, deleting")
+                    delete_set.add(oid_str)
+                    continue
     return delete_set
 
 
@@ -991,7 +1017,9 @@ if args.post_process_rm or args.post_process_fusion:
 
     delete_set = set()
     if args.post_process_rm:
-        delete_set = plan_deletions(track_history, args.rm_min_len, args.rm_static_px)
+        delete_set = plan_deletions(track_history, args.rm_min_len, args.rm_static_px,
+                                     rm_static_iou=args.rm_static_iou,
+                                     tracks_dict=tracks, all_masks_list=all_masks)
         if delete_set:
             print("Delete tracks:", len(delete_set))
 
