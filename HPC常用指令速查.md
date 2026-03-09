@@ -12,6 +12,9 @@
 ```bash
 source /nfs/stak/users/zhanhaoc/hpc-share/conda/bin/activate
 conda activate sam_3d_body
+cd /nfs/hpc/share/zhanhaoc/hpe/tempopeak
+
+srun --gres=gpu:1 --mem=64G --pty bash
 ```
 
 ## 检查命令（版本/设备）
@@ -50,38 +53,48 @@ conda activate sam_3d_body
 - 运行合成数据训练测试：`python train.py`
   - 预期：Loss 快速下降，Acc 接近 1.0
 
-## SAM3 Mask 提取器 (生产级 v1.0)
+## SAM3 Mask 提取器（单视频推理）
 
-脚本：`scripts/sam3_mask_extractor_production_v1.py`
+脚本：`scripts/sam3_mask_extractor.py`（单视频模式，每次处理一个 mp4）
 
-### 生产环境批量运行命令
+### 单视频运行命令
 ```bash
-CUDA_VISIBLE_DEVICES=0 python /nfs/hpc/share/zhanhaoc/hpe/tempopeak/scripts/sam3_mask_extractor_production_v1.py \
+CUDA_VISIBLE_DEVICES=0 python /nfs/hpc/share/zhanhaoc/hpe/tempopeak/scripts/sam3_mask_extractor.py \
   --hf_local_model /nfs/hpc/share/zhanhaoc/hpe/tempopeak/models/models--facebook--sam3/snapshots/3c879f39826c281e95690f02c7821c4de09afae7 \
-  --video_dir /nfs/hpc/share/zhanhaoc/hpe/tempopeak/datasets/serve \
-  --out_dir /nfs/hpc/share/zhanhaoc/hpe/tempopeak/outputs/sam3_prod_v1 \
+  --video_name 00001 \
+  --video_path /nfs/hpc/share/zhanhaoc/hpe/tempopeak/datasets/serve/00001.mp4 \
+  --out_dir /nfs/hpc/share/zhanhaoc/hpe/tempopeak/outputs/sam3_mask_extractor \
+  --prompts ball racket \
+  --dtype bf16 \
+  --tracker_score_min 0.10 \
+  --mask_area_min 1 \
+  --print_every 30
+```
+
+### 开启后处理
+```bash
+CUDA_VISIBLE_DEVICES=0 python /nfs/hpc/share/zhanhaoc/hpe/tempopeak/scripts/sam3_mask_extractor.py \
+  --hf_local_model /nfs/hpc/share/zhanhaoc/hpe/tempopeak/models/models--facebook--sam3/snapshots/3c879f39826c281e95690f02c7821c4de09afae7 \
+  --video_name 00001 \
+  --video_path /nfs/hpc/share/zhanhaoc/hpe/tempopeak/datasets/serve/00001.mp4 \
+  --out_dir /nfs/hpc/share/zhanhaoc/hpe/tempopeak/outputs/sam3_mask_extractor \
   --prompts ball racket \
   --dtype bf16 \
   --tracker_score_min 0.10 \
   --mask_area_min 1 \
   --post_process_rm --rm_min_len 15 --rm_static_px 5.0 \
   --post_process_fusion --fusion_max_gap 5 --fusion_skip_unknown \
-  --print_every 30
+  --post_process_predict --predict_max_gap 15 \
+  --print_every 30 \
+  --vis
 ```
 
-```bash
-CUDA_VISIBLE_DEVICES=0 python scripts/sam3_mask_extractor_production_v1.py \
-  --post_process_rm \
-  --post_process_fusion \
-  --rm_min_len 15 \
-  --rm_static_px 5 \
-  --fusion_max_gap 5
-```
-
-### 环境要求与输入输出
-- **输入**: 视频目录下的 `.mp4` 文件
-- **输出**: JSON 和 NPZ 文件（自动剔除错误目标，生成规范的 hit scores）
-- **特点**: 无隐式记忆污染、强制 no_grad 释放显存、合并 Rebuild、生命周期彻底收敛。
+### 输出文件
+| 文件 | 内容 |
+|---|---|
+| `{video_name}.json` | 含 `_meta` + 每帧 track 数据 |
+| `{video_name}.npz` | `masks [M,H,W] bool` + `frame_indices [M]` + `object_ids [M]` |
+| `{video_name}_vis.mp4` | 可视化视频（仅 `--vis` 时生成） |
 
 ## SAM3 Web 标注工具
 - 启动无状态后端：
