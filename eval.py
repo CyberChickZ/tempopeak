@@ -1,0 +1,72 @@
+"""Evaluation metrics for TempoPeak: MAE, Acc@k, Entropy."""
+
+import torch
+import torch.nn.functional as F
+
+
+def compute_metrics(logits: torch.Tensor, t_gt: torch.Tensor) -> dict[str, float]:
+    """Compute all evaluation metrics.
+
+    Args:
+        logits: [B, T] raw model outputs.
+        t_gt: [B] ground-truth hit frame indices.
+
+    Returns:
+        Dict with mae, acc1, acc3, acc5, entropy.
+    """
+    B, T = logits.shape
+    probs = F.softmax(logits, dim=-1)  # [B, T]
+    preds = probs.argmax(dim=-1)  # [B]
+
+    errors = (preds - t_gt).abs().float()
+
+    mae = errors.mean().item()
+    acc1 = (errors <= 1).float().mean().item() * 100
+    acc3 = (errors <= 3).float().mean().item() * 100
+    acc5 = (errors <= 5).float().mean().item() * 100
+
+    # Entropy of predicted distribution
+    log_probs = torch.log(probs + 1e-8)
+    entropy = -(probs * log_probs).sum(dim=-1).mean().item()
+
+    return {
+        "mae": mae,
+        "acc1": acc1,
+        "acc3": acc3,
+        "acc5": acc5,
+        "entropy": entropy,
+    }
+
+
+def gaussian_target(t_gt: torch.Tensor, t_max: int,
+                    sigma: float = 2.0) -> torch.Tensor:
+    """Create Gaussian soft label centred at t_gt.
+
+    Args:
+        t_gt: [B] integer ground-truth indices.
+        t_max: sequence length T.
+        sigma: Gaussian standard deviation.
+
+    Returns:
+        [B, T] normalised probability distribution.
+    """
+    t = torch.arange(t_max, device=t_gt.device, dtype=torch.float32)  # [T]
+    t_gt_f = t_gt.float().unsqueeze(-1)  # [B, 1]
+    q = torch.exp(-((t.unsqueeze(0) - t_gt_f) ** 2) / (2 * sigma ** 2))  # [B, T]
+    q = q / q.sum(dim=-1, keepdim=True)  # normalise
+    return q
+
+
+def soft_cross_entropy(logits: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
+    """Soft cross-entropy loss: -sum q(t) log p(t).
+
+    Args:
+        logits: [B, T] raw model outputs.
+        targets: [B, T] normalised soft label distribution.
+
+    Returns:
+        Scalar loss.
+    """
+    log_probs = F.log_softmax(logits, dim=-1)  # [B, T]
+    loss = -(targets * log_probs).sum(dim=-1).mean()
+    return loss
