@@ -122,13 +122,13 @@ CUDA_VISIBLE_DEVICES=0 python scripts/yolo_clip_extractor.py \
 ## SAM3 Web 标注工具
 - 启动无状态后端：
   ```bash
-  cd /Users/harryzhang/git/tempopeak/sam3_annotator/backend
+  cd /Users/harryzhang/git/tempopeak/sam3_annotator/server
   pip install -r requirements.txt
   uvicorn main:app --host 0.0.0.0 --port 8080 --reload
   ```
 
   ```bash
-  cd /Users/harryzhang/git/tempopeak/sam3_annotator/backend
+  cd /Users/harryzhang/git/tempopeak/sam3_annotator/server
   uvicorn main:app --host 0.0.0.0 --port 8080 --reload
   ```
 - 访问：打开浏览器 `http://127.0.0.1:8080/`。支持按照视频名称自动加载 `00001.mp4`, `00001.json`, `00001.npz`，并提供拖拽式标注可视化和修改。

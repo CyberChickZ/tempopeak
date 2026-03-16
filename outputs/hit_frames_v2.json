@@ -1,0 +1,12 @@
+{
+  "video": "/Users/harryzhang/git/tempopeak/datasets/serve/00002.mp4",
+  "fps": 60.0,
+  "total_frames": 181,
+  "ball_detection_rate": 1.0,
+  "hit_frames": [
+    35,
+    108,
+    167
+  ],
+  "method": "hsv_ball_roi_direction_change"
+}

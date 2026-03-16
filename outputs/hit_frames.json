@@ -1,0 +1,9 @@
+{
+  "video": "/Users/harryzhang/git/tempopeak/datasets/serve/00002.mp4",
+  "fps": 60.0,
+  "total_frames": 181,
+  "hit_frames": [
+    103
+  ],
+  "method": "optical_flow_long_stride_3"
+}
