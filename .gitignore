@@ -229,4 +229,9 @@ models/models--facebook--sam3/
 models/.locks/
 datasets/raw/Serve-Compilation-Slow-Motion-Alcaraz-Dj-proj.llc
 datasets/raw/Serve-Compilation-Slow-Motion-Alcaraz-Dj.mp4
+datasets/raw/*_frames/
+datasets/v1/
+datasets/yolo_refine/
 *.mp4
+*.pt
+data/clips_tmp/
