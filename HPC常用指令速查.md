@@ -47,11 +47,75 @@ srun --gres=gpu:1 --mem=64G --pty bash
   ```
   - 作用：计算平均前向耗时，快速评估时序模块计算开销。
 
-## 新增模型 (ResNet+BiMamba)
-- 运行新模型冒烟测试：`python test_model.py`
-  - 预期输出：`output shape: [B, T]`，`sum over time: 1.0`
-- 运行合成数据训练测试：`python train.py`
-  - 预期：Loss 快速下降，Acc 接近 1.0
+## 训练 Pipeline — Temporal Head 比较实验
+
+### 文件结构
+| 文件 | 作用 |
+|---|---|
+| `train.py` | 训练入口 |
+| `dataloader.py` | ClipDataset（支持 annot.json 导出格式 + 原始 .json+.mp4 格式） |
+| `model.py` | TempoPeakModel：frozen ResNet-18 → temporal head → Linear → logits |
+| `temporal_heads.py` | 6 种 temporal head：identity, bilstm, mstcn, transformer, mamba2, bimamba2 |
+| `eval.py` | 指标计算：MAE, Acc@1/3/5, Entropy；Gaussian soft CE loss |
+| `config.py` | argparse 配置 |
+
+### Mac 本地冒烟测试
+```bash
+cd /Users/harryzhang/git/tempopeak
+
+# 单头快速验证
+python3 train.py --temporal_head=identity --t_max=32 --data_dir=datasets/v1/clips --epochs=3 --batch_size=4
+
+# 全部 6 heads 冒烟 (1 epoch each)
+for head in identity bilstm mstcn transformer mamba2 bimamba2; do
+    echo "=== Testing $head ==="
+    python3 train.py --temporal_head=$head --t_max=32 --data_dir=datasets/v1/clips --epochs=1 --batch_size=4
+done
+```
+
+### HPC 训练命令
+
+#### Exp A — 6 Temporal Heads 对比 (t_max=32, 100 epochs)
+```bash
+cd /nfs/hpc/share/zhanhaoc/hpe/tempopeak
+for head in identity bilstm mstcn transformer mamba2 bimamba2; do
+    echo "=== Training $head ==="
+    python train.py --temporal_head=$head --t_max=32 --data_dir=datasets/v1/clips --epochs=100
+done
+```
+
+#### Exp B — T_max Sweep (best head)
+```bash
+for tmax in 16 32 64; do
+    python train.py --temporal_head=BEST_HEAD --t_max=$tmax --data_dir=datasets/v1/clips --epochs=100
+done
+```
+
+### train.py 参数一览
+
+| 参数 | 默认值 | 说明 |
+|---|---|---|
+| `--temporal_head` | `identity` | `{identity, bilstm, mstcn, transformer, mamba2, bimamba2}` |
+| `--t_max` | `32` | clip 长度 `{16, 32, 64}` |
+| `--target_type` | `gaussian` | `{onehot, gaussian}` |
+| `--sigma` | `2.0` | Gaussian soft label 标准差 |
+| `--lr` | `1e-3` | 学习率 |
+| `--weight_decay` | `1e-4` | AdamW weight decay |
+| `--epochs` | `100` | 训练轮数 |
+| `--batch_size` | `8` | batch size |
+| `--data_dir` | (required) | 数据根目录 |
+| `--seed` | `42` | 随机种子 |
+| `--device` | `auto` | `auto` = cuda if available else cpu |
+
+### 输出
+- Checkpoint 保存在 `checkpoints/`
+  - `best_{head}_{t_max}.pt` — 按 MAE 选出的最优模型
+  - `last_{head}_{t_max}.pt` — 最后一个 epoch
+- Metrics 每 epoch 打印：`train_loss | MAE Acc@1 Acc@3 Acc@5 Entropy | best_MAE`
+
+## 旧版冒烟测试 (已被 train.py 取代)
+- ~~运行新模型冒烟测试：`python test_model.py`~~
+- ~~运行合成数据训练测试：旧 `python train.py`~~
 
 ## SAM3 Mask 提取器（单视频推理）
 
