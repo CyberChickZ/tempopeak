@@ -1,63 +1,54 @@
+"""TempoPeak model: frozen ResNet-18 backbone + temporal head + linear projection."""
+
 import torch
 import torch.nn as nn
 import torchvision.models as models
-from mamba_ssm import Mamba
+
+from temporal_heads import build_head, HEAD_REGISTRY
 
 
-class EventModel(nn.Module):
-    def __init__(self, d_model=128):
+class TempoPeakModel(nn.Module):
+    """ResNet-18 (frozen) → Temporal Head → Linear → logits [B, T]."""
+
+    def __init__(self, temporal_head: str = "identity"):
         super().__init__()
 
-        # --- Backbone ---
+        # Frozen ResNet-18 backbone (avgpool output → 512-d)
         backbone = models.resnet18(weights=models.ResNet18_Weights.IMAGENET1K_V1)
-        self.feature_extractor = nn.Sequential(
-            backbone.conv1,
-            backbone.bn1,
-            backbone.relu,
-            backbone.maxpool,
-            backbone.layer1,
-            backbone.layer2,
-            backbone.layer3,
-            backbone.layer4,
+        self.backbone = nn.Sequential(
+            backbone.conv1, backbone.bn1, backbone.relu, backbone.maxpool,
+            backbone.layer1, backbone.layer2, backbone.layer3, backbone.layer4,
             backbone.avgpool,
         )
+        for p in self.backbone.parameters():
+            p.requires_grad = False
 
-        self.feature_dim = 512
+        # Temporal head
+        self.head = build_head(temporal_head)
+        head_out_dim = HEAD_REGISTRY[temporal_head].out_dim
 
-        # --- Projection ---
-        self.proj = nn.Linear(self.feature_dim, d_model)
+        # Projection to scalar per timestep
+        self.proj = nn.Linear(head_out_dim, 1)
 
-        # --- Bi-Mamba ---
-        self.mamba_fwd = Mamba(d_model=d_model)
-        self.mamba_bwd = Mamba(d_model=d_model)
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass.
 
-        # --- Score head ---
-        self.score = nn.Linear(d_model * 2, 1)
+        Args:
+            x: [B, T, 3, 224, 224] video frames.
 
-    def forward(self, x):
-        # x: [B, T, 3, H, W]
+        Returns:
+            logits: [B, T] raw scores (apply softmax externally).
+        """
+        B, T = x.shape[:2]
 
-        B, T, C, H, W = x.shape
+        # Per-frame backbone features
+        with torch.no_grad():
+            feats = self.backbone(x.reshape(B * T, *x.shape[2:]))
+        feats = feats.flatten(1).reshape(B, T, -1)  # [B, T, 512]
 
-        x = x.view(B * T, C, H, W)
+        # Temporal modelling
+        h = self.head(feats)  # [B, T, D_out]
 
-        feat = self.feature_extractor(x)
-        feat = torch.flatten(feat, 1)
-
-        feat = feat.view(B, T, -1)
-
-        z = self.proj(feat)
-
-        # Forward
-        h_fwd = self.mamba_fwd(z)
-
-        # Backward
-        z_rev = torch.flip(z, dims=[1])
-        h_bwd = self.mamba_bwd(z_rev)
-        h_bwd = torch.flip(h_bwd, dims=[1])
-
-        h = torch.cat([h_fwd, h_bwd], dim=-1)
-
-        scores = self.score(h).squeeze(-1)
-
-        return scores
+        # Project to logits
+        logits = self.proj(h).squeeze(-1)  # [B, T]
+        return logits
