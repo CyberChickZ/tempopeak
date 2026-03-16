@@ -281,14 +281,22 @@ def build_dataloaders(data_dir: str, t_max: int, batch_size: int,
     """Build train/val DataLoaders with 80/20 split by clip name."""
     full_ds = ClipDataset(data_dir, t_max=t_max)
 
-    # Get unique clip dirs, sorted for deterministic split
-    clip_dirs = sorted(set(s["clip_dir"] for s in full_ds.samples))
-    n_train = int(len(clip_dirs) * 0.8)
-    train_dirs = set(clip_dirs[:n_train])
-    val_dirs = set(clip_dirs[n_train:])
+    # Get unique clip identities, sorted for deterministic split
+    # Use json_path (raw) or clip_dir (annot) as clip identity
+    def _clip_id(s: dict) -> str:
+        return s.get("json_path", s["clip_dir"])
 
-    train_indices = [i for i, s in enumerate(full_ds.samples) if s["clip_dir"] in train_dirs]
-    val_indices = [i for i, s in enumerate(full_ds.samples) if s["clip_dir"] in val_dirs]
+    clip_ids = sorted(set(_clip_id(s) for s in full_ds.samples))
+    n_train = max(1, int(len(clip_ids) * 0.8))
+    train_ids = set(clip_ids[:n_train])
+    val_ids = set(clip_ids[n_train:])
+
+    train_indices = [i for i, s in enumerate(full_ds.samples) if _clip_id(s) in train_ids]
+    val_indices = [i for i, s in enumerate(full_ds.samples) if _clip_id(s) in val_ids]
+
+    # If val is empty (too few clips), use train as val too
+    if not val_indices:
+        val_indices = train_indices
 
     train_ds = torch.utils.data.Subset(full_ds, train_indices)
     val_ds = torch.utils.data.Subset(full_ds, val_indices)
