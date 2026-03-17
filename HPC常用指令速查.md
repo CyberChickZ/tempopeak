@@ -285,13 +285,31 @@ done
 
 然后训练（特征模式，秒级/epoch）：
 ```bash
-# Exp A: 4 heads × 3 backbones
+# Exp A v1: 4 heads × 3 backbones (已完成 resnet18 × 4 heads)
 for bb in resnet18 resnet34 vit_small; do
     for head in identity bilstm mamba2 bimamba2; do
         echo "=== $bb / $head ==="
         python train.py --temporal_head=$head --t_max=32 \
           --data_dir=datasets/v1/export --backbone=$bb --epochs=100 --batch_size=8
     done
+done
+```
+
+### HPC 正式训练 (Exp A v3 — DataLoader v3 + Cosine LR)
+
+```bash
+source /nfs/stak/users/zhanhaoc/hpc-share/conda/bin/activate
+conda activate sam_3d_body
+cd /nfs/hpc/share/zhanhaoc/hpe/tempopeak
+git pull
+srun --gres=gpu:1 --mem=64G --pty bash
+
+# Exp A v3: vit_small × 4 heads × 100 epochs
+# DataLoader v3 枚举窗口 + CosineAnnealingLR(1e-3 → 1e-5)
+for head in identity bilstm mamba2 bimamba2; do
+    echo "=== vit_small / $head ==="
+    python train.py --temporal_head=$head --t_max=32 \
+      --data_dir=datasets/v1/export --backbone=vit_small --epochs=100 --batch_size=32
 done
 ```
 
@@ -321,15 +339,30 @@ done
 | `--data_dir` | (必填) | 数据根目录，支持 export 或 raw 格式 |
 | `--seed` | 42 | 随机种子 |
 
-### 新增参数 (v2)
+### 新增参数 (v2+)
 
 | 参数 | 默认值 | 说明 |
 |---|---|---|
 | `--backbone` | `resnet18` | `{resnet18, resnet34, vit_small}` — 用于查找 features/ 目录 |
 | `--no_features` | (flag) | 强制 image mode，不使用预提取特征 |
 
+### DataLoader 版本说明
+
+| 版本 | 特征 | Train Samples (resnet18) |
+|---|---|---|
+| v2 | `AUG_K_TRAIN=5`，每 hit 注册 5 个随机窗口 | ~890 |
+| **v3 (当前)** | `_enumerate_windows()` 枚举所有合法窗口，`MAX_WINDOWS_PER_HIT=50` | **~5996** |
+
+v3 变化：`__getitem__` 零随机性，所有 `(start, n)` 在 `_build_samples()` 时确定。Val 使用最长窗口 + hit 居中，每 hit 1 个确定性样本。
+
+### Scheduler
+
+- v3 起默认使用 `CosineAnnealingLR(T_max=epochs, eta_min=1e-5)`
+- LR 从 `--lr`（默认 1e-3）余弦衰减至 1e-5
+
 ### Checkpoint 输出
 - Best model: `checkpoints/best_{head}_{t_max}.pt`
+- Last model: `checkpoints/last_{head}_{t_max}.pt`
 
 ## 预提取特征 (extract_features.py)
 
