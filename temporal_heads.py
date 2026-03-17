@@ -118,14 +118,21 @@ class TransformerHead(nn.Module):
 
 
 # ---------------------------------------------------------------------------
-# 5/6. Pure-PyTorch SSM (Mamba2 / BiMamba2)
+# 5/6. Mamba SSM (CUDA kernel via mamba_ssm, fallback to pure-PyTorch)
 # ---------------------------------------------------------------------------
+
+# Try to import the real CUDA Mamba kernel
+try:
+    from mamba_ssm import Mamba as _CUDAMamba
+    _HAS_MAMBA_SSM = True
+except ImportError:
+    _HAS_MAMBA_SSM = False
+
 
 class _SSMLayer(nn.Module):
     """Simplified selective state-space layer (pure PyTorch, no CUDA kernels).
 
-    Implements a gated SSM: input → (gate, ssm_input) → discretised recurrence → output.
-    Compatible with both CPU and CUDA.
+    Fallback for CPU / environments without mamba_ssm.
     """
 
     def __init__(self, d_model: int, d_state: int = 16):
@@ -133,15 +140,11 @@ class _SSMLayer(nn.Module):
         self.d_model = d_model
         self.d_state = d_state
 
-        # Input projections: expand to 2*d for gate + ssm paths
         self.in_proj = nn.Linear(d_model, d_model * 2, bias=False)
-
-        # SSM parameters (input-dependent)
         self.dt_proj = nn.Linear(d_model, d_model, bias=True)
         self.B_proj = nn.Linear(d_model, d_state, bias=False)
         self.C_proj = nn.Linear(d_model, d_state, bias=False)
 
-        # Learnable log(A) — initialised as negative (stable)
         self.A_log = nn.Parameter(
             torch.log(torch.arange(1, d_state + 1, dtype=torch.float32))
             .unsqueeze(0).expand(d_model, -1).clone()
@@ -152,24 +155,20 @@ class _SSMLayer(nn.Module):
         self.norm = nn.LayerNorm(d_model)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # x: [B, T, D]
         B, T, D = x.shape
         residual = x
         x = self.norm(x)
 
-        xz = self.in_proj(x)  # [B, T, 2D]
-        x_ssm, z = xz.chunk(2, dim=-1)  # each [B, T, D]
+        xz = self.in_proj(x)
+        x_ssm, z = xz.chunk(2, dim=-1)
 
-        # Compute selective parameters
-        dt = F.softplus(self.dt_proj(x_ssm))  # [B, T, D]
-        B_t = self.B_proj(x_ssm)  # [B, T, N]
-        C_t = self.C_proj(x_ssm)  # [B, T, N]
-        A = -torch.exp(self.A_log)  # [D, N]
+        dt = F.softplus(self.dt_proj(x_ssm))
+        B_t = self.B_proj(x_ssm)
+        C_t = self.C_proj(x_ssm)
+        A = -torch.exp(self.A_log)
 
-        # Discretise and scan
-        y = self._scan(x_ssm, dt, A, B_t, C_t)  # [B, T, D]
+        y = self._scan(x_ssm, dt, A, B_t, C_t)
 
-        # Combine with gate
         y = y + self.D.unsqueeze(0).unsqueeze(0) * x_ssm
         y = y * F.silu(z)
         y = self.out_proj(y)
@@ -178,33 +177,41 @@ class _SSMLayer(nn.Module):
 
     def _scan(self, x: torch.Tensor, dt: torch.Tensor, A: torch.Tensor,
               B_t: torch.Tensor, C_t: torch.Tensor) -> torch.Tensor:
-        """Sequential scan — simple loop, works on any device."""
         B_batch, T, D = x.shape
         N = self.d_state
 
-        # dA: [B, T, D, N],  dB_x: [B, T, D, N]
         dA = torch.exp(dt.unsqueeze(-1) * A.unsqueeze(0).unsqueeze(0))
-        dB = dt.unsqueeze(-1) * B_t.unsqueeze(2)  # [B, T, D, N]
-        dB_x = dB * x.unsqueeze(-1)  # [B, T, D, N]
+        dB = dt.unsqueeze(-1) * B_t.unsqueeze(2)
+        dB_x = dB * x.unsqueeze(-1)
 
         h = torch.zeros(B_batch, D, N, device=x.device, dtype=x.dtype)
         ys = []
         for t in range(T):
-            h = dA[:, t] * h + dB_x[:, t]  # [B, D, N]
-            y_t = (h * C_t[:, t].unsqueeze(1)).sum(-1)  # [B, D]
+            h = dA[:, t] * h + dB_x[:, t]
+            y_t = (h * C_t[:, t].unsqueeze(1)).sum(-1)
             ys.append(y_t)
 
-        return torch.stack(ys, dim=1)  # [B, T, D]
+        return torch.stack(ys, dim=1)
 
 
 class Mamba2Head(nn.Module):
-    """Forward-only (causal) SSM. Output dim = 256."""
+    """Forward-only (causal) SSM. Uses CUDA Mamba kernel if available.
+
+    Output dim = 256.
+    """
     out_dim = 256
 
     def __init__(self, d_in: int = 512, d_model: int = 256, layers: int = 2):
         super().__init__()
         self.proj = nn.Linear(d_in, d_model)
-        self.layers = nn.ModuleList([_SSMLayer(d_model) for _ in range(layers)])
+        if _HAS_MAMBA_SSM:
+            self.layers = nn.ModuleList([
+                _CUDAMamba(d_model=d_model, d_state=16, d_conv=4, expand=2)
+                for _ in range(layers)
+            ])
+        else:
+            self.layers = nn.ModuleList(
+                [_SSMLayer(d_model) for _ in range(layers)])
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.proj(x)
@@ -214,16 +221,29 @@ class Mamba2Head(nn.Module):
 
 
 class BiMamba2Head(nn.Module):
-    """Bidirectional SSM (fwd + bwd concat). Output dim = 512."""
+    """Bidirectional SSM (fwd + bwd concat). Uses CUDA Mamba kernel if available.
+
+    Output dim = 512.
+    """
     out_dim = 512
 
     def __init__(self, d_in: int = 512, d_model: int = 256, layers: int = 2):
         super().__init__()
         self.proj = nn.Linear(d_in, d_model)
-        self.fwd_layers = nn.ModuleList(
-            [_SSMLayer(d_model) for _ in range(layers)])
-        self.bwd_layers = nn.ModuleList(
-            [_SSMLayer(d_model) for _ in range(layers)])
+        if _HAS_MAMBA_SSM:
+            self.fwd_layers = nn.ModuleList([
+                _CUDAMamba(d_model=d_model, d_state=16, d_conv=4, expand=2)
+                for _ in range(layers)
+            ])
+            self.bwd_layers = nn.ModuleList([
+                _CUDAMamba(d_model=d_model, d_state=16, d_conv=4, expand=2)
+                for _ in range(layers)
+            ])
+        else:
+            self.fwd_layers = nn.ModuleList(
+                [_SSMLayer(d_model) for _ in range(layers)])
+            self.bwd_layers = nn.ModuleList(
+                [_SSMLayer(d_model) for _ in range(layers)])
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.proj(x)
