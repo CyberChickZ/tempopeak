@@ -203,3 +203,64 @@ CUDA_VISIBLE_DEVICES=0 python scripts/yolo_clip_extractor.py \
   python scripts/smoke_text_only.py
   ```
 - 输出：`outputs/pcs_samples/frame_XXXX_text_only.jpg`
+
+## Temporal Head 训练 (SSM Validation)
+
+### Mac 本地冒烟 (CPU)
+```bash
+cd /Users/harryzhang/git/tempopeak
+
+# 单 head 冒烟
+python3 train.py --temporal_head=identity --t_max=32 \
+  --data_dir=datasets/v1/export --epochs=1 --batch_size=4
+
+# 4 heads 全部冒烟 (identity → bilstm → mamba2 → bimamba2)
+for head in identity bilstm mamba2 bimamba2; do
+    echo "=== $head ==="
+    python3 train.py --temporal_head=$head --t_max=32 \
+      --data_dir=datasets/v1/export --epochs=1 --batch_size=4
+done
+```
+
+### HPC 正式训练 (CUDA, Exp A — 4 heads × 100 epochs)
+```bash
+source /nfs/stak/users/zhanhaoc/hpc-share/conda/bin/activate
+conda activate sam_3d_body
+cd /nfs/hpc/share/zhanhaoc/hpe/tempopeak
+git pull
+srun --gres=gpu:1 --mem=64G --pty bash
+
+for head in identity bilstm mamba2 bimamba2; do
+    echo "=== Training $head ==="
+    python train.py --temporal_head=$head --t_max=32 \
+      --data_dir=datasets/v1/export --epochs=100 --batch_size=8
+done
+```
+
+### HPC Exp B — T_max Sweep (用 Exp A best head)
+```bash
+BEST=bimamba2  # ← 替换为 Exp A 的 best head
+for tmax in 16 32 64; do
+    echo "=== T_max=$tmax ==="
+    python train.py --temporal_head=$BEST --t_max=$tmax \
+      --data_dir=datasets/v1/export --epochs=100 --batch_size=8
+done
+```
+
+### 训练参数一览
+
+| 参数 | 默认值 | 说明 |
+|---|---|---|
+| `--temporal_head` | identity | `{identity, bilstm, mstcn, transformer, mamba2, bimamba2}` |
+| `--t_max` | 32 | 每个样本的帧窗口长度 `{16, 32, 64}` |
+| `--target_type` | gaussian | `{gaussian, onehot}` |
+| `--sigma` | 2.0 | Gaussian soft label 标准差 |
+| `--lr` | 1e-3 | AdamW 学习率 |
+| `--weight_decay` | 1e-4 | 权重衰减 |
+| `--epochs` | 100 | |
+| `--batch_size` | 8 | |
+| `--data_dir` | (必填) | 数据根目录，支持 export 或 raw 格式 |
+| `--seed` | 42 | 随机种子 |
+
+### Checkpoint 输出
+- Best model: `checkpoints/best_{head}_{t_max}.pt`
