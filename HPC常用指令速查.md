@@ -144,9 +144,9 @@ done
 
 ### 输出
 - Checkpoint 保存在 `checkpoints/`
-  - `best_{head}_{t_max}.pt` — 按 MAE 选出的最优模型
+  - `best_{head}_{t_max}.pt` — 按 **Acc@1** 选出的最优模型
   - `last_{head}_{t_max}.pt` — 最后一个 epoch
-- Metrics 每 epoch 打印：`train_loss | MAE Acc@1 Acc@3 Acc@5 Entropy | best_MAE`
+- Metrics 每 epoch 打印：`train_loss | MAE Acc@1 Acc@3 Acc@5 Entropy | best_Acc@1`
 
 ## 旧版冒烟测试 (已被 train.py 取代)
 - ~~运行新模型冒烟测试：`python test_model.py`~~
@@ -305,11 +305,13 @@ git pull
 srun --gres=gpu:1 --mem=64G --pty bash
 
 # Exp A v3: vit_small × 4 heads × 100 epochs
-# DataLoader v3 枚举窗口 + CosineAnnealingLR(1e-3 → 1e-5)
+# Feature preload (RAM) + Acc@1 best criterion + CosineAnnealingLR(3e-3 → 1e-5)
+# batch_size=256 充分利用 H100，lr=3e-3（linear scaling: batch ×8 → lr ×√8 ≈ ×3）
 for head in identity bilstm mamba2 bimamba2; do
     echo "=== vit_small / $head ==="
     python train.py --temporal_head=$head --t_max=32 \
-      --data_dir=datasets/v1/export --backbone=vit_small --epochs=100 --batch_size=32
+      --data_dir=datasets/v1/export --backbone=vit_small \
+      --epochs=100 --batch_size=256 --lr=3e-3
 done
 ```
 
@@ -359,11 +361,11 @@ v3 变化：`__getitem__` 零随机性，所有 `(start, n)` 在 `_build_samples
 
 | 参数 | Train | Val | 说明 |
 |---|---|---|---|
-| `num_workers` | 8 | 4 | CPU 核并行预加载 .pt 文件（HPC 32 核） |
+| `preload` | True | True | 启动时一次性加载所有 `.pt` 特征到 RAM（~92MB），`__getitem__` 零磁盘 I/O |
+| `num_workers` | 0 | 0 | 数据全在内存，无需多进程预取 |
 | `pin_memory` | True | True | 锁页内存 DMA 直传，CPU→GPU 传输快 30-50% |
-| `persistent_workers` | True | True | Worker 进程跨 epoch 复用，省 fork/销毁开销 |
 
-这三个参数对训练结果零影响，仅加速数据加载吞吐。
+preload + num_workers=0 对训练结果零影响，仅加速数据加载吞吐。Probe 数据集 `preload=False`（仅读 clip_ids，不需加载特征）。
 
 ### Scheduler
 
@@ -371,8 +373,9 @@ v3 变化：`__getitem__` 零随机性，所有 `(start, n)` 在 `_build_samples
 - LR 从 `--lr`（默认 1e-3）余弦衰减至 1e-5
 
 ### Checkpoint 输出
-- Best model: `checkpoints/best_{head}_{t_max}.pt`
+- Best model: `checkpoints/best_{head}_{t_max}.pt` — 按 **Acc@1** 选出（非 MAE）
 - Last model: `checkpoints/last_{head}_{t_max}.pt`
+- Epoch 日志格式：`train_loss | MAE Acc@1 Acc@3 Acc@5 Entropy | best_Acc@1`（MAE 仅诊断用，不决定 checkpoint）
 
 ## 预提取特征 (extract_features.py)
 
