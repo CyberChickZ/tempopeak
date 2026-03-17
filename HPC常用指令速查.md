@@ -340,14 +340,20 @@ python train.py --temporal_head=bilstm --t_max=32 \
 
 注意：Identity 不用重跑，41.4% 是其 capacity ceiling。
 
-### HPC Exp B — T_max Sweep (用 Exp A best head + best backbone)
+### HPC Exp B — T_max Sweep (BiLSTM 确认为最优 head)
 ```bash
-BEST_HEAD=bimamba2   # ← 替换为 Exp A 的 best head
-BEST_BB=vit_small    # ← 替换为 Exp A 的 best backbone
+source /nfs/stak/users/zhanhaoc/hpc-share/conda/bin/activate
+conda activate sam_3d_body
+cd /nfs/hpc/share/zhanhaoc/hpe/tempopeak
+git pull
+srun --gres=gpu:1 --mem=64G --pty bash
+
+# BiLSTM + vit_small，sweep T_max
 for tmax in 16 32 64; do
     echo "=== T_max=$tmax ==="
-    python train.py --temporal_head=$BEST_HEAD --t_max=$tmax \
-      --data_dir=datasets/v1/export --backbone=$BEST_BB --epochs=100 --batch_size=8
+    python train.py --temporal_head=bilstm --t_max=$tmax \
+      --data_dir=datasets/v1/export --backbone=vit_small \
+      --epochs=30 --batch_size=256 --lr=1e-3
 done
 ```
 
