@@ -355,6 +355,16 @@ done
 
 v3 变化：`__getitem__` 零随机性，所有 `(start, n)` 在 `_build_samples()` 时确定。Val 使用最长窗口 + hit 居中，每 hit 1 个确定性样本。
 
+### DataLoader I/O 参数（硬编码，非命令行参数）
+
+| 参数 | Train | Val | 说明 |
+|---|---|---|---|
+| `num_workers` | 8 | 4 | CPU 核并行预加载 .pt 文件（HPC 32 核） |
+| `pin_memory` | True | True | 锁页内存 DMA 直传，CPU→GPU 传输快 30-50% |
+| `persistent_workers` | True | True | Worker 进程跨 epoch 复用，省 fork/销毁开销 |
+
+这三个参数对训练结果零影响，仅加速数据加载吞吐。
+
 ### Scheduler
 
 - v3 起默认使用 `CosineAnnealingLR(T_max=epochs, eta_min=1e-5)`
