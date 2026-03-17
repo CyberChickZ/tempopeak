@@ -425,11 +425,13 @@ def build_dataloaders(data_dir: str, t_max: int, batch_size: int,
 
     train_loader = torch.utils.data.DataLoader(
         train_ds, batch_size=batch_size, shuffle=True,
-        num_workers=0, generator=g, collate_fn=_collate,
+        num_workers=8, generator=g, collate_fn=_collate,
+        pin_memory=True, persistent_workers=True,
     )
     val_loader = torch.utils.data.DataLoader(
         val_ds, batch_size=batch_size, shuffle=False,
-        num_workers=0, collate_fn=_collate,
+        num_workers=4, collate_fn=_collate,
+        pin_memory=True, persistent_workers=True,
     )
     return train_loader, val_loader
 
