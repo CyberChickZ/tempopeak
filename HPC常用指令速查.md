@@ -17,6 +17,41 @@ cd /nfs/hpc/share/zhanhaoc/hpe/tempopeak
 srun --gres=gpu:1 --mem=64G --pty bash
 ```
 
+## Backbone 权重缓存
+- 缓存目录：`/nfs/stak/users/zhanhaoc/.cache/torch/hub/checkpoints/`
+- `resnet34-b627a593.pth` (83.3M) — 首次 `extract_features.py --backbone=resnet34` 时自动下载
+- `vit_b_16-c867db91.pth` (330M) — 首次 `extract_features.py --backbone=vit_small` 时自动下载
+- ResNet-18 权重也已缓存（之前训练时下载）
+
+## 数据部署（Mac → HPC）
+`datasets/v1/` 在 `.gitignore` 中，数据不走 git，通过**网盘**传输。
+
+### Mac 端打包
+```bash
+cd /Users/harryzhang/git/tempopeak
+# 只打 frames + annot.json，排除 features/*.pt（HPC CUDA 重新提取更快）
+COPYFILE_DISABLE=1 tar -czf datasets_v1_export.tar.gz --exclude='features' datasets/v1/export/
+# 输出: datasets_v1_export.tar.gz (~2.6 GB)
+```
+⚠️ 不加 `COPYFILE_DISABLE=1` 会产生 macOS xattr 警告（`LIBARCHIVE.xattr.com.apple.provenance`），不影响数据但 HPC 会刷屏 warning。
+
+### HPC 端解压
+```bash
+cd /nfs/hpc/share/zhanhaoc/hpe/tempopeak
+tar -xzf datasets_v1_export.tar.gz
+# 验证
+ls datasets/v1/export/0001/ | wc -l    # 应为 27
+find datasets/v1/export -name "*.jpg" | wc -l   # 应为 14946
+```
+
+### 数据规模
+| 内容 | 数量 | 大小 |
+|---|---|---|
+| clips | 27 | — |
+| JPG frames | 14946 (含双 hitter) | ~5.2 GB |
+| annot.json | 27 | ~3.2 MB |
+| tar.gz 压缩包 | 1 | ~2.6 GB |
+
 ## 检查命令（版本/设备）
 - 检查 mamba-ssm 版本：`python -c "import mamba_ssm; print(mamba_ssm.__version__)"`
 - 检查 PyTorch/CUDA/GPU：`python -c "import torch; print(torch.__version__); print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0))"`
