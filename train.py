@@ -124,16 +124,16 @@ def main() -> None:
     ckpt_dir = os.path.join(os.path.dirname(__file__), "checkpoints")
     os.makedirs(ckpt_dir, exist_ok=True)
     best_tag = f"best_{args.temporal_head}_{args.t_max}"
-    best_mae = float("inf")
+    best_acc1 = 0.0
 
     # Training loop
     for epoch in range(1, args.epochs + 1):
         train_loss = train_one_epoch(model, train_loader, optimizer, args, device)
         metrics = evaluate(model, val_loader, device)
 
-        is_best = metrics["mae"] < best_mae
+        is_best = metrics["acc1"] > best_acc1
         if is_best:
-            best_mae = metrics["mae"]
+            best_acc1 = metrics["acc1"]
             torch.save({
                 "epoch": epoch,
                 "model_state_dict": model.state_dict(),
@@ -146,7 +146,7 @@ def main() -> None:
         print(f"[Epoch {epoch}/{args.epochs}] train_loss={train_loss:.4f} | "
               f"MAE={metrics['mae']:.2f} Acc@1={metrics['acc1']:.1f}% "
               f"Acc@3={metrics['acc3']:.1f}% Acc@5={metrics['acc5']:.1f}% "
-              f"Entropy={metrics['entropy']:.3f} | best_MAE={best_mae:.2f}{star}")
+              f"Entropy={metrics['entropy']:.3f} | best_Acc@1={best_acc1:.1f}%{star}")
 
         scheduler.step()
 
@@ -158,7 +158,7 @@ def main() -> None:
         "args": vars(args),
     }, os.path.join(ckpt_dir, f"last_{args.temporal_head}_{args.t_max}.pt"))
 
-    print(f"\nDone. Best MAE={best_mae:.2f} saved to checkpoints/{best_tag}.pt")
+    print(f"\nDone. Best Acc@1={best_acc1:.1f}% saved to checkpoints/{best_tag}.pt")
 
 
 if __name__ == "__main__":
