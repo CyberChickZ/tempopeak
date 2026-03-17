@@ -85,3 +85,28 @@ def soft_cross_entropy(logits: torch.Tensor, targets: torch.Tensor) -> torch.Ten
     log_probs = F.log_softmax(logits, dim=-1)  # [B, T]
     loss = -(targets * log_probs).sum(dim=-1).mean()
     return loss
+
+
+def expected_displacement_loss(logits: torch.Tensor, t_gt: torch.Tensor,
+                                valid_len: torch.Tensor | None = None) -> torch.Tensor:
+    """Expected Displacement Loss: E[|expected_t - t_gt|].
+
+    Computes softmax over logits to get a probability distribution, then
+    calculates the expected timestep and penalises displacement from ground truth.
+
+    Args:
+        logits: [B, T] raw model outputs.
+        t_gt: [B] ground-truth hit frame indices.
+        valid_len: [B] if given, mask padding positions to -inf before softmax.
+
+    Returns:
+        Scalar loss.
+    """
+    B, T = logits.shape
+    if valid_len is not None:
+        mask = torch.arange(T, device=logits.device).unsqueeze(0) >= valid_len.unsqueeze(1)
+        logits = logits.masked_fill(mask, float("-inf"))
+    probs = F.softmax(logits, dim=-1)
+    t = torch.arange(T, device=logits.device, dtype=torch.float32)
+    expected_t = (probs * t).sum(dim=-1)          # [B]
+    return (expected_t - t_gt.float()).abs().mean()

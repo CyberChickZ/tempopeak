@@ -10,7 +10,7 @@ from torch.optim import AdamW
 
 from config import parse_args, resolve_device
 from dataloader import build_dataloaders
-from eval import compute_metrics, gaussian_target, soft_cross_entropy
+from eval import compute_metrics, gaussian_target, soft_cross_entropy, expected_displacement_loss
 from model import TempoPeakModel
 
 
@@ -37,12 +37,7 @@ def train_one_epoch(model: torch.nn.Module, loader, optimizer,
 
         logits = model(frames)  # [B, T]
 
-        if args.target_type == "gaussian":
-            targets = gaussian_target(t_gt, args.t_max, sigma=args.sigma,
-                                      valid_len=valid_len)
-            loss = soft_cross_entropy(logits, targets)
-        else:
-            loss = F.cross_entropy(logits, t_gt)
+        loss = expected_displacement_loss(logits, t_gt, valid_len=valid_len)
 
         optimizer.zero_grad()
         loss.backward()

@@ -91,7 +91,7 @@ find datasets/v1/export -name "*.jpg" | wc -l   # 应为 14946
 | `dataloader.py` | ClipDataset（支持 annot.json 导出格式 + 原始 .json+.mp4 格式） |
 | `model.py` | TempoPeakModel：frozen ResNet-18 → temporal head → Linear → logits |
 | `temporal_heads.py` | 6 种 temporal head：identity, bilstm, mstcn, transformer, mamba2, bimamba2 |
-| `eval.py` | 指标计算：MAE, Acc@1/3/5, Entropy；Gaussian soft CE loss |
+| `eval.py` | 指标计算：MAE, Acc@1/3/5, Entropy；Gaussian soft CE loss；Expected Displacement Loss |
 | `config.py` | argparse 配置 |
 
 ### Mac 本地冒烟测试
@@ -339,6 +339,44 @@ python train.py --temporal_head=bilstm --t_max=32 \
 ```
 
 注意：Identity 不用重跑，41.4% 是其 capacity ceiling。
+
+### HPC Exp A v3.2 — CUDA Mamba2 kernel (30 epochs)
+
+```bash
+source /nfs/stak/users/zhanhaoc/hpc-share/conda/bin/activate
+conda activate sam_3d_body
+cd /nfs/hpc/share/zhanhaoc/hpe/tempopeak
+git pull
+srun --gres=gpu:1 --mem=64G --pty bash
+
+# Mamba2 + BiMamba2 用真正的 CUDA Mamba2 SSD kernel（mamba_ssm 2.2.6）
+for head in mamba2 bimamba2; do
+    echo "=== $head (CUDA Mamba2) ==="
+    python train.py --temporal_head=$head --t_max=32 \
+      --data_dir=datasets/v1/export --backbone=vit_small \
+      --epochs=30 --batch_size=256 --lr=1e-3
+done
+```
+
+### HPC Exp A v3.3 — Expected Displacement Loss (30 epochs)
+
+```bash
+source /nfs/stak/users/zhanhaoc/hpc-share/conda/bin/activate
+conda activate sam_3d_body
+cd /nfs/hpc/share/zhanhaoc/hpe/tempopeak
+git pull
+srun --gres=gpu:1 --mem=64G --pty bash
+
+# EDL loss（替代 Gaussian Soft CE），3 heads 对比
+for head in mamba2 bimamba2 bilstm; do
+    echo "=== $head (EDL) ==="
+    python train.py --temporal_head=$head --t_max=32 \
+      --data_dir=datasets/v1/export --backbone=vit_small \
+      --epochs=30 --batch_size=256 --lr=1e-3
+done
+```
+
+注意：v3.3 起 `train.py` 默认使用 Expected Displacement Loss，`--target_type` 和 `--sigma` 参数不再影响训练。
 
 ### HPC Exp B — T_max Sweep (BiLSTM 确认为最优 head)
 ```bash
