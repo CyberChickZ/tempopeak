@@ -206,23 +206,34 @@ CUDA_VISIBLE_DEVICES=0 python scripts/yolo_clip_extractor.py \
 
 ## Temporal Head 训练 (SSM Validation)
 
-### Mac 本地冒烟 (CPU)
+### Mac 本地冒烟 (CPU, Feature-Mode)
 ```bash
 cd /Users/harryzhang/git/tempopeak
 
-# 单 head 冒烟
+# 单 head 冒烟 (resnet18 features)
 python3 train.py --temporal_head=identity --t_max=32 \
-  --data_dir=datasets/v1/export --epochs=1 --batch_size=4
+  --data_dir=datasets/v1/export --backbone=resnet18 --epochs=1 --batch_size=4
 
-# 4 heads 全部冒烟 (identity → bilstm → mamba2 → bimamba2)
+# 4 heads × 指定 backbone 全部冒烟
 for head in identity bilstm mamba2 bimamba2; do
     echo "=== $head ==="
     python3 train.py --temporal_head=$head --t_max=32 \
-      --data_dir=datasets/v1/export --epochs=1 --batch_size=4
+      --data_dir=datasets/v1/export --backbone=resnet18 --epochs=1 --batch_size=4
+done
+
+# 3 backbones × 4 heads 完整冒烟
+for bb in resnet18 resnet34 vit_small; do
+    for head in identity bilstm mamba2 bimamba2; do
+        echo "=== $bb / $head ==="
+        python3 train.py --temporal_head=$head --t_max=32 \
+          --data_dir=datasets/v1/export --backbone=$bb --epochs=1 --batch_size=4
+    done
 done
 ```
 
-### HPC 正式训练 (CUDA, Exp A — 4 heads × 100 epochs)
+### HPC 正式训练 (CUDA, Exp A — 4 heads × 3 backbones × 100 epochs)
+
+先提取所有 backbone 的特征（HPC CUDA 上很快）：
 ```bash
 source /nfs/stak/users/zhanhaoc/hpc-share/conda/bin/activate
 conda activate sam_3d_body
@@ -230,20 +241,33 @@ cd /nfs/hpc/share/zhanhaoc/hpe/tempopeak
 git pull
 srun --gres=gpu:1 --mem=64G --pty bash
 
-for head in identity bilstm mamba2 bimamba2; do
-    echo "=== Training $head ==="
-    python train.py --temporal_head=$head --t_max=32 \
-      --data_dir=datasets/v1/export --epochs=100 --batch_size=8
+# 提取 3 种 backbone 特征
+for bb in resnet18 resnet34 vit_small; do
+    echo "=== Extracting $bb ==="
+    python extract_features.py --data_dir=datasets/v1/export --backbone=$bb --batch_size=64
 done
 ```
 
-### HPC Exp B — T_max Sweep (用 Exp A best head)
+然后训练（特征模式，秒级/epoch）：
 ```bash
-BEST=bimamba2  # ← 替换为 Exp A 的 best head
+# Exp A: 4 heads × 3 backbones
+for bb in resnet18 resnet34 vit_small; do
+    for head in identity bilstm mamba2 bimamba2; do
+        echo "=== $bb / $head ==="
+        python train.py --temporal_head=$head --t_max=32 \
+          --data_dir=datasets/v1/export --backbone=$bb --epochs=100 --batch_size=8
+    done
+done
+```
+
+### HPC Exp B — T_max Sweep (用 Exp A best head + best backbone)
+```bash
+BEST_HEAD=bimamba2   # ← 替换为 Exp A 的 best head
+BEST_BB=vit_small    # ← 替换为 Exp A 的 best backbone
 for tmax in 16 32 64; do
     echo "=== T_max=$tmax ==="
-    python train.py --temporal_head=$BEST --t_max=$tmax \
-      --data_dir=datasets/v1/export --epochs=100 --batch_size=8
+    python train.py --temporal_head=$BEST_HEAD --t_max=$tmax \
+      --data_dir=datasets/v1/export --backbone=$BEST_BB --epochs=100 --batch_size=8
 done
 ```
 
