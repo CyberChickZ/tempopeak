@@ -47,7 +47,8 @@ class ClipDataset(Dataset):
 
     def __init__(self, data_dir: str, t_max: int = 32,
                  is_val: bool = False,
-                 use_features: bool = True, backbone: str = "resnet18"):
+                 use_features: bool = True, backbone: str = "resnet18",
+                 preload: bool = True):
         self.t_max = t_max
         self.is_val = is_val
         self.use_features = use_features  # auto-downgrade if features/ not found
@@ -58,6 +59,11 @@ class ClipDataset(Dataset):
         self._scan(data_dir)
         if not self.clips:
             raise RuntimeError(f"No clips found in {data_dir}")
+
+        # Preload all features into RAM
+        self._feature_cache: dict[str, torch.Tensor] = {}
+        if preload and self.use_features:
+            self._preload_features()
 
         # Expand to (clip_idx, hit_idx, start, n) samples
         self.samples: list[tuple[int, int, int, int]] = []
@@ -178,6 +184,21 @@ class ClipDataset(Dataset):
                     for start, n in selected:
                         self.samples.append((ci, hi_idx, start, n))
 
+    def _preload_features(self) -> None:
+        """Load all .pt feature files into RAM at startup."""
+        print("Preloading features into RAM...", flush=True)
+        for clip in self.clips:
+            for hitter in set(clip["hitters"]):
+                player_key = f"p{hitter}" if hitter in (1, 2) else "p1"
+                feat_dir = Path(clip["clip_dir"]) / "features" / self.backbone / player_key
+                if not feat_dir.exists():
+                    continue
+                for pt_path in sorted(feat_dir.glob("*.pt")):
+                    key = str(pt_path)
+                    if key not in self._feature_cache:
+                        self._feature_cache[key] = torch.load(pt_path, weights_only=True)
+        print(f"Cached {len(self._feature_cache)} feature tensors.", flush=True)
+
     def __len__(self) -> int:
         return len(self.samples)
 
@@ -220,19 +241,18 @@ class ClipDataset(Dataset):
 
     def _load_features(self, clip: dict, feat_dir: Path,
                        start: int, end: int) -> torch.Tensor:
-        """Load pre-extracted feature vectors [T, D]."""
+        """Load pre-extracted feature vectors [T, D] from cache or disk."""
         total = clip["total_frames"]
         feats = []
         for i in range(start, end):
             fi = max(0, min(i, total - 1))
-            pt_path = feat_dir / f"{fi}.pt"
-            if pt_path.exists():
-                feats.append(torch.load(pt_path, weights_only=True))
+            key = str(feat_dir / f"{fi}.pt")
+            if key in self._feature_cache:
+                feats.append(self._feature_cache[key])
             elif feats:
-                feats.append(feats[-1].clone())  # repeat last
+                feats.append(feats[-1].clone())
             else:
-                # Should not happen if extract_features.py ran correctly
-                raise FileNotFoundError(f"Missing feature: {pt_path}")
+                raise FileNotFoundError(f"Missing feature: {key}")
         return torch.stack(feats)  # [T, D]
 
     def _load_cropped_frames(self, clip: dict, start: int, end: int,
@@ -395,8 +415,8 @@ def build_dataloaders(data_dir: str, t_max: int, batch_size: int,
     """Build train/val DataLoaders with 80/20 split by clip."""
     kw = dict(use_features=use_features, backbone=backbone)
 
-    # Build full index just to get clip list
-    probe = ClipDataset(data_dir, t_max=t_max, is_val=True, **kw)
+    # Build full index just to get clip list (no preload needed)
+    probe = ClipDataset(data_dir, t_max=t_max, is_val=True, preload=False, **kw)
     clip_ids = sorted(set(c["clip_id"] for c in probe.clips))
     n_train = max(1, int(len(clip_ids) * 0.8))
     train_ids = set(clip_ids[:n_train])
@@ -425,13 +445,13 @@ def build_dataloaders(data_dir: str, t_max: int, batch_size: int,
 
     train_loader = torch.utils.data.DataLoader(
         train_ds, batch_size=batch_size, shuffle=True,
-        num_workers=8, generator=g, collate_fn=_collate,
-        pin_memory=True, persistent_workers=True,
+        num_workers=0, generator=g, collate_fn=_collate,
+        pin_memory=True,
     )
     val_loader = torch.utils.data.DataLoader(
         val_ds, batch_size=batch_size, shuffle=False,
-        num_workers=4, collate_fn=_collate,
-        pin_memory=True, persistent_workers=True,
+        num_workers=0, collate_fn=_collate,
+        pin_memory=True,
     )
     return train_loader, val_loader
 
