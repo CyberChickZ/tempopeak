@@ -1,4 +1,4 @@
-"""ClipDataset v2 — bbox-crop + variable-length windows + stratified hit position.
+"""ClipDataset v3 — enumerate all valid (start, n) windows at build time.
 
 Supports two loading modes:
   1. Image mode: load JPEGs, bbox crop, resize 448, return [T, 3, 448, 448]
@@ -21,23 +21,34 @@ from torch.utils.data import Dataset
 IMAGENET_MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
 IMAGENET_STD = np.array([0.229, 0.224, 0.225], dtype=np.float32)
 
-# --- Core constants (Section 3.4) ---
-HIT_MARGIN = 4     # exclude ±4 frames around neighbouring hits
-MIN_LEN = 8        # minimum window length
-AUG_K_TRAIN = 5    # each hit registered K times for train
-AUG_K_VAL = 1      # val: 1 deterministic sample per hit
-IMG_SIZE = 448      # crop resize target
-BBOX_PAD = 1.5      # longest side multiplier for square crop
+# --- Core constants ---
+HIT_MARGIN = 4              # exclude ±4 frames around neighbouring hits
+MIN_LEN = 8                 # minimum window length
+MAX_WINDOWS_PER_HIT = 50    # train: max windows sampled per hit
+IMG_SIZE = 448               # crop resize target
+BBOX_PAD = 1.5               # longest side multiplier for square crop
+
+
+def _enumerate_windows(hit: int, lo: int, hi: int,
+                       t_max: int, min_len: int) -> list[tuple[int, int]]:
+    """Enumerate all valid (start, n) pairs for a hit within [lo, hi]."""
+    windows = []
+    available = hi - lo + 1
+    for n in range(min_len, min(t_max, available) + 1):
+        start_lo = max(lo, hit - n + 1)
+        start_hi = min(hit, hi - n + 1)
+        for start in range(start_lo, start_hi + 1):
+            windows.append((start, n))
+    return windows
 
 
 class ClipDataset(Dataset):
     """Dataset of tennis clips with hit-frame labels and person-crop augmentation."""
 
     def __init__(self, data_dir: str, t_max: int = 32,
-                 aug_k: int = AUG_K_TRAIN, is_val: bool = False,
+                 is_val: bool = False,
                  use_features: bool = True, backbone: str = "resnet18"):
         self.t_max = t_max
-        self.aug_k = aug_k
         self.is_val = is_val
         self.use_features = use_features  # auto-downgrade if features/ not found
         self.backbone = backbone
@@ -48,8 +59,8 @@ class ClipDataset(Dataset):
         if not self.clips:
             raise RuntimeError(f"No clips found in {data_dir}")
 
-        # Expand to (clip_idx, hit_idx, aug_id) samples
-        self.samples: list[tuple[int, int, int]] = []
+        # Expand to (clip_idx, hit_idx, start, n) samples
+        self.samples: list[tuple[int, int, int, int]] = []
         self._build_samples()
 
     def _scan(self, root: str) -> None:
@@ -140,39 +151,44 @@ class ClipDataset(Dataset):
         return intervals
 
     def _build_samples(self) -> None:
-        """Register (clip_idx, hit_idx, aug_id) for each hit × K augmentations."""
+        """Enumerate all valid (start, n) windows for each hit."""
         for ci, clip in enumerate(self.clips):
-            for hi in range(len(clip["hits"])):
-                lo, hi_bound = clip["intervals"][hi]
+            for hi_idx in range(len(clip["hits"])):
+                hit = clip["hits"][hi_idx]
+                lo, hi_bound = clip["intervals"][hi_idx]
                 available = hi_bound - lo + 1
                 if available < MIN_LEN:
-                    continue  # skip hits with too little context
-                for aug_id in range(self.aug_k):
-                    self.samples.append((ci, hi, aug_id))
+                    continue
+
+                windows = _enumerate_windows(hit, lo, hi_bound,
+                                             self.t_max, MIN_LEN)
+                if not windows:
+                    continue
+
+                if self.is_val:
+                    # Pick the longest window with hit closest to center
+                    best_n = max(w[1] for w in windows)
+                    candidates = [w for w in windows if w[1] == best_n]
+                    best = min(candidates,
+                               key=lambda w: abs(w[0] + w[1] // 2 - hit))
+                    self.samples.append((ci, hi_idx, best[0], best[1]))
+                else:
+                    selected = random.sample(
+                        windows, min(len(windows), MAX_WINDOWS_PER_HIT))
+                    for start, n in selected:
+                        self.samples.append((ci, hi_idx, start, n))
 
     def __len__(self) -> int:
         return len(self.samples)
 
     def __getitem__(self, idx: int) -> dict:
-        ci, hi, aug_id = self.samples[idx]
+        ci, hi_idx, start, n = self.samples[idx]
         clip = self.clips[ci]
-        hit = clip["hits"][hi]
-        hitter = clip["hitters"][hi] if hi < len(clip["hitters"]) else 0
-        lo, hi_bound = clip["intervals"][hi]
-        available = hi_bound - lo + 1
+        hit = clip["hits"][hi_idx]
+        hitter = clip["hitters"][hi_idx] if hi_idx < len(clip["hitters"]) else 0
+        end = start + n
 
-        # Step 2: sample window length
-        max_n = min(self.t_max, available)
-        if self.is_val:
-            n = max_n  # val: use max length, deterministic
-        else:
-            n = random.randint(MIN_LEN, max_n)
-
-        # Step 3: compute start with stratified hit position
-        start = self._pick_start(hit, lo, hi_bound, n, aug_id)
-        end = start + n  # exclusive
-
-        # Step 4: load data (features or images)
+        # Load data (features or images)
         player_key = f"p{hitter}" if hitter in (1, 2) else "p1"
         feat_dir = Path(clip["clip_dir"]) / "features" / self.backbone / player_key
 
@@ -183,13 +199,12 @@ class ClipDataset(Dataset):
             data = self._load_cropped_frames(clip, start, end, hit, hitter)
             mode = "images"
 
-        # Step 5: pad to t_max
+        # Pad to t_max
         valid_len = n
         if n < self.t_max:
             pad = data[-1:].expand(self.t_max - n, *data.shape[1:])
             data = torch.cat([data, pad], dim=0)
 
-        # t_gt relative to window
         t_gt = hit - start
 
         meta = {
@@ -219,41 +234,6 @@ class ClipDataset(Dataset):
                 # Should not happen if extract_features.py ran correctly
                 raise FileNotFoundError(f"Missing feature: {pt_path}")
         return torch.stack(feats)  # [T, D]
-
-    def _pick_start(self, hit: int, lo: int, hi: int,
-                    n: int, aug_id: int) -> int:
-        """Pick window start with stratified tier positioning (Section 3.2)."""
-        # start must satisfy: lo <= start, start + n - 1 <= hi, start <= hit < start + n
-        start_lo = max(lo, hit - n + 1)
-        start_hi = min(hit, hi - n + 1)
-        start_hi = max(start_lo, start_hi)
-
-        if self.is_val:
-            # Deterministic: center hit in window
-            return max(start_lo, min(hit - n // 2, start_hi))
-
-        tier = aug_id % 3
-        span = start_hi - start_lo
-        if span <= 0:
-            return start_lo
-
-        if tier == 0:
-            # Hit in front 1/3 of window → start close to hit (high start)
-            t_lo = start_lo + (span * 2) // 3
-            t_hi = start_hi
-        elif tier == 1:
-            # Hit in middle
-            t_lo = start_lo + span // 3
-            t_hi = start_lo + (span * 2) // 3
-        else:
-            # Hit in back 2/3 → start far before hit (low start)
-            t_lo = start_lo
-            t_hi = start_lo + span // 3
-
-        t_lo = max(start_lo, t_lo)
-        t_hi = min(start_hi, t_hi)
-        t_hi = max(t_lo, t_hi)
-        return random.randint(t_lo, t_hi)
 
     def _load_cropped_frames(self, clip: dict, start: int, end: int,
                              hit: int, hitter: int) -> torch.Tensor:
@@ -416,14 +396,14 @@ def build_dataloaders(data_dir: str, t_max: int, batch_size: int,
     kw = dict(use_features=use_features, backbone=backbone)
 
     # Build full index just to get clip list
-    probe = ClipDataset(data_dir, t_max=t_max, aug_k=1, **kw)
+    probe = ClipDataset(data_dir, t_max=t_max, is_val=True, **kw)
     clip_ids = sorted(set(c["clip_id"] for c in probe.clips))
     n_train = max(1, int(len(clip_ids) * 0.8))
     train_ids = set(clip_ids[:n_train])
 
-    # Build separate datasets with correct aug_k
-    train_ds = ClipDataset(data_dir, t_max=t_max, aug_k=AUG_K_TRAIN, **kw)
-    val_ds = ClipDataset(data_dir, t_max=t_max, aug_k=AUG_K_VAL, is_val=True, **kw)
+    # Build separate datasets
+    train_ds = ClipDataset(data_dir, t_max=t_max, **kw)
+    val_ds = ClipDataset(data_dir, t_max=t_max, is_val=True, **kw)
 
     # Filter samples by clip split
     train_ds.samples = [

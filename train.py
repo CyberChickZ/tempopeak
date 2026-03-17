@@ -111,10 +111,13 @@ def main() -> None:
     total = sum(p.numel() for p in model.parameters())
     print(f"Parameters: {trainable:,} trainable / {total:,} total")
 
-    # Optimizer
+    # Optimizer + scheduler
     optimizer = AdamW(
         [p for p in model.parameters() if p.requires_grad],
         lr=args.lr, weight_decay=args.weight_decay,
+    )
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+        optimizer, T_max=args.epochs, eta_min=1e-5,
     )
 
     # Checkpointing
@@ -144,6 +147,8 @@ def main() -> None:
               f"MAE={metrics['mae']:.2f} Acc@1={metrics['acc1']:.1f}% "
               f"Acc@3={metrics['acc3']:.1f}% Acc@5={metrics['acc5']:.1f}% "
               f"Entropy={metrics['entropy']:.3f} | best_MAE={best_mae:.2f}{star}")
+
+        scheduler.step()
 
     # Save last checkpoint
     torch.save({
