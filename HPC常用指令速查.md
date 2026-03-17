@@ -262,5 +262,67 @@ done
 | `--data_dir` | (必填) | 数据根目录，支持 export 或 raw 格式 |
 | `--seed` | 42 | 随机种子 |
 
+### 新增参数 (v2)
+
+| 参数 | 默认值 | 说明 |
+|---|---|---|
+| `--backbone` | `resnet18` | `{resnet18, resnet34, vit_small}` — 用于查找 features/ 目录 |
+| `--no_features` | (flag) | 强制 image mode，不使用预提取特征 |
+
 ### Checkpoint 输出
 - Best model: `checkpoints/best_{head}_{t_max}.pt`
+
+## 预提取特征 (extract_features.py)
+
+训练前先提取 backbone 特征，避免每 epoch 重复过 ResNet/ViT。
+
+### 目录结构
+```
+export/0001/00001/
+├── frames/                          # 原始 JPEG
+├── features/
+│   ├── resnet18/p1/*.pt             # ResNet-18 特征 [512]
+│   ├── resnet18/p2/*.pt
+│   ├── resnet34/p1/*.pt             # ResNet-34 特征 [512]
+│   └── vit_small/p1/*.pt            # ViT-Small 特征 [768]
+└── annot.json
+```
+
+### Mac 本地提取
+```bash
+cd /Users/harryzhang/git/tempopeak
+
+# ResNet-18 (D=512)
+python3 extract_features.py --data_dir=datasets/v1/export --backbone=resnet18 --batch_size=16
+
+# ResNet-34 (D=512)
+python3 extract_features.py --data_dir=datasets/v1/export --backbone=resnet34 --batch_size=16
+
+# ViT-Small (D=768)
+python3 extract_features.py --data_dir=datasets/v1/export --backbone=vit_small --batch_size=8
+```
+
+### HPC 提取 (CUDA)
+```bash
+cd /nfs/hpc/share/zhanhaoc/hpe/tempopeak
+python extract_features.py --data_dir=datasets/v1/export --backbone=resnet18 --batch_size=64
+python extract_features.py --data_dir=datasets/v1/export --backbone=vit_small --batch_size=32
+```
+
+### 特征模式训练
+```bash
+# 自动检测 features/ 目录（如果存在则跳过 backbone）
+python train.py --temporal_head=identity --t_max=32 --data_dir=datasets/v1/export --backbone=resnet18
+
+# 强制 image mode（忽略预提取特征）
+python train.py --temporal_head=identity --t_max=32 --data_dir=datasets/v1/export --no_features
+```
+
+### extract_features.py 参数
+
+| 参数 | 默认值 | 说明 |
+|---|---|---|
+| `--data_dir` | (必填) | 数据根目录，递归查找 annot.json |
+| `--backbone` | `resnet18` | `{resnet18, resnet34, vit_small}` |
+| `--batch_size` | `32` | 每批处理帧数 |
+| `--device` | `auto` | `auto` = cuda > cpu |

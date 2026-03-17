@@ -88,13 +88,27 @@ def main() -> None:
     print(f"Device: {device} | Head: {args.temporal_head} | T_max: {args.t_max} "
           f"| Target: {args.target_type} | LR: {args.lr}")
 
-    # Data
+    # Data — auto-detect feature mode
+    use_features = not args.no_features
     train_loader, val_loader = build_dataloaders(
-        args.data_dir, args.t_max, args.batch_size, seed=args.seed)
-    print(f"Train batches: {len(train_loader)} | Val batches: {len(val_loader)}")
+        args.data_dir, args.t_max, args.batch_size, seed=args.seed,
+        use_features=use_features, backbone=args.backbone)
+
+    # Detect if features were actually loaded (check first batch shape)
+    sample = train_loader.dataset[train_loader.dataset.samples[0][0]
+                                  if hasattr(train_loader.dataset, 'samples')
+                                  else 0]
+    feature_mode = sample["frames"].dim() == 2  # [T, D] vs [T, 3, H, W]
+    feat_dim = sample["frames"].shape[-1] if feature_mode else 512
+    mode_str = f"features (D={feat_dim})" if feature_mode else "images"
+    print(f"Train batches: {len(train_loader)} | Val batches: {len(val_loader)} | Mode: {mode_str}")
 
     # Model
-    model = TempoPeakModel(temporal_head=args.temporal_head).to(device)
+    model = TempoPeakModel(
+        temporal_head=args.temporal_head,
+        feat_dim=feat_dim,
+        use_backbone=not feature_mode,
+    ).to(device)
     trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
     total = sum(p.numel() for p in model.parameters())
     print(f"Parameters: {trainable:,} trainable / {total:,} total")

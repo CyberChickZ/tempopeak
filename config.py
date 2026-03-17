@@ -27,6 +27,11 @@ def parse_args() -> argparse.Namespace:
 
     # Data
     p.add_argument("--data_dir", type=str, required=True)
+    p.add_argument("--backbone", type=str, default="resnet18",
+                   choices=["resnet18", "resnet34", "vit_small"],
+                   help="backbone for feature extraction / feature dir lookup")
+    p.add_argument("--no_features", action="store_true",
+                   help="force image mode, skip pre-extracted features")
 
     # Device
     p.add_argument("--device", type=str, default="auto",

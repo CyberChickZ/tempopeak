@@ -1,4 +1,10 @@
-"""ClipDataset v2 — bbox-crop + variable-length windows + stratified hit position."""
+"""ClipDataset v2 — bbox-crop + variable-length windows + stratified hit position.
+
+Supports two loading modes:
+  1. Image mode: load JPEGs, bbox crop, resize 448, return [T, 3, 448, 448]
+  2. Feature mode: load pre-extracted .pt tensors, return [T, D] (e.g. D=512)
+     Feature mode is auto-detected when features_p*/ dirs exist alongside frames/.
+"""
 
 import json
 import os
@@ -28,10 +34,13 @@ class ClipDataset(Dataset):
     """Dataset of tennis clips with hit-frame labels and person-crop augmentation."""
 
     def __init__(self, data_dir: str, t_max: int = 32,
-                 aug_k: int = AUG_K_TRAIN, is_val: bool = False):
+                 aug_k: int = AUG_K_TRAIN, is_val: bool = False,
+                 use_features: bool = True, backbone: str = "resnet18"):
         self.t_max = t_max
         self.aug_k = aug_k
         self.is_val = is_val
+        self.use_features = use_features  # auto-downgrade if features/ not found
+        self.backbone = backbone
 
         # Build index: list of clip metadata dicts
         self.clips: list[dict] = []
@@ -163,14 +172,22 @@ class ClipDataset(Dataset):
         start = self._pick_start(hit, lo, hi_bound, n, aug_id)
         end = start + n  # exclusive
 
-        # Step 4: load frames with bbox crop
-        frames = self._load_cropped_frames(clip, start, end, hit, hitter)
+        # Step 4: load data (features or images)
+        player_key = f"p{hitter}" if hitter in (1, 2) else "p1"
+        feat_dir = Path(clip["clip_dir"]) / "features" / self.backbone / player_key
+
+        if self.use_features and feat_dir.exists():
+            data = self._load_features(clip, feat_dir, start, end)
+            mode = "features"
+        else:
+            data = self._load_cropped_frames(clip, start, end, hit, hitter)
+            mode = "images"
 
         # Step 5: pad to t_max
         valid_len = n
         if n < self.t_max:
-            pad_frame = frames[-1:].expand(self.t_max - n, -1, -1, -1)
-            frames = torch.cat([frames, pad_frame], dim=0)
+            pad = data[-1:].expand(self.t_max - n, *data.shape[1:])
+            data = torch.cat([data, pad], dim=0)
 
         # t_gt relative to window
         t_gt = hit - start
@@ -182,8 +199,26 @@ class ClipDataset(Dataset):
             "start": start,
             "valid_len": valid_len,
             "total_frames": clip["total_frames"],
+            "mode": mode,
         }
-        return {"frames": frames, "t_gt": t_gt, "valid_len": valid_len, "meta": meta}
+        return {"frames": data, "t_gt": t_gt, "valid_len": valid_len, "meta": meta}
+
+    def _load_features(self, clip: dict, feat_dir: Path,
+                       start: int, end: int) -> torch.Tensor:
+        """Load pre-extracted feature vectors [T, D]."""
+        total = clip["total_frames"]
+        feats = []
+        for i in range(start, end):
+            fi = max(0, min(i, total - 1))
+            pt_path = feat_dir / f"{fi}.pt"
+            if pt_path.exists():
+                feats.append(torch.load(pt_path, weights_only=True))
+            elif feats:
+                feats.append(feats[-1].clone())  # repeat last
+            else:
+                # Should not happen if extract_features.py ran correctly
+                raise FileNotFoundError(f"Missing feature: {pt_path}")
+        return torch.stack(feats)  # [T, D]
 
     def _pick_start(self, hit: int, lo: int, hi: int,
                     n: int, aug_id: int) -> int:
@@ -375,17 +410,20 @@ class ClipDataset(Dataset):
 
 
 def build_dataloaders(data_dir: str, t_max: int, batch_size: int,
-                      seed: int = 42) -> tuple:
+                      seed: int = 42, use_features: bool = True,
+                      backbone: str = "resnet18") -> tuple:
     """Build train/val DataLoaders with 80/20 split by clip."""
+    kw = dict(use_features=use_features, backbone=backbone)
+
     # Build full index just to get clip list
-    probe = ClipDataset(data_dir, t_max=t_max, aug_k=1)
+    probe = ClipDataset(data_dir, t_max=t_max, aug_k=1, **kw)
     clip_ids = sorted(set(c["clip_id"] for c in probe.clips))
     n_train = max(1, int(len(clip_ids) * 0.8))
     train_ids = set(clip_ids[:n_train])
 
     # Build separate datasets with correct aug_k
-    train_ds = ClipDataset(data_dir, t_max=t_max, aug_k=AUG_K_TRAIN)
-    val_ds = ClipDataset(data_dir, t_max=t_max, aug_k=AUG_K_VAL, is_val=True)
+    train_ds = ClipDataset(data_dir, t_max=t_max, aug_k=AUG_K_TRAIN, **kw)
+    val_ds = ClipDataset(data_dir, t_max=t_max, aug_k=AUG_K_VAL, is_val=True, **kw)
 
     # Filter samples by clip split
     train_ds.samples = [
