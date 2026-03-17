@@ -235,3 +235,4 @@ datasets/yolo_refine/
 *.mp4
 *.pt
 data/clips_tmp/
+*.tar.gz
