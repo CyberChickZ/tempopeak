@@ -30,7 +30,8 @@ class BiLSTMHead(nn.Module):
         super().__init__()
         self.proj = nn.Linear(d_in, hidden)
         self.lstm = nn.LSTM(hidden, hidden, num_layers=layers,
-                            batch_first=True, bidirectional=True)
+                            batch_first=True, bidirectional=True,
+                            dropout=0.3)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.proj(x)

@@ -22,8 +22,8 @@ IMAGENET_MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
 IMAGENET_STD = np.array([0.229, 0.224, 0.225], dtype=np.float32)
 
 # --- Core constants ---
-HIT_MARGIN = 4              # exclude ±4 frames around neighbouring hits
-MIN_LEN = 8                 # minimum window length
+HIT_MARGIN = 6              # exclude ±6 frames around neighbouring hits
+MIN_LEN = 12                # minimum window length
 MAX_WINDOWS_PER_HIT = 50    # train: max windows sampled per hit
 IMG_SIZE = 448               # crop resize target
 BBOX_PAD = 1.5               # longest side multiplier for square crop

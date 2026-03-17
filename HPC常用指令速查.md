@@ -378,7 +378,32 @@ done
 
 注意：v3.3 起 `train.py` 默认使用 Expected Displacement Loss，`--target_type` 和 `--sigma` 参数不再影响训练。
 
-### HPC Exp B — T_max Sweep (BiMamba2 + EDL 确认为最优组合)
+### HPC Exp B — BiLSTM+dropout 控制变量 + 数据清洗 (30 epochs)
+
+```bash
+source /nfs/stak/users/zhanhaoc/hpc-share/conda/bin/activate
+conda activate sam_3d_body
+cd /nfs/hpc/share/zhanhaoc/hpe/tempopeak
+git pull
+srun --gres=gpu:1 --mem=64G --pty bash
+
+# Exp B: BiLSTM + dropout=0.3 + EDL + smoothed eval
+python train.py --temporal_head=bilstm --t_max=32 \
+  --data_dir=datasets/v1/export --backbone=vit_small \
+  --epochs=30 --batch_size=256 --lr=1e-3
+
+# Exp B 对照：BiMamba2 (HIT_MARGIN=6 后 baseline)
+python train.py --temporal_head=bimamba2 --t_max=32 \
+  --data_dir=datasets/v1/export --backbone=vit_small \
+  --epochs=30 --batch_size=256 --lr=1e-3
+```
+
+代码变更（v3.3 → Exp B）：
+- `temporal_heads.py`：BiLSTM LSTM `dropout=0.3`（层间 dropout）
+- `dataloader.py`：`HIT_MARGIN` 4→6，`MIN_LEN` 8→12（过滤低质量短窗口）
+- `eval.py`：`compute_metrics` 入口加 `gaussian_filter1d(sigma=1.5)` 平滑 logits
+
+### HPC Exp B2 — T_max Sweep (BiMamba2 + EDL 确认为最优组合)
 ```bash
 source /nfs/stak/users/zhanhaoc/hpc-share/conda/bin/activate
 conda activate sam_3d_body
@@ -422,9 +447,11 @@ done
 | 版本 | 特征 | Train Samples (resnet18) |
 |---|---|---|
 | v2 | `AUG_K_TRAIN=5`，每 hit 注册 5 个随机窗口 | ~890 |
-| **v3 (当前)** | `_enumerate_windows()` 枚举所有合法窗口，`MAX_WINDOWS_PER_HIT=50` | **~5996** |
+| v3 | `_enumerate_windows()` 枚举所有合法窗口，`MAX_WINDOWS_PER_HIT=50`，`HIT_MARGIN=4`，`MIN_LEN=8` | ~5996 |
+| **v3.1 (当前)** | 同 v3，`HIT_MARGIN` 4→**6**，`MIN_LEN` 8→**12**（过滤低质量短窗口） | **待确认** |
 
 v3 变化：`__getitem__` 零随机性，所有 `(start, n)` 在 `_build_samples()` 时确定。Val 使用最长窗口 + hit 居中，每 hit 1 个确定性样本。
+v3.1 变化：增大安全边距（HIT_MARGIN 6）和最小窗口长度（MIN_LEN 12），过滤掉 gap<25 的 hit pair 产生的低质量样本。
 
 ### DataLoader I/O 参数（硬编码，非命令行参数）
 

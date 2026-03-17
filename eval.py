@@ -2,6 +2,7 @@
 
 import torch
 import torch.nn.functional as F
+from scipy.ndimage import gaussian_filter1d
 
 
 def compute_metrics(logits: torch.Tensor, t_gt: torch.Tensor,
@@ -16,6 +17,11 @@ def compute_metrics(logits: torch.Tensor, t_gt: torch.Tensor,
     Returns:
         Dict with mae, acc1, acc3, acc5, entropy.
     """
+    # Gaussian smoothing on logits before any computation
+    logits_np = logits.cpu().float().numpy()
+    logits_np = gaussian_filter1d(logits_np, sigma=1.5, axis=-1)
+    logits = torch.from_numpy(logits_np).to(logits.device)
+
     B, T = logits.shape
 
     # Mask padding positions to -inf before softmax
