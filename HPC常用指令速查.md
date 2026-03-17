@@ -378,7 +378,7 @@ done
 
 注意：v3.3 起 `train.py` 默认使用 Expected Displacement Loss，`--target_type` 和 `--sigma` 参数不再影响训练。
 
-### HPC Exp B — T_max Sweep (BiLSTM 确认为最优 head)
+### HPC Exp B — T_max Sweep (BiMamba2 + EDL 确认为最优组合)
 ```bash
 source /nfs/stak/users/zhanhaoc/hpc-share/conda/bin/activate
 conda activate sam_3d_body
@@ -386,10 +386,10 @@ cd /nfs/hpc/share/zhanhaoc/hpe/tempopeak
 git pull
 srun --gres=gpu:1 --mem=64G --pty bash
 
-# BiLSTM + vit_small，sweep T_max
+# BiMamba2 + EDL + vit_small，sweep T_max
 for tmax in 16 32 64; do
     echo "=== T_max=$tmax ==="
-    python train.py --temporal_head=bilstm --t_max=$tmax \
+    python train.py --temporal_head=bimamba2 --t_max=$tmax \
       --data_dir=datasets/v1/export --backbone=vit_small \
       --epochs=30 --batch_size=256 --lr=1e-3
 done
