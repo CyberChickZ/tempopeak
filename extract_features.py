@@ -12,7 +12,8 @@ import torchvision.models as models
 from torchvision import transforms
 
 BBOX_PAD = 1.5
-IMG_SIZE = 448
+# Per-backbone image size: ViT-B-16 requires exactly 224; ResNets can use 448
+BACKBONE_IMG_SIZE = {"resnet18": 448, "resnet34": 448, "vit_small": 224}
 
 IMAGENET_TRANSFORM = transforms.Compose([
     transforms.ToTensor(),
@@ -63,8 +64,8 @@ def build_backbone(name: str, device: str) -> tuple[nn.Module, int]:
     return backbone, feat_dim
 
 
-def crop_square(img: np.ndarray, bbox: dict | None) -> np.ndarray:
-    """Crop square around bbox center, resize to IMG_SIZE."""
+def crop_square(img: np.ndarray, bbox: dict | None, img_size: int = 448) -> np.ndarray:
+    """Crop square around bbox center, resize to img_size."""
     H, W = img.shape[:2]
     if bbox is None:
         side = min(H, W)
@@ -86,7 +87,7 @@ def crop_square(img: np.ndarray, bbox: dict | None) -> np.ndarray:
     crop = img[y0:y1c, x0:x1c]
     if crop.shape[0] == 0 or crop.shape[1] == 0:
         crop = img
-    return cv2.resize(crop, (IMG_SIZE, IMG_SIZE))
+    return cv2.resize(crop, (img_size, img_size))
 
 
 def get_bbox(frames_dict: dict, fi: int, player: str) -> dict | None:
@@ -115,7 +116,8 @@ def get_bbox(frames_dict: dict, fi: int, player: str) -> dict | None:
 
 
 def extract_clip(clip_dir: Path, annot: dict, backbone: nn.Module,
-                 backbone_name: str, device: str, batch_size: int) -> None:
+                 backbone_name: str, device: str, batch_size: int,
+                 img_size: int = 448) -> None:
     """Extract features for all frames × all hitters in a clip."""
     frames_dir = clip_dir / "frames"
     total = annot.get("total_frames", 0)
@@ -158,7 +160,7 @@ def extract_clip(clip_dir: Path, annot: dict, backbone: nn.Module,
                     continue
 
                 bbox = get_bbox(frames_dict, fi, player)
-                crop = crop_square(img, bbox)
+                crop = crop_square(img, bbox, img_size=img_size)
                 tensors.append(IMAGENET_TRANSFORM(crop))
                 valid_idx.append(fi)
 
@@ -186,7 +188,8 @@ def main():
 
     device = "cuda" if args.device == "auto" and torch.cuda.is_available() else "cpu"
     backbone, feat_dim = build_backbone(args.backbone, device)
-    print(f"Backbone: {args.backbone} | D={feat_dim} | Device: {device}")
+    img_size = BACKBONE_IMG_SIZE.get(args.backbone, 448)
+    print(f"Backbone: {args.backbone} | D={feat_dim} | IMG={img_size} | Device: {device}")
 
     root = Path(args.data_dir)
     annots = sorted(root.rglob("annot.json"))
@@ -198,7 +201,8 @@ def main():
             annot = json.load(f)
         total = annot.get("total_frames", 0)
         print(f"[{i+1}/{len(annots)}] {clip_dir.name}: {total} frames ...", end=" ", flush=True)
-        extract_clip(clip_dir, annot, backbone, args.backbone, device, args.batch_size)
+        extract_clip(clip_dir, annot, backbone, args.backbone, device, args.batch_size,
+                     img_size=img_size)
         print("done")
 
     print(f"\nAll done. Features at: features/{args.backbone}/p*/")
