@@ -31,13 +31,15 @@ def train_one_epoch(model: torch.nn.Module, loader, optimizer,
     n_batches = 0
 
     for batch in loader:
-        frames = batch["frames"].to(device)   # [B, T, 3, 224, 224]
-        t_gt = batch["t_gt"].to(device)        # [B]
+        frames = batch["frames"].to(device)       # [B, T, 3, IMG, IMG]
+        t_gt = batch["t_gt"].to(device)            # [B]
+        valid_len = batch["valid_len"].to(device)  # [B]
 
         logits = model(frames)  # [B, T]
 
         if args.target_type == "gaussian":
-            targets = gaussian_target(t_gt, args.t_max, sigma=args.sigma)
+            targets = gaussian_target(t_gt, args.t_max, sigma=args.sigma,
+                                      valid_len=valid_len)
             loss = soft_cross_entropy(logits, targets)
         else:
             loss = F.cross_entropy(logits, t_gt)
@@ -58,20 +60,24 @@ def evaluate(model: torch.nn.Module, loader, device: str) -> dict[str, float]:
     model.eval()
     all_logits = []
     all_tgt = []
+    all_vlen = []
 
     for batch in loader:
         frames = batch["frames"].to(device)
         t_gt = batch["t_gt"].to(device)
+        valid_len = batch["valid_len"].to(device)
         logits = model(frames)
         all_logits.append(logits)
         all_tgt.append(t_gt)
+        all_vlen.append(valid_len)
 
     if not all_logits:
         return {"mae": 999, "acc1": 0, "acc3": 0, "acc5": 0, "entropy": 0}
 
     logits = torch.cat(all_logits, dim=0)
     t_gt = torch.cat(all_tgt, dim=0)
-    return compute_metrics(logits, t_gt)
+    valid_len = torch.cat(all_vlen, dim=0)
+    return compute_metrics(logits, t_gt, valid_len=valid_len)
 
 
 def main() -> None:

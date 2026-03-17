@@ -4,17 +4,25 @@ import torch
 import torch.nn.functional as F
 
 
-def compute_metrics(logits: torch.Tensor, t_gt: torch.Tensor) -> dict[str, float]:
+def compute_metrics(logits: torch.Tensor, t_gt: torch.Tensor,
+                    valid_len: torch.Tensor | None = None) -> dict[str, float]:
     """Compute all evaluation metrics.
 
     Args:
         logits: [B, T] raw model outputs.
         t_gt: [B] ground-truth hit frame indices.
+        valid_len: [B] real frame count per sample (mask padding).
 
     Returns:
         Dict with mae, acc1, acc3, acc5, entropy.
     """
     B, T = logits.shape
+
+    # Mask padding positions to -inf before softmax
+    if valid_len is not None:
+        mask = torch.arange(T, device=logits.device).unsqueeze(0) >= valid_len.unsqueeze(1)
+        logits = logits.masked_fill(mask, float("-inf"))
+
     probs = F.softmax(logits, dim=-1)  # [B, T]
     preds = probs.argmax(dim=-1)  # [B]
 
@@ -38,14 +46,15 @@ def compute_metrics(logits: torch.Tensor, t_gt: torch.Tensor) -> dict[str, float
     }
 
 
-def gaussian_target(t_gt: torch.Tensor, t_max: int,
-                    sigma: float = 2.0) -> torch.Tensor:
+def gaussian_target(t_gt: torch.Tensor, t_max: int, sigma: float = 2.0,
+                    valid_len: torch.Tensor | None = None) -> torch.Tensor:
     """Create Gaussian soft label centred at t_gt.
 
     Args:
         t_gt: [B] integer ground-truth indices.
         t_max: sequence length T.
         sigma: Gaussian standard deviation.
+        valid_len: [B] if given, zero out padding positions before normalising.
 
     Returns:
         [B, T] normalised probability distribution.
@@ -53,7 +62,13 @@ def gaussian_target(t_gt: torch.Tensor, t_max: int,
     t = torch.arange(t_max, device=t_gt.device, dtype=torch.float32)  # [T]
     t_gt_f = t_gt.float().unsqueeze(-1)  # [B, 1]
     q = torch.exp(-((t.unsqueeze(0) - t_gt_f) ** 2) / (2 * sigma ** 2))  # [B, T]
-    q = q / q.sum(dim=-1, keepdim=True)  # normalise
+
+    # Zero out padding
+    if valid_len is not None:
+        mask = torch.arange(t_max, device=q.device).unsqueeze(0) >= valid_len.unsqueeze(1)
+        q = q.masked_fill(mask, 0.0)
+
+    q = q / q.sum(dim=-1, keepdim=True).clamp(min=1e-8)
     return q
 
 
