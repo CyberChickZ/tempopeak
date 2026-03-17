@@ -597,8 +597,9 @@ header .primary-btn {
 }
 
 .clip-list-item:hover { background: #e2e8f0; }
-.clip-list-item.active { border-color: #3b82f6; background: #eff6ff; }
 .clip-list-item.annotated { border-color: #10b981; background: #f0fdf4; }
+.clip-list-item.active { border-color: #3b82f6; background: #eff6ff; }
+.clip-list-item.active.annotated { border-color: #3b82f6; background: #dbeafe; }
 
 /* Main clip area */
 #clip-main {

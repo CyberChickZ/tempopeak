@@ -1545,7 +1545,6 @@ let plHitters = [];         // [0|1|2, ...] same length as plHits, 0=unmarked, 1
 let plKeyFrames = {};       // {frameIdx: {p1: detIdx|{x,y}|null, p2: detIdx|{x,y}|null}}
 let plResolved = {};       // {frameIdx: {p1: {x1,y1,x2,y2}|null, p2: {...}|null}}
 let plDetections = {};      // {frameIdx(int): [{id, x1, y1, x2, y2}]}
-let plWhitelist = null;     // null = disabled, Set(trackId) = enabled
 let plHistory = [];
 let plDirty = false;        // Track unsaved changes
 let plDetPollTimer = null;
@@ -1586,22 +1585,15 @@ function plPropagate() {
 
     // Get all keyframes sorted
     const keyFrameNums = Object.keys(plKeyFrames).map(Number).sort((a, b) => a - b);
-    if (keyFrameNums.length === 0) {
-        // Auto-calculate whitelist even with no keyframes
-        plWhitelist = null;
-        return;
-    }
+    if (keyFrameNums.length === 0) return;
 
     // Get all frame numbers that have detections
     const allFrames = Object.keys(plDetections).map(Number).sort((a, b) => a - b);
-    if (allFrames.length === 0) {
-        plWhitelist = null;
-        return;
-    }
+    if (allFrames.length === 0) return;
 
     // Helper: get box from keyframe value (det index, manual dot, or manual box)
     function getKfBox(kfValue, frame) {
-        if (kfValue == null) return null;
+        if (kfValue == null || kfValue === 'skip') return null;
         if (typeof kfValue === 'number') {
             // Det index
             const dets = plDetections[frame];
@@ -1620,12 +1612,6 @@ function plPropagate() {
             }
         }
         return null;
-    }
-
-    // Helper: filter detections by whitelist
-    function filterDets(dets) {
-        if (!plWhitelist) return dets;
-        return dets.filter(d => plWhitelist.has(d.id));
     }
 
     // For each role (p1, p2), propagate from keyframes
@@ -1654,22 +1640,17 @@ function plPropagate() {
             // Propagate forward
             for (let i = startIdx; i < allFrames.length; i++) {
                 const f = allFrames[i];
+
+                // Stop at next keyframe that has this role set (barrier)
+                if (i > startIdx && plKeyFrames[f] && plKeyFrames[f][role] != null) break;
+
                 const dets = plDetections[f];
                 if (!dets || dets.length === 0) continue;
 
-                // Try whitelist first
-                let searchDets = filterDets(dets);
                 let bestDet = null, bestIou = 0;
-                for (const det of searchDets) {
+                for (const det of dets) {
                     const iouVal = iou(currentBox, det);
                     if (iouVal > bestIou) { bestIou = iouVal; bestDet = det; }
-                }
-                // If whitelist match failed, try ALL dets
-                if (bestIou <= 0.3 && searchDets.length < dets.length) {
-                    for (const det of dets) {
-                        const iouVal = iou(currentBox, det);
-                        if (iouVal > bestIou) { bestIou = iouVal; bestDet = det; }
-                    }
                 }
 
                 // Skip if already resolved by another anchor with higher priority
@@ -1681,11 +1662,6 @@ function plPropagate() {
                     if (plResolved[f][otherRole]) {
                         const otherIou = iou(plResolved[f][otherRole], bestDet);
                         if (otherIou > 0.8 && i !== startIdx) continue;
-                    }
-
-                    // Auto-expand whitelist if matched from non-whitelist det
-                    if (plWhitelist && bestDet.id !== undefined && !plWhitelist.has(bestDet.id)) {
-                        plWhitelist.add(bestDet.id);
                     }
 
                     plResolved[f][role] = { x1: bestDet.x1, y1: bestDet.y1, x2: bestDet.x2, y2: bestDet.y2 };
@@ -1700,34 +1676,24 @@ function plPropagate() {
             currentBox = anchor.box;
             for (let i = startIdx - 1; i >= 0; i--) {
                 const f = allFrames[i];
+
+                // Stop at previous keyframe that has this role set (barrier)
+                if (plKeyFrames[f] && plKeyFrames[f][role] != null) break;
+
                 const dets = plDetections[f];
                 if (!dets || dets.length === 0) continue;
 
                 if (plResolved[f][role]) continue;
 
-                // Try whitelist first
-                let searchDets = filterDets(dets);
                 let bestDet = null, bestIou = 0;
-                for (const det of searchDets) {
+                for (const det of dets) {
                     const iouVal = iou(currentBox, det);
                     if (iouVal > bestIou) { bestIou = iouVal; bestDet = det; }
-                }
-                // If whitelist match failed, try ALL dets
-                if (bestIou <= 0.3 && searchDets.length < dets.length) {
-                    for (const det of dets) {
-                        const iouVal = iou(currentBox, det);
-                        if (iouVal > bestIou) { bestIou = iouVal; bestDet = det; }
-                    }
                 }
 
                 if (bestIou > 0.3 && bestDet) {
                     const otherRole = role === 'p1' ? 'p2' : 'p1';
                     if (plResolved[f][otherRole] && iou(plResolved[f][otherRole], bestDet) > 0.8) continue;
-
-                    // Auto-expand whitelist if matched from non-whitelist det
-                    if (plWhitelist && bestDet.id !== undefined && !plWhitelist.has(bestDet.id)) {
-                        plWhitelist.add(bestDet.id);
-                    }
 
                     plResolved[f][role] = { x1: bestDet.x1, y1: bestDet.y1, x2: bestDet.x2, y2: bestDet.y2 };
                     currentBox = bestDet;
@@ -1736,24 +1702,6 @@ function plPropagate() {
         }
     }
 
-    // Auto-calculate whitelist from keyframes
-    // Only enable when BOTH P1 and P2 have det-index keyframes
-    const wlP1 = new Set();
-    const wlP2 = new Set();
-    for (const [frameStr, kf] of Object.entries(plKeyFrames)) {
-        const f = parseInt(frameStr);
-        const dets = plDetections[f];
-        if (!dets) continue;
-        // Only count det index keyframes (not manual dots)
-        if (kf.p1 != null && typeof kf.p1 === 'number' && dets[kf.p1]) wlP1.add(dets[kf.p1].id);
-        if (kf.p2 != null && typeof kf.p2 === 'number' && dets[kf.p2]) wlP2.add(dets[kf.p2].id);
-    }
-    // Only enable whitelist when BOTH P1 and P2 have been assigned
-    if (wlP1.size > 0 && wlP2.size > 0) {
-        plWhitelist = new Set([...wlP1, ...wlP2]);
-    } else {
-        plWhitelist = null;
-    }
 }
 
 // ── Seek ──────────────────────────────────────────────────────
@@ -1828,7 +1776,6 @@ function plDrawCanvas() {
             let lineWidth = 1;
             let isHitter = false;
             let isKeyframe = false;
-            let isWhitelistFiltered = plWhitelist && !plWhitelist.has(det.id);
 
             // Only mark ONE det as P1, ONE as P2 (prevent duplicate highlights from overlapping detections)
             if (!p1Drawn && resolved.p1 && iou(det, resolved.p1) > 0.5) {
@@ -1847,11 +1794,6 @@ function plDrawCanvas() {
                 if (currentHitter === 2) isHitter = true;
                 if (keyframe && typeof keyframe.p2 === 'number' && keyframe.p2 === detIdx) isKeyframe = true;
                 p2Drawn = true;
-            }
-            // Whitelist filtered boxes shown dimmer
-            else if (isWhitelistFiltered) {
-                color = '#374151'; // very dim gray
-                lineWidth = 1;
             }
 
             // Draw box
@@ -2036,7 +1978,6 @@ function plSaveToMemory() {
     clip.key_frames = JSON.parse(JSON.stringify(plKeyFrames));
     clip.hitters = [...plHitters];
     clip.resolved = JSON.parse(JSON.stringify(plResolved));
-    clip.whitelist = plWhitelist ? [...plWhitelist] : null;
 }
 
 // ── Clip list ─────────────────────────────────────────────────
@@ -2081,8 +2022,10 @@ function plRenderClipList() {
 async function plSelectClip(idx) {
     if (idx < 0 || idx >= plClips.length) return;
 
-    // Save current clip state to memory (not file) before switching
-    if (plCurrentIdx >= 0 && plCurrentIdx !== idx) {
+    // Auto-save current clip to file before switching
+    if (plCurrentIdx >= 0 && plCurrentIdx !== idx && plDirty) {
+        await plSave();
+    } else if (plCurrentIdx >= 0 && plCurrentIdx !== idx) {
         plSaveToMemory();
     }
 
@@ -2114,7 +2057,6 @@ async function plSelectClip(idx) {
     if (clip.resolved) {
         // From memory (after switching between clips in same session)
         plResolved = JSON.parse(JSON.stringify(clip.resolved));
-        plWhitelist = clip.whitelist ? new Set(clip.whitelist) : null;
     } else if (clip.frames && Object.keys(clip.frames).length > 0) {
         // From saved JSON file (frames -> resolved)
         plResolved = {};
@@ -2124,11 +2066,9 @@ async function plSelectClip(idx) {
                 p2: frameData.p2 || null
             };
         }
-        plWhitelist = null; // Will be recomputed if needed
     } else {
         // No saved state, start empty
         plResolved = {};
-        plWhitelist = null;
     }
 
     // Load first frame
@@ -2236,8 +2176,8 @@ function plHandleMouseUp(e) {
     // Check BOTH keyframe AND resolved (propagated) state
     if (!assigned) {
         const resolved = plResolved[plCurrentFrame] || { p1: null, p2: null };
-        const hasP1 = kf.p1 != null || resolved.p1 != null;
-        const hasP2 = kf.p2 != null || resolved.p2 != null;
+        const hasP1 = (kf.p1 != null && kf.p1 !== 'skip') || resolved.p1 != null;
+        const hasP2 = (kf.p2 != null && kf.p2 !== 'skip') || resolved.p2 != null;
 
         if (!hasP1 && !hasP2) {
             kf.p1 = box;
@@ -2250,9 +2190,6 @@ function plHandleMouseUp(e) {
     }
 
     plKeyFrames[plCurrentFrame] = kf;
-
-    // NOTE: Don't add to whitelist for manual boxes - whitelist is only for clicked detections
-    // Manual boxes use IoU-based propagation which works even without consistent track IDs
 
     // Clear draw state
     plDrawingBox = null;
@@ -2286,14 +2223,12 @@ function plHandleCanvasClick(e) {
     const vx = (cx - offX) / scale;
     const vy = (cy - offY) / scale;
 
-    // Find clicked detection box (with whitelist filter)
+    // Find clicked detection box
     const frameDets = plDetections[plCurrentFrame];
     let clickedIdx = -1;
     if (frameDets && frameDets.length > 0) {
         for (let i = 0; i < frameDets.length; i++) {
             const det = frameDets[i];
-            // Whitelist filter
-            if (plWhitelist && !plWhitelist.has(det.id)) continue;
             if (vx >= det.x1 && vx <= det.x2 && vy >= det.y1 && vy <= det.y2) {
                 clickedIdx = i;
                 break;
@@ -2359,36 +2294,35 @@ function plHandleCanvasClick(e) {
     if (clickedEntity) {
         if (clickedRole === null) {
             // Unassigned detection → assign to first available role
-            const p1Free = kf.p1 == null && resolved.p1 == null;
-            const p2Free = kf.p2 == null && resolved.p2 == null;
+            const p1Free = (kf.p1 == null || kf.p1 === 'skip') && resolved.p1 == null;
+            const p2Free = (kf.p2 == null || kf.p2 === 'skip') && resolved.p2 == null;
             if (p1Free) kf.p1 = kfValue;
             else if (p2Free) kf.p2 = kfValue;
             plKeyFrames[plCurrentFrame] = kf;
-            if (clickedIdx >= 0) plWhitelist.add(frameDets[clickedIdx].id);
         } else {
             const hitterNum = clickedRole === 'p1' ? 1 : 2;
             const isHitter = isHitFrame && plHitters[hitIdx] === hitterNum;
             const otherRole = clickedRole === 'p1' ? 'p2' : 'p1';
-            const otherTaken = kf[otherRole] != null || resolved[otherRole] != null;
+            const otherTaken = (kf[otherRole] != null && kf[otherRole] !== 'skip') || resolved[otherRole] != null;
 
             if (!isHitter && isHitFrame) {
                 // P → P HIT (mark as hitter)
                 plHitters[hitIdx] = hitterNum;
-                if (kf[clickedRole] == null) {
+                if (kf[clickedRole] == null || kf[clickedRole] === 'skip') {
                     kf[clickedRole] = kfValue;
                     plKeyFrames[plCurrentFrame] = kf;
                 }
             } else if (clickedRole === 'p1' && !otherTaken) {
                 // P1 (HIT or non-HIT) → P2
-                kf.p2 = kf.p1 != null ? kf.p1 : kfValue;
-                delete kf.p1;
+                const val = (kf.p1 != null && kf.p1 !== 'skip') ? kf.p1 : kfValue;
+                kf.p2 = val;
+                delete kf.p1;  // delete (not skip) so P1 propagation passes through
                 plKeyFrames[plCurrentFrame] = kf;
                 if (isHitFrame) plHitters[hitIdx] = 0;
             } else {
-                // → discard
-                delete kf[clickedRole];
-                if (kf.p1 == null && kf.p2 == null) delete plKeyFrames[plCurrentFrame];
-                else plKeyFrames[plCurrentFrame] = kf;
+                // → discard (use 'skip' sentinel to block propagation)
+                kf[clickedRole] = 'skip';
+                plKeyFrames[plCurrentFrame] = kf;
                 if (isHitFrame) plHitters[hitIdx] = 0;
             }
         }
@@ -2399,8 +2333,8 @@ function plHandleCanvasClick(e) {
     }
 
     // --- Empty canvas: place new DOT ---
-    const p1Taken = kf.p1 != null || resolved.p1 != null;
-    const p2Taken = kf.p2 != null || resolved.p2 != null;
+    const p1Taken = (kf.p1 != null && kf.p1 !== 'skip') || resolved.p1 != null;
+    const p2Taken = (kf.p2 != null && kf.p2 !== 'skip') || resolved.p2 != null;
     let placedRole = null;
 
     if (!p1Taken) {
@@ -2529,8 +2463,7 @@ async function plSave() {
             clip.key_frames = JSON.parse(JSON.stringify(plKeyFrames));
             clip.hitters = [...plHitters];
             clip.resolved = JSON.parse(JSON.stringify(plResolved));
-            clip.whitelist = plWhitelist ? [...plWhitelist] : null;
-            plDirty = false; // Clear dirty flag after successful save
+                    plDirty = false; // Clear dirty flag after successful save
             plRenderClipList();
             btn.textContent = 'Saved!';
             setTimeout(() => { btn.textContent = 'Save'; btn.disabled = false; }, 2000);
@@ -2541,47 +2474,84 @@ async function plSave() {
     }
 }
 
-// ── Export ──────────────────────────────────────────────────────
+// ── Export All (with modal progress) ──────────────────────────────
+let plExportPollTimer = null;
+
+function plShowExportOverlay(show) {
+    let overlay = document.getElementById('pl-export-overlay');
+    if (!overlay && show) {
+        overlay = document.createElement('div');
+        overlay.id = 'pl-export-overlay';
+        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;' +
+            'background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:9999;';
+        overlay.innerHTML = `
+            <div style="background:#1e293b;border-radius:12px;padding:32px 48px;min-width:360px;text-align:center;color:#e2e8f0;">
+                <div style="font-size:1.2rem;font-weight:600;margin-bottom:16px;">Exporting...</div>
+                <div id="pl-export-bar-wrap" style="background:#334155;border-radius:6px;height:20px;overflow:hidden;margin-bottom:12px;">
+                    <div id="pl-export-bar" style="background:#8b5cf6;height:100%;width:0%;transition:width 0.3s;border-radius:6px;"></div>
+                </div>
+                <div id="pl-export-text" style="font-size:0.85rem;color:#94a3b8;">Preparing...</div>
+            </div>`;
+        document.body.appendChild(overlay);
+    }
+    if (overlay) overlay.style.display = show ? 'flex' : 'none';
+}
+
 async function plExport() {
-    if (plCurrentIdx < 0) return;
-    const clip = plClips[plCurrentIdx];
-    const btn = document.getElementById('pl-export-btn');
-    btn.textContent = 'Exporting...'; btn.disabled = true;
+    if (!plWorkdir) return;
 
-    // Extract video name from workdir (parent folder name)
-    const videoName = plWorkdir.split('/').filter(s => s).pop() || 'unknown';
-
-    // Build frames object from resolved data (clip boxes to video bounds)
-    const frames = {};
-    for (const [frameStr, resolved] of Object.entries(plResolved)) {
-        const frameObj = { p1: null, p2: null };
-        if (resolved.p1) frameObj.p1 = clipBox(resolved.p1, plVidW, plVidH);
-        if (resolved.p2) frameObj.p2 = clipBox(resolved.p2, plVidW, plVidH);
-        if (frameObj.p1 || frameObj.p2) {
-            frames[frameStr] = frameObj;
-        }
+    // Save current clip first
+    if (plCurrentIdx >= 0 && plDirty) {
+        await plSave();
     }
 
+    // Let user pick export directory
+    let exportDir;
     try {
-        const res = await fetch('/api/pl/export', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                workdir: plWorkdir,
-                name: clip.name,
-                video_name: videoName,
-                hits: plHits,
-                hitters: plHitters,
-                frames
-            })
-        });
-        const data = await res.json();
-        if (data.ok) {
-            btn.textContent = `${data.frames_exported} frames`;
-            setTimeout(() => { btn.textContent = 'Export'; btn.disabled = false; }, 3000);
-        } else { throw new Error(data.detail || 'Export failed'); }
+        const browseRes = await fetch('/api/browse_dir');
+        const browseData = await browseRes.json();
+        if (!browseData.path) return; // cancelled
+        exportDir = browseData.path;
     } catch (e) {
-        alert('Export error: ' + e.message);
-        btn.textContent = 'Export'; btn.disabled = false;
+        alert('Browse failed'); return;
+    }
+
+    // Start export on server
+    const res = await fetch('/api/pl/export_start', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workdir: plWorkdir, export_dir: exportDir })
+    });
+    const data = await res.json();
+    if (!data.ok) { alert('Export failed: ' + (data.detail || '')); return; }
+
+    // Show overlay and start polling
+    plShowExportOverlay(true);
+    plExportPollTimer = setInterval(plPollExportStatus, 500);
+}
+
+async function plPollExportStatus() {
+    const s = await (await fetch('/api/pl/export_status')).json();
+    const bar = document.getElementById('pl-export-bar');
+    const text = document.getElementById('pl-export-text');
+    if (!bar || !text) return;
+
+    const pct = s.total_clips > 0 ? Math.round(s.done_clips / s.total_clips * 100) : 0;
+    bar.style.width = pct + '%';
+
+    if (s.running) {
+        text.textContent = `${s.done_clips}/${s.total_clips} clips · ${s.done_frames} frames${s.current ? ' · ' + s.current : ''}`;
+    } else {
+        clearInterval(plExportPollTimer);
+        plExportPollTimer = null;
+        if (s.error) {
+            text.textContent = `Error: ${s.error}`;
+            bar.style.background = '#ef4444';
+        } else {
+            bar.style.width = '100%';
+            text.textContent = `Done! ${s.done_clips} clips, ${s.done_frames} frames exported`;
+        }
+        // Auto-close after 2s
+        setTimeout(() => plShowExportOverlay(false), 2000);
     }
 }
 
@@ -2603,8 +2573,6 @@ async function plClearClip() {
             clip.key_frames = {};
             clip.hitters = (clip.hits || []).map(() => 0);
             clip.resolved = {};
-            clip.whitelist = null;
-
             // Save to file
             await fetch('/api/pl/save', {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -2623,14 +2591,12 @@ async function plClearClip() {
         plKeyFrames = {};
         plHitters = plHits.map(() => 0);
         plResolved = {};
-        plWhitelist = null;
     } else {
         // Clear current clip only
         plSaveHistory();
         plKeyFrames = {};
         plHitters = plHits.map(() => 0);
         plResolved = {};
-        plWhitelist = null;
 
         // Update memory
         plSaveToMemory();
@@ -2642,6 +2608,41 @@ async function plClearClip() {
     plDrawCanvas();
     plUpdateHitIndicator();
     plRenderClipList();
+}
+
+// ── Delete Clip ──────────────────────────────────────────────────────
+async function plDeleteClip() {
+    if (plCurrentIdx < 0) return;
+    const clip = plClips[plCurrentIdx];
+    if (!confirm(`Delete clip "${clip.name}"? The last clip will fill the gap.`)) return;
+
+    // 1. Save current clip first (preserve any unsaved work on OTHER clips)
+    await plSave();
+
+    // 2. Delete on server
+    const res = await fetch('/api/pl/delete_clip', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workdir: plWorkdir, name: clip.name })
+    });
+    const data = await res.json();
+    if (!data.ok) { alert('Delete failed: ' + (data.detail || '')); return; }
+
+    // 3. Clear in-memory state for all clips (force fresh load from disk)
+    const prevIdx = plCurrentIdx;
+    plCurrentIdx = -1;
+    plClips = [];
+    plKeyFrames = {};
+    plHitters = [];
+    plResolved = {};
+    plDetections = {};
+    plHistory = [];
+    plDirty = false;
+
+    // 4. Reload everything from disk
+    await plLoadClips();
+    if (plClips.length > 0) {
+        await plSelectClip(Math.min(prevIdx, plClips.length - 1));
+    }
 }
 
 // ── Fill Gaps ──────────────────────────────────────────────────────
@@ -2974,6 +2975,7 @@ function plInit() {
     document.getElementById('pl-drawbox-btn').addEventListener('click', plToggleDrawBox);
     document.getElementById('pl-fillgaps-btn').addEventListener('click', plFillGaps);
     document.getElementById('pl-clear-btn').addEventListener('click', plClearClip);
+    document.getElementById('pl-delete-btn').addEventListener('click', plDeleteClip);
     document.getElementById('pl-export-btn').addEventListener('click', plExport);
     document.getElementById('pl-save-btn').addEventListener('click', plSave);
     document.getElementById('pl-prev-btn').addEventListener('click', () => plNextHit(-1));

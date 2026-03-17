@@ -302,9 +302,12 @@
                 <input type="checkbox" id="pl-clear-all" style="width:auto;margin:0;">
                 <label for="pl-clear-all" style="cursor:pointer;color:#64748b;">Clear ALL clips</label>
             </div>
-            <button id="pl-clear-btn" class="secondary-btn" style="width:100%;color:#ef4444;border-color:#ef4444;">Clear Clip</button>
+            <div style="display:flex;gap:6px;">
+                <button id="pl-clear-btn" class="secondary-btn" style="flex:1;color:#ef4444;border-color:#ef4444;">Clear Clip</button>
+                <button id="pl-delete-btn" class="secondary-btn" style="flex:1;color:#ef4444;border-color:#ef4444;">Delete Clip</button>
+            </div>
             <button id="pl-fillgaps-btn" class="secondary-btn" style="width:100%;">Fill Gaps</button>
-            <button id="pl-export-btn" class="primary-btn" style="background:#8b5cf6;border-color:#7c3aed;">Export</button>
+            <button id="pl-export-btn" class="primary-btn" style="background:#8b5cf6;border-color:#7c3aed;">Export All</button>
             <button id="pl-save-btn" class="primary-btn" style="background:#10b981;border-color:#059669;">Save</button>
         </div>
 
@@ -347,6 +350,6 @@
     </div>
 </div>
 
-<script src="app.js?v=20"></script>
+<script src="app.js?v=27"></script>
 </body>
 </html>

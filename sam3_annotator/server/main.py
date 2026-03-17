@@ -547,12 +547,21 @@ def _run_pl_detection(workdir: str, scope: str = "all", current_clip: str = None
         else:
             clips = []
     elif scope == "unmodified":
-        # Only clips without _det.json
+        # Only clips without annotations (no frames in .json)
         clips = []
         for mp4 in all_clips:
             name = os.path.splitext(os.path.basename(mp4))[0]
-            det_path = os.path.join(workdir, name + "_det.json")
-            if not os.path.exists(det_path):
+            json_path = os.path.join(workdir, name + ".json")
+            has_annot = False
+            if os.path.exists(json_path):
+                try:
+                    with open(json_path) as _f:
+                        jd = json.load(_f)
+                    frames = jd.get("frames", {})
+                    has_annot = len(frames) > 0
+                except Exception:
+                    pass
+            if not has_annot:
                 clips.append(mp4)
     else:  # "all"
         clips = all_clips
@@ -718,72 +727,151 @@ def pl_save(req: PLSaveRequest):
     return {"ok": True}
 
 
-class PLExportRequest(BaseModel):
+class PLDeleteRequest(BaseModel):
     workdir: str
-    name: str
-    video_name: str  # Parent folder name (source video)
-    hits: list
-    hitters: list
-    frames: dict  # {frame_str: {p1: {x1,y1,x2,y2}, p2: {...}}}
+    name: str  # clip to delete, e.g. "clip_003"
 
-@app.post("/api/pl/export")
-def pl_export(req: PLExportRequest):
-    """
-    Export clip to exports/{video_name}/{clip_name}/ with frames/ and annot.json.
-    This ensures exact frame-to-annotation mapping without offset issues.
-    """
+@app.post("/api/pl/delete_clip")
+def pl_delete_clip(req: PLDeleteRequest):
+    """Delete a clip and move the last clip into the gap to keep numbering dense."""
+    import glob as _glob
+
+    workdir = req.workdir
+    target = req.name
+
+    # Enumerate all clips sorted
+    all_mp4 = sorted(_glob.glob(os.path.join(workdir, "*.mp4")))
+    all_names = [os.path.splitext(os.path.basename(p))[0] for p in all_mp4]
+
+    if target not in all_names:
+        raise HTTPException(status_code=404, detail=f"Clip {target} not found")
+
+    last_name = all_names[-1]
+    suffixes = [".mp4", ".json", "_det.json"]
+
+    def remove_clip_files(name):
+        for suf in suffixes:
+            p = os.path.join(workdir, name + suf)
+            if os.path.exists(p):
+                os.remove(p)
+
+    if target == last_name:
+        # Deleting the last clip — just remove files
+        remove_clip_files(target)
+    else:
+        # Remove target files, then rename last → target
+        remove_clip_files(target)
+        for suf in suffixes:
+            src = os.path.join(workdir, last_name + suf)
+            dst = os.path.join(workdir, target + suf)
+            if os.path.exists(src):
+                os.rename(src, dst)
+
+    # Invalidate frame cache for both clips
+    keys_to_remove = [k for k in _pl_frame_cache if k[1] in (target, last_name)]
+    for k in keys_to_remove:
+        _pl_frame_cache.pop(k, None)
+        if k in _pl_frame_cache_order:
+            _pl_frame_cache_order.remove(k)
+
+    remaining = len(all_names) - 1
+    return {"ok": True, "remaining": remaining, "moved": last_name if target != last_name else None}
+
+
+class PLExportAllRequest(BaseModel):
+    workdir: str
+    export_dir: str  # user-chosen export directory
+
+_pl_export_state = {"running": False, "done_clips": 0, "total_clips": 0,
+                    "done_frames": 0, "current": "", "error": ""}
+
+def _run_pl_export(workdir: str, export_dir: str):
+    import glob as _glob
     import cv2 as _cv2
+    global _pl_export_state
 
-    # Create export directory structure: exports/{video_name}/{clip_name}/
-    export_dir = os.path.join(req.workdir, "exports", req.video_name, req.name)
-    frames_dir = os.path.join(export_dir, "frames")
-    os.makedirs(frames_dir, exist_ok=True)
+    video_name = os.path.basename(workdir.rstrip("/")) or "unknown"
 
-    # Open video
-    video_path = os.path.join(req.workdir, req.name + ".mp4")
-    if not os.path.exists(video_path):
-        raise HTTPException(status_code=404, detail="Video not found")
+    # Suppress cv2 h264 warnings
+    os.environ["OPENCV_LOG_LEVEL"] = "SILENT"
 
-    cap = _cv2.VideoCapture(video_path)
-    if not cap.isOpened():
-        raise HTTPException(status_code=500, detail="Cannot open video")
+    # Find annotated clips (have .json but not _det.json)
+    all_json = sorted(_glob.glob(os.path.join(workdir, "*.json")))
+    clip_list = []
+    for jp in all_json:
+        bn = os.path.basename(jp)
+        if bn.endswith("_det.json"):
+            continue
+        clip_name = os.path.splitext(bn)[0]
+        if os.path.exists(os.path.join(workdir, clip_name + ".mp4")):
+            clip_list.append((clip_name, jp))
 
+    _pl_export_state.update({"running": True, "done_clips": 0, "total_clips": len(clip_list),
+                             "done_frames": 0, "current": "", "error": ""})
     try:
-        # Extract frames that have annotations
-        frame_numbers = sorted([int(k) for k in req.frames.keys()])
+        for clip_name, json_path in clip_list:
+            _pl_export_state["current"] = clip_name
+            video_path = os.path.join(workdir, clip_name + ".mp4")
 
-        for frame_num in frame_numbers:
-            cap.set(_cv2.CAP_PROP_POS_FRAMES, frame_num)
-            ret, img = cap.read()
-            if not ret:
+            with open(json_path, "r") as f:
+                annot_data = json.load(f)
+            frames_data = annot_data.get("frames", {})
+            if not frames_data:
+                _pl_export_state["done_clips"] += 1
                 continue
 
-            # Save frame as JPEG
-            frame_path = os.path.join(frames_dir, f"{frame_num}.jpg")
-            _cv2.imwrite(frame_path, img, [_cv2.IMWRITE_JPEG_QUALITY, 95])
+            clip_dir = os.path.join(export_dir, video_name, clip_name)
+            frames_dir = os.path.join(clip_dir, "frames")
+            os.makedirs(frames_dir, exist_ok=True)
 
-        # Save annotation file with exact data from web page
-        annot = {
-            "clip": req.name,
-            "video": req.video_name,
-            "total_frames": len(frame_numbers),
-            "hits": req.hits,
-            "hitters": req.hitters,
-            "frames": req.frames  # Exact boxes as shown on web
-        }
+            cap = _cv2.VideoCapture(video_path)
+            if not cap.isOpened():
+                _pl_export_state["done_clips"] += 1
+                continue
+            try:
+                frame_numbers = sorted([int(k) for k in frames_data.keys()])
+                for frame_num in frame_numbers:
+                    cap.set(_cv2.CAP_PROP_POS_FRAMES, frame_num)
+                    ret, img = cap.read()
+                    if not ret:
+                        continue
+                    _cv2.imwrite(os.path.join(frames_dir, f"{frame_num}.jpg"),
+                                img, [_cv2.IMWRITE_JPEG_QUALITY, 95])
+                    _pl_export_state["done_frames"] += 1
 
-        annot_path = os.path.join(export_dir, "annot.json")
-        with open(annot_path, "w") as f:
-            json.dump(annot, f, indent=2)
+                annot_out = {
+                    "clip": clip_name, "video": video_name,
+                    "total_frames": len(frame_numbers),
+                    "hits": annot_data.get("hits", []),
+                    "hitters": annot_data.get("hitters", []),
+                    "frames": frames_data
+                }
+                with open(os.path.join(clip_dir, "annot.json"), "w") as f:
+                    json.dump(annot_out, f, indent=2)
+            finally:
+                cap.release()
 
-        return {
-            "ok": True,
-            "export_dir": export_dir,
-            "frames_exported": len(frame_numbers)
-        }
-
+            _pl_export_state["done_clips"] += 1
+    except Exception as e:
+        _pl_export_state["error"] = str(e)
+        print(f"PL export error: {e}")
     finally:
-        cap.release()
+        _pl_export_state["running"] = False
+        _pl_export_state["current"] = ""
+
+@app.post("/api/pl/export_start")
+def pl_export_start(req: PLExportAllRequest):
+    if _pl_export_state["running"]:
+        raise HTTPException(status_code=409, detail="Export already running")
+    if not os.path.isdir(req.workdir):
+        raise HTTPException(status_code=400, detail="Workdir not found")
+    os.makedirs(req.export_dir, exist_ok=True)
+    threading.Thread(target=_run_pl_export, args=(req.workdir, req.export_dir), daemon=True).start()
+    return {"ok": True}
+
+@app.get("/api/pl/export_status")
+def pl_export_status():
+    return _pl_export_state
 
 
 @app.post("/api/pl/fill_frame")
