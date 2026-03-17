@@ -94,10 +94,8 @@ def main() -> None:
         args.data_dir, args.t_max, args.batch_size, seed=args.seed,
         use_features=use_features, backbone=args.backbone)
 
-    # Detect if features were actually loaded (check first batch shape)
-    sample = train_loader.dataset[train_loader.dataset.samples[0][0]
-                                  if hasattr(train_loader.dataset, 'samples')
-                                  else 0]
+    # Detect if features were actually loaded (check first sample shape)
+    sample = train_loader.dataset[0]
     feature_mode = sample["frames"].dim() == 2  # [T, D] vs [T, 3, H, W]
     feat_dim = sample["frames"].shape[-1] if feature_mode else 512
     mode_str = f"features (D={feat_dim})" if feature_mode else "images"
