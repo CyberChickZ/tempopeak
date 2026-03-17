@@ -315,6 +315,31 @@ for head in identity bilstm mamba2 bimamba2; do
 done
 ```
 
+### HPC Exp A v3.1 — LR 调优 + Gradient Clipping (30 epochs)
+
+```bash
+source /nfs/stak/users/zhanhaoc/hpc-share/conda/bin/activate
+conda activate sam_3d_body
+cd /nfs/hpc/share/zhanhaoc/hpe/tempopeak
+git pull
+srun --gres=gpu:1 --mem=64G --pty bash
+
+# SSM heads 用更小 LR（3e-3 导致 BiMamba2 爆炸）
+for head in mamba2 bimamba2; do
+    echo "=== vit_small / $head (lr=3e-4) ==="
+    python train.py --temporal_head=$head --t_max=32 \
+      --data_dir=datasets/v1/export --backbone=vit_small \
+      --epochs=30 --batch_size=256 --lr=3e-4
+done
+
+# BiLSTM 稍降 LR 防 epoch 24 爆炸
+python train.py --temporal_head=bilstm --t_max=32 \
+  --data_dir=datasets/v1/export --backbone=vit_small \
+  --epochs=30 --batch_size=256 --lr=1e-3
+```
+
+注意：Identity 不用重跑，41.4% 是其 capacity ceiling。
+
 ### HPC Exp B — T_max Sweep (用 Exp A best head + best backbone)
 ```bash
 BEST_HEAD=bimamba2   # ← 替换为 Exp A 的 best head
@@ -367,10 +392,11 @@ v3 变化：`__getitem__` 零随机性，所有 `(start, n)` 在 `_build_samples
 
 preload + num_workers=0 对训练结果零影响，仅加速数据加载吞吐。Probe 数据集 `preload=False`（仅读 clip_ids，不需加载特征）。
 
-### Scheduler
+### Scheduler + Gradient Clipping
 
 - v3 起默认使用 `CosineAnnealingLR(T_max=epochs, eta_min=1e-5)`
 - LR 从 `--lr`（默认 1e-3）余弦衰减至 1e-5
+- Gradient clipping: `clip_grad_norm_(max_norm=1.0)` — SSM/RNN 标配，防止 BiMamba2 数值爆炸（loss.backward() 后、optimizer.step() 前）
 
 ### Checkpoint 输出
 - Best model: `checkpoints/best_{head}_{t_max}.pt` — 按 **Acc@1** 选出（非 MAE）
