@@ -219,6 +219,7 @@ Thumbs.db
 .vscode/
 .idea/
 
+
 # Project specific
 work_dirs/
 checkpoints/
