@@ -38,6 +38,8 @@ def build_backbone(name: str, device: str) -> tuple[nn.Module, int]:
         )
         feat_dim = 512
     elif name == "vit_small":
+        # NOTE: despite the CLI alias "vit_small", this loads ViT-B-16 (~86M params, D=768),
+        # NOT ViT-Small (~22M params, D=384). Presentations/papers must cite "ViT-B-16".
         m = models.vit_b_16(weights=models.ViT_B_16_Weights.IMAGENET1K_V1)
         feat_dim = 768
 

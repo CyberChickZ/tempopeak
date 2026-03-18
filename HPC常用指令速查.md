@@ -20,7 +20,7 @@ srun --gres=gpu:1 --mem=64G --pty bash
 ## Backbone 权重缓存
 - 缓存目录：`/nfs/stak/users/zhanhaoc/.cache/torch/hub/checkpoints/`
 - `resnet34-b627a593.pth` (83.3M) — 首次 `extract_features.py --backbone=resnet34` 时自动下载
-- `vit_b_16-c867db91.pth` (330M) — 首次 `extract_features.py --backbone=vit_small` 时自动下载
+- `vit_b_16-c867db91.pth` (330M) — 首次 `extract_features.py --backbone=vit_small` 时自动下载（⚠️ CLI alias `vit_small` 实际加载 ViT-B-16, D=768, ~86M params）
 - ResNet-18 权重也已缓存（之前训练时下载）
 
 ## 数据部署（Mac → HPC）
@@ -402,6 +402,23 @@ python train.py --temporal_head=bimamba2 --t_max=32 \
 - `temporal_heads.py`：BiLSTM LSTM `dropout=0.3`（层间 dropout）
 - `dataloader.py`：`HIT_MARGIN` 4→6，`MIN_LEN` 8→12（过滤低质量短窗口）
 - `eval.py`：`compute_metrics` 入口加 `gaussian_filter1d(sigma=1.5)` 平滑 logits
+
+### HPC Exp B Final — Transformer 补全 5-Head 消融 (30 epochs)
+
+```bash
+source /nfs/stak/users/zhanhaoc/hpc-share/conda/bin/activate
+conda activate sam_3d_body
+cd /nfs/hpc/share/zhanhaoc/hpe/tempopeak
+git pull
+srun --gres=gpu:1 --mem=64G --pty bash
+
+# Transformer head (6.8M params, d_model=512, nhead=8, layers=2)
+python train.py --temporal_head=transformer --t_max=32 \
+  --data_dir=datasets/v1/export --backbone=vit_small \
+  --epochs=30 --batch_size=256 --lr=1e-3
+```
+
+结果：Acc@1=62.1%（5-head 最高），但 MAE=3.88（最差），params=6.8M（Mamba2 的 4.9×）。
 
 ### HPC Exp B2 — T_max Sweep (BiMamba2 + EDL 确认为最优组合)
 ```bash
