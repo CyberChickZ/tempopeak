@@ -444,7 +444,7 @@ done
 - BiMamba2: 58.6% → 58.6% (持平)
 - Transformer: 62.1% → 63.8% (+1.7pp ↑, 全局最佳 🏆)
 
-### HPC Exp B2 — T_max=64 Sweep (待执行)
+### HPC Exp B2 — T_max=64 Sweep (已完成)
 
 ```bash
 source /nfs/stak/users/zhanhaoc/hpc-share/conda/bin/activate
@@ -453,12 +453,29 @@ cd /nfs/hpc/share/zhanhaoc/hpe/tempopeak
 git pull
 srun --gres=gpu:1 --mem=64G --pty bash
 
-# 全 5 heads × T_max=64，完成 T∈{16, 32, 64} 曲线
+# 全 5 heads × T_max=64
 for head in identity mamba2 bilstm bimamba2 transformer; do
     python train.py --temporal_head=$head --t_max=64 \
       --data_dir=datasets/v1/export --backbone=vit_small \
       --epochs=30 --batch_size=256 --lr=1e-3
 done
+```
+
+结果汇总（T=64）：
+- Identity: 51.7%（与 T=32 持平）
+- Mamba2: 51.7%（-6.9pp ↓↓，崩至 Identity 水平）
+- BiLSTM: 46.6%（-1.7pp ↓，持续最差）
+- **BiMamba2: 58.6%（三窗口完全一致 ✅）**
+- Transformer: 55.2%（-6.9pp ↓↓）
+
+完整 T_max Sweep 总表：
+```
+Head          T=16     T=32     T=64     Δ(max-min)
+Identity      53.4%    51.7%    51.7%    1.7pp
+BiLSTM        58.6%    48.3%    46.6%    12.0pp
+Mamba2        55.2%    58.6%    51.7%    6.9pp
+BiMamba2      58.6%    58.6%    58.6%    0.0pp ← robust
+Transformer   63.8%    62.1%    55.2%    8.6pp
 ```
 
 ### 训练参数一览
