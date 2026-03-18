@@ -420,7 +420,8 @@ python train.py --temporal_head=transformer --t_max=32 \
 
 结果：Acc@1=62.1%（5-head 最高），但 MAE=3.88（最差），params=6.8M（Mamba2 的 4.9×）。
 
-### HPC Exp B2 — T_max Sweep (BiMamba2 + EDL 确认为最优组合)
+### HPC Exp B2 — T_max=16 全 5-Head Sweep (30 epochs)
+
 ```bash
 source /nfs/stak/users/zhanhaoc/hpc-share/conda/bin/activate
 conda activate sam_3d_body
@@ -428,10 +429,33 @@ cd /nfs/hpc/share/zhanhaoc/hpe/tempopeak
 git pull
 srun --gres=gpu:1 --mem=64G --pty bash
 
-# BiMamba2 + EDL + vit_small，sweep T_max
-for tmax in 16 32 64; do
-    echo "=== T_max=$tmax ==="
-    python train.py --temporal_head=bimamba2 --t_max=$tmax \
+# 全 5 heads × T_max=16，与 T=32 结果对比
+for head in identity mamba2 bilstm bimamba2 transformer; do
+    python train.py --temporal_head=$head --t_max=16 \
+      --data_dir=datasets/v1/export --backbone=vit_small \
+      --epochs=30 --batch_size=256 --lr=1e-3
+done
+```
+
+结果汇总（T=32 → T=16）：
+- Identity: 51.7% → 53.4% (+1.7pp)
+- BiLSTM: 48.3% → 58.6% (+10.3pp ↑↑)
+- Mamba2: 58.6% → 55.2% (-3.4pp ↓)
+- BiMamba2: 58.6% → 58.6% (持平)
+- Transformer: 62.1% → 63.8% (+1.7pp ↑, 全局最佳 🏆)
+
+### HPC Exp B2 — T_max=64 Sweep (待执行)
+
+```bash
+source /nfs/stak/users/zhanhaoc/hpc-share/conda/bin/activate
+conda activate sam_3d_body
+cd /nfs/hpc/share/zhanhaoc/hpe/tempopeak
+git pull
+srun --gres=gpu:1 --mem=64G --pty bash
+
+# 全 5 heads × T_max=64，完成 T∈{16, 32, 64} 曲线
+for head in identity mamba2 bilstm bimamba2 transformer; do
+    python train.py --temporal_head=$head --t_max=64 \
       --data_dir=datasets/v1/export --backbone=vit_small \
       --epochs=30 --batch_size=256 --lr=1e-3
 done
