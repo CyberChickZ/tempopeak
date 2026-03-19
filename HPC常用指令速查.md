@@ -544,7 +544,8 @@ export/0001/00001/
 │   ├── resnet18/p1/*.pt             # ResNet-18 特征 [512]
 │   ├── resnet18/p2/*.pt
 │   ├── resnet34/p1/*.pt             # ResNet-34 特征 [512]
-│   └── vit_small/p1/*.pt            # ViT-Small 特征 [768]
+│   ├── vit_small/p1/*.pt            # ViT-B-16 特征 [768]
+│   └── dinov2/p1/*.pt               # DINOv2 ViT-L 特征 [1024]
 └── annot.json
 ```
 
@@ -567,6 +568,7 @@ python3 extract_features.py --data_dir=datasets/v1/export --backbone=vit_small -
 cd /nfs/hpc/share/zhanhaoc/hpe/tempopeak
 python extract_features.py --data_dir=datasets/v1/export --backbone=resnet18 --batch_size=64
 python extract_features.py --data_dir=datasets/v1/export --backbone=vit_small --batch_size=32
+python extract_features.py --data_dir=datasets/v1/export --backbone=dinov2 --batch_size=32
 ```
 
 ### 特征模式训练
@@ -583,9 +585,45 @@ python train.py --temporal_head=identity --t_max=32 --data_dir=datasets/v1/expor
 | 参数 | 默认值 | 说明 |
 |---|---|---|
 | `--data_dir` | (必填) | 数据根目录，递归查找 annot.json |
-| `--backbone` | `resnet18` | `{resnet18, resnet34, vit_small}` |
+| `--backbone` | `resnet18` | `{resnet18, resnet34, vit_small, dinov2}` |
 | `--batch_size` | `32` | 每批处理帧数 |
 | `--device` | `auto` | `auto` = cuda > cpu |
+
+### HPC Exp C — DINOv2 Backbone 5-Head 消融 (待执行)
+
+```bash
+source /nfs/stak/users/zhanhaoc/hpc-share/conda/bin/activate
+conda activate sam_3d_body
+cd /nfs/hpc/share/zhanhaoc/hpe/tempopeak
+git pull
+srun --gres=gpu:1 --mem=64G --pty bash
+
+# 1. 提取 DINOv2 特征 (D=1024)
+python extract_features.py --data_dir=datasets/v1/export --backbone=dinov2 --batch_size=32
+
+# 2. 验证特征提取成功
+find datasets/v1/export -path "*/features/dinov2/p1/*.pt" | wc -l
+
+# 3. Exp C: DINOv2 5-head 消融 T=32
+for head in identity bilstm mamba2 bimamba2 transformer; do
+    echo "=== $head (DINOv2) ==="
+    python train.py --temporal_head=$head --t_max=32 \
+      --data_dir=datasets/v1/export --backbone=dinov2 \
+      --epochs=30 --batch_size=256 --lr=1e-3
+done
+
+# 4. Exp C2: T_max sweep (BiMamba2 + Transformer)
+for tmax in 16 32 64; do
+    for head in bimamba2 transformer; do
+        python train.py --temporal_head=$head --t_max=$tmax \
+          --data_dir=datasets/v1/export --backbone=dinov2 \
+          --epochs=30 --batch_size=256 --lr=1e-3
+    done
+done
+```
+
+DINOv2 ViT-L: D=1024, ~304M params (frozen), CLS token 特征。
+model.py 自动触发 `feat_proj = Linear(1024, 512)` 适配 temporal head。
 
 ## Optical Flow 可视化 (RAFT-Large)
 

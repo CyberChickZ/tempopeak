@@ -13,7 +13,7 @@ from torchvision import transforms
 
 BBOX_PAD = 1.5
 # Per-backbone image size: ViT-B-16 requires exactly 224; ResNets can use 448
-BACKBONE_IMG_SIZE = {"resnet18": 448, "resnet34": 448, "vit_small": 224}
+BACKBONE_IMG_SIZE = {"resnet18": 448, "resnet34": 448, "vit_small": 224, "dinov2": 224}
 
 IMAGENET_TRANSFORM = transforms.Compose([
     transforms.ToTensor(),
@@ -57,6 +57,23 @@ def build_backbone(name: str, device: str) -> tuple[nn.Module, int]:
                 return x[:, 0]  # CLS → [B, 768]
 
         backbone = _ViTFeats(m)
+    elif name == "dinov2":
+        from transformers import AutoModel
+
+        _dinov2_model = AutoModel.from_pretrained("facebook/dinov2-large")
+        feat_dim = 1024  # DINOv2 ViT-L hidden_size
+
+        class _DINOv2Feats(nn.Module):
+            def __init__(self, dinov2):
+                super().__init__()
+                self.dinov2 = dinov2
+
+            def forward(self, x):
+                # x: [B, 3, 224, 224] already ImageNet-normalized
+                outputs = self.dinov2(pixel_values=x)
+                return outputs.last_hidden_state[:, 0, :]  # CLS token [B, 1024]
+
+        backbone = _DINOv2Feats(_dinov2_model)
     else:
         raise ValueError(f"Unknown backbone: {name}")
 
@@ -183,7 +200,7 @@ def main():
     parser = argparse.ArgumentParser(description="Pre-extract backbone features")
     parser.add_argument("--data_dir", type=str, required=True)
     parser.add_argument("--backbone", type=str, default="resnet18",
-                        choices=["resnet18", "resnet34", "vit_small"])
+                        choices=["resnet18", "resnet34", "vit_small", "dinov2"])
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--device", type=str, default="auto")
     args = parser.parse_args()
