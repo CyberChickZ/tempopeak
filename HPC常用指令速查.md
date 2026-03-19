@@ -586,3 +586,42 @@ python train.py --temporal_head=identity --t_max=32 --data_dir=datasets/v1/expor
 | `--backbone` | `resnet18` | `{resnet18, resnet34, vit_small}` |
 | `--batch_size` | `32` | 每批处理帧数 |
 | `--device` | `auto` | `auto` = cuda > cpu |
+
+## Optical Flow 可视化 (RAFT-Large)
+
+脚本：`scripts/optical_flow_viz.py` — 用 torchvision RAFT-Large 对 hit 帧 (t-1, t) 做光流可视化。
+
+### HPC 运行
+```bash
+source /nfs/stak/users/zhanhaoc/hpc-share/conda/bin/activate
+conda activate sam_3d_body
+cd /nfs/hpc/share/zhanhaoc/hpe/tempopeak
+srun --gres=gpu:1 --mem=16G --pty bash
+
+# 随机选一个 clip
+python scripts/optical_flow_viz.py
+
+# 指定 clip
+python scripts/optical_flow_viz.py --video 0001 --clip 00003
+
+# 高精度（32 次迭代）
+python scripts/optical_flow_viz.py --iters 32
+
+# CPU 模式（慢）
+python scripts/optical_flow_viz.py --device cpu
+```
+
+### 参数
+
+| 参数 | 默认值 | 说明 |
+|---|---|---|
+| `--data_root` | `datasets/v1/export` | 数据根目录（CWD 相对） |
+| `--video` | 随机 | 视频 ID（如 `0001`） |
+| `--clip` | 随机 | Clip ID（如 `00003`） |
+| `--hit_idx` | `0` | 第几个 hit（0-indexed） |
+| `--iters` | `20` | RAFT 迭代次数（32 最高质量） |
+| `--output` | `optical_flow_viz.png` | 输出路径 |
+| `--device` | auto | `cuda` / `cpu`（不用 MPS） |
+
+### 输出
+- `optical_flow_viz.png` — 2×3 面板：[t-1帧, t帧(HIT), 叠加] / [HSV色轮, 幅值热力图, 矢量箭头]
