@@ -234,6 +234,14 @@ datasets/raw/*_frames/
 datasets/v1/
 datasets/yolo_refine/
 *.mp4
+*.avi
+*.mov
+*.wmv
+*.flv
+*.mkv
+*.webm
+*.m4v
+*.ts
 *.pt
 data/clips_tmp/
 *.tar.gz
