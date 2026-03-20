@@ -53,7 +53,7 @@ print(f"\n{'head':14s} {'epoch':>5s} {'F1@1':>6s} {'F1@2':>6s} {'F1@3':>6s} "
       f"{'P@1':>6s} {'R@1':>6s} {'GT':>4s} {'Pred':>5s} {'val_loss':>9s}")
 print("-" * 85)
 for r in rows:
-    print(f"{r['head']:14s} {r['best_epoch']:>5s} {r['F1@1']:>6s} {r['F1@2']:>6s} {r['F1@3']:>6s} "
+    print(f"{r['head']:14s} {str(r['best_epoch']):>5s} {r['F1@1']:>6s} {r['F1@2']:>6s} {r['F1@3']:>6s} "
           f"{r['P@1']:>6s} {r['R@1']:>6s} {str(r['GT']):>4s} {str(r['Pred']):>5s} {r['val_loss']:>9s}")
 
 # Export CSV
