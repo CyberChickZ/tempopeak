@@ -84,22 +84,34 @@ class FullVideoDataset(Dataset):
     """
 
     def __init__(self, features_pt, hit_json,
-                 segment_len=2700, stride=None, radius=5):
+                 segment_len=2700, stride=None, radius=5,
+                 frame_range=None):
         self.segment_len = segment_len
         self.radius = radius
 
         # Load features
-        self.features = torch.load(features_pt, weights_only=True).float()
-        if self.features.dim() == 3:
-            self.features = self.features.squeeze(1)  # [N,1,D] → [N,D]
-        assert self.features.dim() == 2, \
-            f"Expected [N, D] features, got {self.features.shape}"
-        self.N, self.feat_dim = self.features.shape
+        all_features = torch.load(features_pt, weights_only=True).float()
+        if all_features.dim() == 3:
+            all_features = all_features.squeeze(1)  # [N,1,D] → [N,D]
+        assert all_features.dim() == 2, \
+            f"Expected [N, D] features, got {all_features.shape}"
 
         # Load hits
         with open(hit_json) as f:
             data = json.load(f)
-        self.all_hits = sorted(data.get("HIT", data.get("hits", [])))
+        all_hits = sorted(data.get("HIT", data.get("hits", [])))
+
+        # Apply frame_range (for temporal train/val split)
+        if frame_range is not None:
+            start_f, end_f = frame_range
+            self.features = all_features[start_f:end_f]
+            self.all_hits = [h - start_f for h in all_hits
+                             if start_f <= h < end_f]
+        else:
+            self.features = all_features
+            self.all_hits = all_hits
+
+        self.N, self.feat_dim = self.features.shape
 
         # Create segments
         if stride is None:
@@ -302,37 +314,68 @@ def build_multihit_dataloaders(
         train_loader is None when eval_only=True.
     """
     if features_pt and hit_json:
-        dataset = FullVideoDataset(
+        if eval_only:
+            dataset = FullVideoDataset(
+                features_pt, hit_json,
+                segment_len=segment_len, stride=stride, radius=radius,
+            )
+            feat_dim = dataset.feat_dim
+            print(f"Dataset: {len(dataset)} samples, feat_dim={feat_dim}")
+            val_loader = DataLoader(
+                dataset, batch_size=batch_size, shuffle=False,
+                collate_fn=_collate, pin_memory=True,
+            )
+            return None, val_loader, feat_dim
+
+        # Temporal split: front 80% train, back 20% val (zero frame overlap)
+        all_features = torch.load(features_pt, weights_only=True)
+        N = all_features.shape[0] if all_features.dim() == 2 else all_features.shape[0]
+        del all_features  # free memory, datasets will reload
+        split = int(N * (1 - val_split))
+
+        train_ds = FullVideoDataset(
             features_pt, hit_json,
-            segment_len=segment_len, stride=stride, radius=radius,
+            segment_len=segment_len,
+            stride=stride or 900,
+            radius=radius,
+            frame_range=(0, split),
         )
-        feat_dim = dataset.feat_dim
+        val_ds = FullVideoDataset(
+            features_pt, hit_json,
+            segment_len=segment_len,
+            stride=segment_len,  # no overlap in val
+            radius=radius,
+            frame_range=(split, N),
+        )
+        feat_dim = train_ds.feat_dim
+        print(f"Temporal split: train [{0}:{split}] {len(train_ds)} segs, "
+              f"val [{split}:{N}] {len(val_ds)} segs, feat_dim={feat_dim}")
+
     elif clip_data_dir:
         dataset = ClipFolderDataset(
             clip_data_dir, backbone=backbone,
             radius=radius, max_len=segment_len,
         )
         feat_dim = dataset.feat_dim
+        print(f"Dataset: {len(dataset)} samples, feat_dim={feat_dim}")
+
+        if eval_only:
+            val_loader = DataLoader(
+                dataset, batch_size=batch_size, shuffle=False,
+                collate_fn=_collate, pin_memory=True,
+            )
+            return None, val_loader, feat_dim
+
+        # Random split for clip data (no overlap issue)
+        n = len(dataset)
+        n_val = max(1, int(n * val_split))
+        n_train = n - n_val
+        gen = torch.Generator().manual_seed(seed)
+        train_ds, val_ds = torch.utils.data.random_split(
+            dataset, [n_train, n_val], generator=gen,
+        )
     else:
         raise ValueError("Provide (features_pt + hit_json) or clip_data_dir")
-
-    print(f"Dataset: {len(dataset)} samples, feat_dim={feat_dim}")
-
-    if eval_only:
-        val_loader = DataLoader(
-            dataset, batch_size=batch_size, shuffle=False,
-            collate_fn=_collate, pin_memory=True,
-        )
-        return None, val_loader, feat_dim
-
-    # Train/val split
-    n = len(dataset)
-    n_val = max(1, int(n * val_split))
-    n_train = n - n_val
-    gen = torch.Generator().manual_seed(seed)
-    train_ds, val_ds = torch.utils.data.random_split(
-        dataset, [n_train, n_val], generator=gen,
-    )
 
     train_loader = DataLoader(
         train_ds, batch_size=batch_size, shuffle=True,
