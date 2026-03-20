@@ -1,6 +1,8 @@
-"""TempoPeak multi-hit training & evaluation.
+"""TempoPeak multi-hit training & evaluation (T-DEED style cls+displacement).
 
 Trains a temporal head on long sequences with multiple hit events.
+Two outputs per frame: classification (hit nearby?) + displacement (where exactly?).
+
 Supports two data modes:
   A) Full video:  --features_pt + --hit_json   (FullVideoDataset, segment_len segments)
   B) Clip folder: --clip_data_dir              (ClipFolderDataset, one clip = one sample)
@@ -34,7 +36,7 @@ import torch.nn as nn
 
 from temporal_heads import HEAD_REGISTRY, TransformerHead
 from dataloader_multihit import build_multihit_dataloaders
-from eval_multihit import soft_cross_entropy, detect_peaks, match_predictions
+from eval_multihit import cls_displacement_loss, cls_disp_detect, match_predictions
 
 
 # ---------------------------------------------------------------------------
@@ -42,13 +44,14 @@ from eval_multihit import soft_cross_entropy, detect_peaks, match_predictions
 # ---------------------------------------------------------------------------
 
 class MultiHitModel(nn.Module):
-    """Feature-only model for multi-hit detection.
+    """Feature-only model for multi-hit detection (T-DEED style).
 
-    All features are projected to 512-d before the temporal head
-    (consistent with existing heads that expect 512-d input).
+    Two output heads:
+      fc_cls:  per-frame classification logit ("hit nearby within radius?")
+      fc_disp: per-frame displacement prediction ("signed offset to nearest hit")
 
     Input:  [B, T, D]  pre-extracted features
-    Output: [B, T]     per-frame hit logits
+    Output: (cls_logits [B, T], disp_logits [B, T])
     """
 
     def __init__(self, temporal_head_name, feat_dim=1024, t_max=2700):
@@ -67,12 +70,15 @@ class MultiHitModel(nn.Module):
             self.head = HEAD_REGISTRY[temporal_head_name]()
 
         head_out = HEAD_REGISTRY[temporal_head_name].out_dim
-        self.fc = nn.Linear(head_out, 1)
+        self.fc_cls = nn.Linear(head_out, 1)    # classification
+        self.fc_disp = nn.Linear(head_out, 1)   # displacement regression
 
     def forward(self, x):
-        x = self.feat_proj(x)             # [B, T, 512]
-        h = self.head(x)                   # [B, T, D_out]
-        return self.fc(h).squeeze(-1)      # [B, T]
+        x = self.feat_proj(x)                    # [B, T, 512]
+        h = self.head(x)                          # [B, T, D_out]
+        cls_logits = self.fc_cls(h).squeeze(-1)   # [B, T]
+        disp_logits = self.fc_disp(h).squeeze(-1) # [B, T]
+        return cls_logits, disp_logits
 
 
 # ---------------------------------------------------------------------------
@@ -80,18 +86,25 @@ class MultiHitModel(nn.Module):
 # ---------------------------------------------------------------------------
 
 def train_one_epoch(model, loader, optimizer, device):
-    """Train one epoch, return average loss."""
+    """Train one epoch, return (avg_loss, avg_cls_loss, avg_disp_loss)."""
     model.train()
     total_loss = 0.0
+    total_cls = 0.0
+    total_disp = 0.0
     n = 0
 
     for batch in loader:
         features = batch["features"].to(device)
-        target = batch["target"].to(device)
+        cls_target = batch["cls_target"].to(device)
+        disp_target = batch["disp_target"].to(device)
+        disp_mask = batch["disp_mask"].to(device)
         valid_len = batch["valid_len"].to(device)
 
-        logits = model(features)
-        loss = soft_cross_entropy(logits, target, valid_len)
+        cls_logits, disp_logits = model(features)
+
+        loss, cls_l, disp_l = cls_displacement_loss(
+            cls_logits, disp_logits,
+            cls_target, disp_target, disp_mask, valid_len)
 
         optimizer.zero_grad()
         loss.backward()
@@ -99,9 +112,11 @@ def train_one_epoch(model, loader, optimizer, device):
         optimizer.step()
 
         total_loss += loss.item()
+        total_cls += cls_l
+        total_disp += disp_l
         n += 1
 
-    return total_loss / max(n, 1)
+    return total_loss / max(n, 1), total_cls / max(n, 1), total_disp / max(n, 1)
 
 
 # ---------------------------------------------------------------------------
@@ -110,14 +125,16 @@ def train_one_epoch(model, loader, optimizer, device):
 
 @torch.no_grad()
 def evaluate(model, loader, device, tolerances=(1, 2, 3),
-             sigma_smooth=3.0, height_ratio=0.15, min_distance=10):
-    """Evaluate model: peak detection → P/R/F1 at multiple tolerances.
+             threshold=0.5, min_distance=10):
+    """Evaluate model: cls+disp detection → P/R/F1 at multiple tolerances.
 
-    Returns dict with loss, P@k, R@k, F1@k, total_gt, total_pred.
+    Returns dict with loss, cls_loss, disp_loss, P@k, R@k, F1@k, total_gt, total_pred.
     """
     model.eval()
 
     total_loss = 0.0
+    total_cls_loss = 0.0
+    total_disp_loss = 0.0
     n_batches = 0
     matched = {k: 0 for k in tolerances}
     total_gt = 0
@@ -125,23 +142,30 @@ def evaluate(model, loader, device, tolerances=(1, 2, 3),
 
     for batch in loader:
         features = batch["features"].to(device)
-        target = batch["target"].to(device)
+        cls_target = batch["cls_target"].to(device)
+        disp_target = batch["disp_target"].to(device)
+        disp_mask = batch["disp_mask"].to(device)
         valid_len = batch["valid_len"].to(device)
         hit_indices = batch["hit_indices"]  # list of list[int]
 
-        logits = model(features)
-        loss = soft_cross_entropy(logits, target, valid_len)
+        cls_logits, disp_logits = model(features)
+
+        loss, cls_l, disp_l = cls_displacement_loss(
+            cls_logits, disp_logits,
+            cls_target, disp_target, disp_mask, valid_len)
         total_loss += loss.item()
+        total_cls_loss += cls_l
+        total_disp_loss += disp_l
         n_batches += 1
 
-        B = logits.shape[0]
+        B = cls_logits.shape[0]
         for b in range(B):
             vl = valid_len[b].item()
-            logits_b = logits[b, :vl].cpu().numpy()
             gt = hit_indices[b]
 
-            pred = detect_peaks(logits_b, sigma_smooth, height_ratio,
-                                min_distance)
+            pred = cls_disp_detect(
+                cls_logits[b], disp_logits[b], vl,
+                threshold=threshold, min_distance=min_distance)
             total_pred += len(pred)
             total_gt += len(gt)
 
@@ -149,8 +173,13 @@ def evaluate(model, loader, device, tolerances=(1, 2, 3),
                 n_m, _, _ = match_predictions(pred, gt, k)
                 matched[k] += n_m
 
-    results = {"loss": total_loss / max(n_batches, 1),
-               "total_gt": total_gt, "total_pred": total_pred}
+    results = {
+        "loss": total_loss / max(n_batches, 1),
+        "cls_loss": total_cls_loss / max(n_batches, 1),
+        "disp_loss": total_disp_loss / max(n_batches, 1),
+        "total_gt": total_gt,
+        "total_pred": total_pred,
+    }
     for k in tolerances:
         p = matched[k] / total_pred if total_pred > 0 else 0.0
         r = matched[k] / total_gt if total_gt > 0 else 0.0
@@ -238,7 +267,7 @@ def single_model_timing(model, feat_dim, t_max, device, n_runs=50):
 # ---------------------------------------------------------------------------
 
 def parse_args():
-    p = argparse.ArgumentParser("TempoPeak Multi-Hit Training")
+    p = argparse.ArgumentParser("TempoPeak Multi-Hit Training (T-DEED style)")
 
     # Data: full-video mode
     p.add_argument("--features_pt", type=str, default=None,
@@ -263,8 +292,8 @@ def parse_args():
     p.add_argument("--segment_len", type=int, default=2700)
     p.add_argument("--stride", type=int, default=None,
                    help="Segment stride (default=segment_len, no overlap)")
-    p.add_argument("--sigma", type=float, default=2.0,
-                   help="Gaussian target sigma")
+    p.add_argument("--radius", type=int, default=5,
+                   help="Positive label radius around each hit (frames)")
     p.add_argument("--lr", type=float, default=1e-3)
     p.add_argument("--weight_decay", type=float, default=1e-4)
     p.add_argument("--epochs", type=int, default=50)
@@ -342,7 +371,7 @@ def main():
         backbone=args.backbone,
         segment_len=args.segment_len,
         stride=args.stride,
-        sigma=args.sigma,
+        radius=args.radius,
         batch_size=args.batch_size,
         seed=args.seed,
         eval_only=args.eval_only,
@@ -359,7 +388,7 @@ def main():
     trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
     total_params = sum(p.numel() for p in model.parameters())
     print(f"Device: {device} | Head: {args.temporal_head} | "
-          f"T={args.segment_len} D={feat_dim}")
+          f"T={args.segment_len} D={feat_dim} radius={args.radius}")
     print(f"Parameters: {trainable:,} trainable / {total_params:,} total")
 
     # Load checkpoint
@@ -375,7 +404,8 @@ def main():
         metrics = evaluate(model, val_loader, device)
         eval_time = time.time() - t0
 
-        print(f"\n[Eval] loss={metrics['loss']:.4f} | "
+        print(f"\n[Eval] loss={metrics['loss']:.4f} "
+              f"(cls={metrics['cls_loss']:.4f} disp={metrics['disp_loss']:.4f}) | "
               f"P@2={metrics['P@2']*100:.1f}% "
               f"R@2={metrics['R@2']*100:.1f}% "
               f"F1@1={metrics['F1@1']*100:.1f}% "
@@ -409,7 +439,8 @@ def main():
     for epoch in range(1, args.epochs + 1):
         # Train
         t0 = time.time()
-        train_loss = train_one_epoch(model, train_loader, optimizer, device)
+        train_loss, train_cls, train_disp = train_one_epoch(
+            model, train_loader, optimizer, device)
         train_time = time.time() - t0
 
         # Eval
@@ -431,7 +462,8 @@ def main():
             }, os.path.join(ckpt_dir, f"{best_tag}.pt"))
 
         star = " *" if is_best else ""
-        print(f"[Epoch {epoch}/{args.epochs}] loss={train_loss:.4f} | "
+        print(f"[Epoch {epoch}/{args.epochs}] "
+              f"loss={train_loss:.4f} (cls={train_cls:.4f} disp={train_disp:.4f}) | "
               f"P@2={metrics['P@2']*100:.1f}% "
               f"R@2={metrics['R@2']*100:.1f}% "
               f"F1@1={metrics['F1@1']*100:.1f}% "

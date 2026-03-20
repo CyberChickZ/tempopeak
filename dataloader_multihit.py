@@ -1,4 +1,4 @@
-"""Multi-hit dataloader for TempoPeak.
+"""Multi-hit dataloader for TempoPeak (T-DEED style cls+displacement targets).
 
 Two dataset classes:
   FullVideoDataset  — pre-extracted [N,D] features + HIT JSON → fixed-length segments
@@ -26,29 +26,47 @@ from torch.utils.data import Dataset, DataLoader
 
 
 # ---------------------------------------------------------------------------
-# Target generation
+# Target generation (T-DEED style: classification + displacement)
 # ---------------------------------------------------------------------------
 
-def multi_gaussian_target(hit_indices, T, sigma=2.0):
-    """Create normalized multi-peak Gaussian target distribution.
+def cls_displacement_target(hit_indices, T, radius=5):
+    """Classification + displacement target for T-DEED style detection.
 
     Args:
         hit_indices: list[int] hit frame positions (segment-local).
         T: sequence length.
-        sigma: Gaussian std.
+        radius: frames within ±radius of a hit are positive.
 
     Returns:
-        [T] tensor, sums to 1.0 (uniform if no hits).
+        cls_target:  [T] float, 1.0 if within radius of any hit, else 0.0
+        disp_target: [T] float, signed offset to nearest hit (0 if no hits)
+        disp_mask:   [T] float, 1.0 for positive frames (only regress near hits)
     """
+    cls_target = torch.zeros(T)
+    disp_target = torch.zeros(T)
+    disp_mask = torch.zeros(T)
+
+    if not hit_indices:
+        return cls_target, disp_target, disp_mask
+
+    hits = torch.tensor(hit_indices, dtype=torch.float32)
     t = torch.arange(T, dtype=torch.float32)
-    target = torch.zeros(T)
-    for h in hit_indices:
-        target += torch.exp(-0.5 * ((t - h) / sigma) ** 2)
-    if target.sum() > 0:
-        target = target / target.sum()
-    else:
-        target = torch.ones(T) / T  # uniform (no-hit segment)
-    return target
+
+    # For each frame, find distance to nearest hit
+    # [T, 1] - [1, N_hits] → [T, N_hits]
+    dists = t.unsqueeze(1) - hits.unsqueeze(0)
+    abs_dists = dists.abs()
+    nearest_idx = abs_dists.argmin(dim=1)       # [T]
+    nearest_disp = dists[torch.arange(T), nearest_idx]  # [T] signed
+
+    # Classification: positive if within radius
+    cls_target = (abs_dists.min(dim=1).values <= radius).float()
+
+    # Displacement: signed offset to nearest hit (only valid for positive frames)
+    disp_target = nearest_disp
+    disp_mask = cls_target  # only regress on positive frames
+
+    return cls_target, disp_target, disp_mask
 
 
 # ---------------------------------------------------------------------------
@@ -66,9 +84,9 @@ class FullVideoDataset(Dataset):
     """
 
     def __init__(self, features_pt, hit_json,
-                 segment_len=2700, stride=None, sigma=2.0):
+                 segment_len=2700, stride=None, radius=5):
         self.segment_len = segment_len
-        self.sigma = sigma
+        self.radius = radius
 
         # Load features
         self.features = torch.load(features_pt, weights_only=True)
@@ -108,11 +126,14 @@ class FullVideoDataset(Dataset):
             pad = feats[-1:].expand(self.segment_len - valid_len, -1)
             feats = torch.cat([feats, pad])
 
-        target = multi_gaussian_target(hits, self.segment_len, self.sigma)
+        cls_target, disp_target, disp_mask = cls_displacement_target(
+            hits, self.segment_len, radius=self.radius)
 
         return {
             "features": feats,           # [segment_len, D]
-            "target": target,            # [segment_len]
+            "cls_target": cls_target,    # [segment_len]
+            "disp_target": disp_target,  # [segment_len]
+            "disp_mask": disp_mask,      # [segment_len]
             "hit_indices": hits,         # list[int] (segment-local)
             "valid_len": valid_len,      # int
             "segment_start": start,      # int (global offset)
@@ -136,9 +157,9 @@ class ClipFolderDataset(Dataset):
     Each (clip, player) pair = one sample. Supports multi-hit per player.
     """
 
-    def __init__(self, data_dir, backbone="dinov2", sigma=2.0, max_len=2700):
+    def __init__(self, data_dir, backbone="dinov2", radius=5, max_len=2700):
         self.backbone = backbone
-        self.sigma = sigma
+        self.radius = radius
         self.max_len = max_len
         self.data_dir = Path(data_dir)
         self.feat_dim = None  # auto-detected
@@ -227,11 +248,14 @@ class ClipFolderDataset(Dataset):
             feats = feats[:self.max_len]
             hits = [h for h in hits if h < self.max_len]
 
-        target = multi_gaussian_target(hits, self.max_len, self.sigma)
+        cls_target, disp_target, disp_mask = cls_displacement_target(
+            hits, self.max_len, radius=self.radius)
 
         return {
             "features": feats,           # [max_len, D]
-            "target": target,            # [max_len]
+            "cls_target": cls_target,    # [max_len]
+            "disp_target": disp_target,  # [max_len]
+            "disp_mask": disp_mask,      # [max_len]
             "hit_indices": hits,         # list[int]
             "valid_len": valid_len,      # int
             "segment_start": 0,          # always 0 for clips
@@ -246,7 +270,9 @@ def _collate(batch):
     """Custom collate: hit_indices stays as list of lists."""
     return {
         "features": torch.stack([b["features"] for b in batch]),
-        "target": torch.stack([b["target"] for b in batch]),
+        "cls_target": torch.stack([b["cls_target"] for b in batch]),
+        "disp_target": torch.stack([b["disp_target"] for b in batch]),
+        "disp_mask": torch.stack([b["disp_mask"] for b in batch]),
         "hit_indices": [b["hit_indices"] for b in batch],
         "valid_len": torch.tensor([b["valid_len"] for b in batch]),
         "segment_start": torch.tensor([b["segment_start"] for b in batch]),
@@ -263,7 +289,7 @@ def build_multihit_dataloaders(
     # Common
     segment_len=2700,
     stride=None,
-    sigma=2.0,
+    radius=5,
     batch_size=4,
     val_split=0.2,
     seed=42,
@@ -278,13 +304,13 @@ def build_multihit_dataloaders(
     if features_pt and hit_json:
         dataset = FullVideoDataset(
             features_pt, hit_json,
-            segment_len=segment_len, stride=stride, sigma=sigma,
+            segment_len=segment_len, stride=stride, radius=radius,
         )
         feat_dim = dataset.feat_dim
     elif clip_data_dir:
         dataset = ClipFolderDataset(
             clip_data_dir, backbone=backbone,
-            sigma=sigma, max_len=segment_len,
+            radius=radius, max_len=segment_len,
         )
         feat_dim = dataset.feat_dim
     else:

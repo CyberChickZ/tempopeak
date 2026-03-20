@@ -1,11 +1,12 @@
-"""Multi-hit evaluation: peak detection, P/R/F1, loss functions.
+"""Multi-hit evaluation: T-DEED style cls+displacement loss, detection, P/R/F1.
 
-Peak detection pipeline:
-  1. Gaussian-smooth the raw logits (remove frame-level noise)
-  2. Normalize to [0,1]
+Detection pipeline:
+  1. Sigmoid on cls_logits → cls probability per frame
+  2. Gaussian-smooth cls probabilities (remove frame-level noise)
   3. scipy.signal.find_peaks with height & min_distance
-  4. Greedy-match predicted peaks to GT peaks within tolerance
-  5. Compute Precision / Recall / F1
+  4. Refine each peak position using displacement prediction
+  5. Greedy-match predicted peaks to GT peaks within tolerance
+  6. Compute Precision / Recall / F1
 """
 
 import numpy as np
@@ -16,59 +17,96 @@ from scipy.signal import find_peaks
 
 
 # ---------------------------------------------------------------------------
-# Loss
+# Loss (Focal BCE + Displacement MSE)
 # ---------------------------------------------------------------------------
 
-def soft_cross_entropy(logits, target, valid_len=None):
-    """Soft cross-entropy loss for multi-peak distributions.
-
-    Handles padding: masks both logits and target, renormalizes target
-    over valid positions only. Uses -1e9 (not -inf) to avoid NaN from
-    0 * -inf in IEEE 754.
+def cls_displacement_loss(cls_logits, disp_logits, cls_target, disp_target,
+                          disp_mask, valid_len=None,
+                          focal_gamma=2.0, focal_alpha=0.25,
+                          lambda_disp=1.0):
+    """T-DEED style loss: focal BCE for cls + MSE for displacement.
 
     Args:
-        logits:    [B, T] raw model output.
-        target:    [B, T] normalized multi-Gaussian target.
-        valid_len: [B] real frame count per sample (mask padding).
+        cls_logits:  [B, T] raw classification logits
+        disp_logits: [B, T] raw displacement predictions
+        cls_target:  [B, T] binary (0/1)
+        disp_target: [B, T] signed offset to nearest hit
+        disp_mask:   [B, T] 1.0 for positive frames only
+        valid_len:   [B] mask padding
+        focal_gamma: focal loss gamma
+        focal_alpha: focal loss alpha
+        lambda_disp: displacement loss weight
 
     Returns:
-        Scalar loss.
+        total_loss, cls_loss, disp_loss (all scalars)
     """
-    B, T = logits.shape
+    B, T = cls_logits.shape
+
+    # Valid mask
     if valid_len is not None:
-        mask = torch.arange(T, device=logits.device)[None] >= valid_len[:, None]
-        logits = logits.masked_fill(mask, -1e9)
-        target = target.masked_fill(mask, 0.0)
-        target = target / target.sum(-1, keepdim=True).clamp(min=1e-8)
-    log_prob = F.log_softmax(logits, dim=-1)
-    return -(target * log_prob).sum(dim=-1).mean()
+        vmask = (torch.arange(T, device=cls_logits.device)[None]
+                 < valid_len[:, None]).float()
+    else:
+        vmask = torch.ones(B, T, device=cls_logits.device)
+
+    # --- Classification: Focal BCE ---
+    p = torch.sigmoid(cls_logits)
+    bce = F.binary_cross_entropy_with_logits(
+        cls_logits, cls_target, reduction='none')
+    p_t = p * cls_target + (1 - p) * (1 - cls_target)
+    focal_w = (1 - p_t) ** focal_gamma
+    alpha_t = focal_alpha * cls_target + (1 - focal_alpha) * (1 - cls_target)
+    cls_loss = (alpha_t * focal_w * bce * vmask).sum() / vmask.sum()
+
+    # --- Displacement: MSE on positive frames only ---
+    disp_diff = (disp_logits - disp_target) ** 2
+    disp_valid = disp_mask * vmask
+    n_pos = disp_valid.sum().clamp(min=1.0)
+    disp_loss = (disp_diff * disp_valid).sum() / n_pos
+
+    total = cls_loss + lambda_disp * disp_loss
+    return total, cls_loss.item(), disp_loss.item()
 
 
 # ---------------------------------------------------------------------------
-# Peak detection
+# Detection (cls peak finding + displacement refinement)
 # ---------------------------------------------------------------------------
 
-def detect_peaks(logits_np, sigma_smooth=3.0, height_ratio=0.15,
-                 min_distance=10):
-    """Detect peaks in a 1-D logits array.
+def cls_disp_detect(cls_logits, disp_logits, valid_len,
+                    threshold=0.5, min_distance=10):
+    """Detect hits from cls + displacement outputs.
 
     Args:
-        logits_np:    [T] numpy array (raw logits, valid region only).
-        sigma_smooth: Gaussian smoothing sigma before peak finding.
-        height_ratio: min peak height as fraction of (max - min).
-        min_distance: minimum frames between two peaks.
+        cls_logits:  [T] raw classification logits (single sample)
+        disp_logits: [T] displacement predictions
+        valid_len:   int
+        threshold:   sigmoid threshold for cls
+        min_distance: min frames between detected hits
 
     Returns:
-        list[int] — detected peak frame indices (sorted).
+        list[int] — detected hit frame indices (sorted)
     """
-    smoothed = gaussian_filter1d(logits_np.astype(np.float64),
-                                 sigma=sigma_smooth)
-    vmin, vmax = smoothed.min(), smoothed.max()
-    if vmax - vmin < 1e-8:
-        return []
-    normed = (smoothed - vmin) / (vmax - vmin)
-    peaks, _ = find_peaks(normed, height=height_ratio, distance=min_distance)
-    return sorted(peaks.tolist())
+    T = valid_len
+    cls_prob = torch.sigmoid(cls_logits[:T]).cpu().numpy()
+
+    # Smooth cls probabilities
+    cls_smooth = gaussian_filter1d(cls_prob.astype(np.float64), sigma=1.5)
+
+    # Find peaks in classification score
+    peaks, _ = find_peaks(cls_smooth, height=threshold,
+                          distance=min_distance)
+
+    # Refine each peak position using displacement
+    disp = disp_logits[:T].cpu().numpy()
+    refined = []
+    for pk in peaks:
+        # displacement = signed offset to nearest hit
+        # predicted hit position = pk + disp[pk]
+        hit_pos = int(round(pk + disp[pk]))
+        hit_pos = max(0, min(hit_pos, T - 1))
+        refined.append(hit_pos)
+
+    return sorted(set(refined))
 
 
 # ---------------------------------------------------------------------------

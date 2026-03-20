@@ -639,6 +639,71 @@ model.py 自动触发 `feat_proj = Linear(1024, 512)` 适配 temporal head。
 
 **关键发现**：Identity baseline 74.1%（ViT-B-16 仅 51.7%），说明 DINOv2 帧级特征已蕴含丰富时序信息。BiMamba2 79.3% 为全项目最佳。Transformer 从 ViT-B-16 最佳→DINOv2 最差，feat_proj 1024→512 瓶颈可能是原因。
 
+## Multi-Hit 训练 (T-DEED style cls+displacement)
+
+脚本：`train_multihit.py` — 全视频多击球检测，T-DEED 风格双头输出（分类 + 位移回归）。
+
+### 架构
+- **分类头** `fc_cls`：每帧 sigmoid → "±radius 帧内有 hit 吗？"（binary）
+- **位移头** `fc_disp`：每帧回归 → "最近 hit 的 signed offset"
+- **Loss**：Focal BCE（cls）+ MSE（disp，仅正帧）
+- **推理**：cls score 做 peak detection → disp 修正精确位置
+
+### HPC 运行
+
+```bash
+source /nfs/stak/users/zhanhaoc/hpc-share/conda/bin/activate
+conda activate sam_3d_body
+cd /nfs/hpc/share/zhanhaoc/hpe/tempopeak
+git pull
+srun --gres=gpu:1 --mem=64G --pty bash
+
+# 训练（全视频模式，需要预提取的特征 .pt + HIT JSON）
+python train_multihit.py \
+    --features_pt data/00001_features.pt \
+    --hit_json datasets/v1/clips/0006/00001.json \
+    --temporal_head bimamba2 \
+    --segment_len 2700 --radius 5 --epochs 50 --batch_size 4
+
+# 评估
+python train_multihit.py \
+    --features_pt data/00001_features.pt \
+    --hit_json datasets/v1/clips/0006/00001.json \
+    --eval_only --checkpoint checkpoints/best_bimamba2_multihit.pt
+
+# 推理 benchmark（所有 head）
+python train_multihit.py --benchmark --feat_dim 1024 --segment_len 2700
+```
+
+### train_multihit.py 参数
+
+| 参数 | 默认值 | 说明 |
+|---|---|---|
+| `--features_pt` | (无) | 预提取特征 [N, D] .pt 文件 |
+| `--hit_json` | (无) | HIT 标注 JSON（全局帧索引） |
+| `--clip_data_dir` | (无) | export/ 目录（clip 模式） |
+| `--backbone` | `dinov2` | 特征 backbone（clip 模式用） |
+| `--temporal_head` | `bimamba2` | 时序头 |
+| `--segment_len` | `2700` | 段长（帧数） |
+| `--stride` | segment_len | 段步幅 |
+| `--radius` | `5` | 正标签半径（±帧，5帧≈167ms@30fps） |
+| `--lr` | `1e-3` | 学习率 |
+| `--epochs` | `50` | 训练轮数 |
+| `--batch_size` | `4` | 批大小 |
+| `--eval_only` | false | 仅评估 |
+| `--benchmark` | false | 推理 benchmark |
+
+### 超参数选择依据
+
+| 参数 | 值 | 来源 |
+|---|---|---|
+| `radius` | 5 | T-DEED r_E，5帧≈167ms 覆盖击球动作 |
+| `focal_gamma` | 2.0 | ActionFormer/TriDet 标准 |
+| `focal_alpha` | 0.25 | ActionFormer/TriDet 标准 |
+| `lambda_disp` | 1.0 | ActionFormer ablation（0.2-5.0 不敏感） |
+| `threshold` | 0.5 | 推理阈值起点，可 sweep 0.3-0.7 |
+| `min_distance` | 10 | ~333ms@30fps，两次击球最小间隔 |
+
 ## Optical Flow 可视化 (RAFT-Large)
 
 脚本：`scripts/optical_flow_viz.py` — 用 torchvision RAFT-Large 对 hit 帧 (t-1, t) 做光流可视化。
