@@ -49,6 +49,8 @@ HEAD_MARKERS = {
     "identity": "x",
 }
 
+EXP_TAG = os.environ.get("EXP_TAG", "518")  # "224" or "518"
+
 CKPT_DIR = os.path.join(os.path.dirname(__file__) or ".", "checkpoints")
 PLOT_DIR = os.path.join(CKPT_DIR, "plots")
 os.makedirs(PLOT_DIR, exist_ok=True)
@@ -135,11 +137,11 @@ for h in HEADS:
 
 ax.set_xlabel("Epoch")
 ax.set_ylabel("F1@1 (%)")
-ax.set_title("Hit Detection F1@1 (±1 frame) — All Temporal Heads")
+ax.set_title(f"Hit Detection F1@1 (±1 frame) — CE-{EXP_TAG} Features")
 ax.legend(loc="upper left", framealpha=0.9)
 ax.set_xlim(0, 300)
 ax.set_ylim(0, None)
-path = os.path.join(PLOT_DIR, "fig1_f1at1_curves.pdf")
+path = os.path.join(PLOT_DIR, f"{EXP_TAG}_fig1_f1at1_curves.pdf")
 fig.savefig(path)
 fig.savefig(path.replace(".pdf", ".png"))
 plt.close(fig)
@@ -160,11 +162,11 @@ for h in HEADS:
 
 ax.set_xlabel("Epoch")
 ax.set_ylabel("F1@1 (%)")
-ax.set_title("Hit Detection F1@1 (EMA smoothed, α=0.92) — All Temporal Heads")
+ax.set_title(f"Hit Detection F1@1 (EMA smoothed, α=0.92) — CE-{EXP_TAG} Features")
 ax.legend(loc="upper left", framealpha=0.9)
 ax.set_xlim(0, 300)
 ax.set_ylim(0, None)
-path = os.path.join(PLOT_DIR, "fig2_f1at1_curves_smooth.pdf")
+path = os.path.join(PLOT_DIR, f"{EXP_TAG}_fig2_f1at1_curves_smooth.pdf")
 fig.savefig(path)
 fig.savefig(path.replace(".pdf", ".png"))
 plt.close(fig)
@@ -204,10 +206,10 @@ ax.set_xticks(x)
 ax.set_xticklabels([f"{HEAD_LABELS[h]}\n(ep {best_epochs[h]})" for h in heads_present],
                    fontsize=9)
 ax.set_ylabel("F1 Score (%)")
-ax.set_title("Best F1 Scores at ±1/±2/±3 Frames (at Best F1@1 Epoch)")
+ax.set_title(f"Best F1 Scores at ±1/±2/±3 Frames — CE-{EXP_TAG}")
 ax.legend(loc="upper right")
 ax.set_ylim(0, max(max(best_f1["F1@3"].values()), 80) + 5)
-path = os.path.join(PLOT_DIR, "fig3_best_f1_bar.pdf")
+path = os.path.join(PLOT_DIR, f"{EXP_TAG}_fig3_best_f1_bar.pdf")
 fig.savefig(path)
 fig.savefig(path.replace(".pdf", ".png"))
 plt.close(fig)
@@ -237,9 +239,9 @@ for i, h in enumerate(HEADS):
     if i % 3 == 0:
         ax.set_ylabel("Loss (log)")
 
-fig.suptitle("Train vs Validation Loss — Overfitting Analysis", fontsize=14, y=1.01)
+fig.suptitle(f"Train vs Validation Loss — CE-{EXP_TAG}", fontsize=14, y=1.01)
 fig.tight_layout()
-path = os.path.join(PLOT_DIR, "fig4_train_val_loss.pdf")
+path = os.path.join(PLOT_DIR, f"{EXP_TAG}_fig4_train_val_loss.pdf")
 fig.savefig(path)
 fig.savefig(path.replace(".pdf", ".png"))
 plt.close(fig)
@@ -267,9 +269,9 @@ for i, h in enumerate(HEADS):
     if i % 3 == 0:
         ax.set_ylabel("Score (%)")
 
-fig.suptitle("Precision & Recall @1 (±33ms) — EMA Smoothed", fontsize=14, y=1.01)
+fig.suptitle(f"Precision & Recall @1 (±33ms) — CE-{EXP_TAG}", fontsize=14, y=1.01)
 fig.tight_layout()
-path = os.path.join(PLOT_DIR, "fig5_precision_recall_at1.pdf")
+path = os.path.join(PLOT_DIR, f"{EXP_TAG}_fig5_precision_recall_at1.pdf")
 fig.savefig(path)
 fig.savefig(path.replace(".pdf", ".png"))
 plt.close(fig)
@@ -285,9 +287,9 @@ lr = col(ref_head, "lr")
 ax.plot(epochs, lr * 1e4, color="#2196F3", linewidth=2)
 ax.set_xlabel("Epoch")
 ax.set_ylabel("Learning Rate (×10⁻⁴)")
-ax.set_title("CosineAnnealingLR Schedule (3×10⁻⁴ → 1×10⁻⁵)")
+ax.set_title(f"CosineAnnealingLR Schedule (3×10⁻⁴ → 1×10⁻⁵) — CE-{EXP_TAG}")
 ax.yaxis.set_major_formatter(mticker.FormatStrFormatter("%.1f"))
-path = os.path.join(PLOT_DIR, "fig6_lr_schedule.pdf")
+path = os.path.join(PLOT_DIR, f"{EXP_TAG}_fig6_lr_schedule.pdf")
 fig.savefig(path)
 fig.savefig(path.replace(".pdf", ".png"))
 plt.close(fig)
@@ -316,9 +318,9 @@ for i, h in enumerate(HEADS):
     if i % 3 == 0:
         ax.set_ylabel("Count")
 
-fig.suptitle("Predicted Hit Count vs Ground Truth Over Training", fontsize=14, y=1.01)
+fig.suptitle(f"Predicted Hit Count vs Ground Truth — CE-{EXP_TAG}", fontsize=14, y=1.01)
 fig.tight_layout()
-path = os.path.join(PLOT_DIR, "fig7_pred_count.pdf")
+path = os.path.join(PLOT_DIR, f"{EXP_TAG}_fig7_pred_count.pdf")
 fig.savefig(path)
 fig.savefig(path.replace(".pdf", ".png"))
 plt.close(fig)
@@ -337,11 +339,11 @@ for h in HEADS:
 
 ax.set_xlabel("Epoch")
 ax.set_ylabel("Validation Cls Loss")
-ax.set_title("Validation Classification Loss (EMA smoothed) — All Heads")
+ax.set_title(f"Validation Classification Loss (EMA smoothed) — CE-{EXP_TAG}")
 ax.legend(loc="upper right", framealpha=0.9)
 ax.set_xlim(0, 300)
 ax.set_yscale("log")
-path = os.path.join(PLOT_DIR, "fig8_cls_loss_curves.pdf")
+path = os.path.join(PLOT_DIR, f"{EXP_TAG}_fig8_cls_loss_curves.pdf")
 fig.savefig(path)
 fig.savefig(path.replace(".pdf", ".png"))
 plt.close(fig)
@@ -352,6 +354,6 @@ print(f"\n✅ All 8 figures saved to: {PLOT_DIR}/")
 print("   PDF (vector, for paper) + PNG (raster, for preview)")
 print("\nFiles:")
 for i in range(1, 9):
-    fname = [f for f in os.listdir(PLOT_DIR) if f.startswith(f"fig{i}_") and f.endswith(".pdf")]
+    fname = [f for f in os.listdir(PLOT_DIR) if f.startswith(f"{EXP_TAG}_fig{i}_") and f.endswith(".pdf")]
     if fname:
         print(f"  {fname[0]}")
