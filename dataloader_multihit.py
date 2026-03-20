@@ -89,7 +89,7 @@ class FullVideoDataset(Dataset):
         self.radius = radius
 
         # Load features
-        self.features = torch.load(features_pt, weights_only=True)
+        self.features = torch.load(features_pt, weights_only=True).float()
         if self.features.dim() == 3:
             self.features = self.features.squeeze(1)  # [N,1,D] → [N,D]
         assert self.features.dim() == 2, \
