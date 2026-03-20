@@ -1,34 +1,36 @@
 """Extract per-frame DINOv2 features → single [N, D] .pt file.
 
 Two input modes:
-  --video      Read .mp4 directly, optional court crop + letterbox
-  --frames_dir Read pre-exported JPEGs (from annotator CE export), already preprocessed
+  --video      Read .mp4 directly (sequential, fast on NFS)
+  --frames_dir Read pre-exported JPEGs (thread pool for parallel IO)
 
-Uses PyTorch DataLoader with multiple workers for fast parallel JPEG loading.
+Uses threaded prefetch to overlap disk IO and GPU compute.
 
 Usage:
-  # Mode 1: From .mp4 with court crop → 518
+  # From .mp4 (recommended — sequential IO, fastest on NFS)
   python extract_features_fullvideo.py \
-      --video datasets/fullvideo/00001.mp4 \
-      --output datasets/fullvideo/00001_court518.pt \
-      --crop 100,900,200,1700 --img_size 518 --batch_size 256
+      --video datasets/v1/export/0006/00001/00001.mp4 \
+      --output datasets/v1/export/0006/00001/00001_518.pt \
+      --img_size 518 --batch_size 256
 
-  # Mode 2: From annotator-exported JPEGs (already cropped+letterboxed)
+  # From annotator-exported JPEGs
   python extract_features_fullvideo.py \
       --frames_dir datasets/v1/export/0006/00001/frames_518 \
-      --output datasets/fullvideo/00001_ce518.pt \
-      --batch_size 256 --num_workers 8
+      --output datasets/v1/export/0006/00001/00001_ce518.pt \
+      --batch_size 256 --num_workers 32
 """
 
 import argparse
 import os
 import time
+from concurrent.futures import ThreadPoolExecutor
+from threading import Thread
+from queue import Queue
 
 import cv2
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 
 
@@ -73,101 +75,105 @@ def letterbox(img, img_size):
 
 
 # ---------------------------------------------------------------------------
-# Dataset classes for DataLoader (parallel loading with num_workers)
+# Frame reading functions
 # ---------------------------------------------------------------------------
 
-class FramesDirDataset(Dataset):
-    """Read pre-exported JPEGs from a directory. Already preprocessed."""
-
-    def __init__(self, frames_dir):
-        self.frames_dir = frames_dir
-        # Count sequential frames: 0.jpg, 1.jpg, ...
-        self.total = 0
-        while os.path.exists(os.path.join(frames_dir, f"{self.total}.jpg")):
-            self.total += 1
-        if self.total == 0:
-            # Fallback: count all .jpg files
-            self.total = len([f for f in os.listdir(frames_dir) if f.endswith(".jpg")])
-
-    def __len__(self):
-        return self.total
-
-    def __getitem__(self, idx):
-        jpg_path = os.path.join(self.frames_dir, f"{idx}.jpg")
-        img = cv2.imread(jpg_path)
-        if img is None:
-            # Return black frame if missing
-            return torch.zeros(3, 1, 1), idx
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        tensor = IMAGENET_TRANSFORM(img)
-        return tensor, idx
+def _read_jpeg(args):
+    """Read single JPEG → tensor. For ThreadPoolExecutor."""
+    idx, path = args
+    img = cv2.imread(path)
+    if img is None:
+        return idx, None
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    return idx, IMAGENET_TRANSFORM(img)
 
 
-class VideoDataset(Dataset):
-    """Read frames from .mp4 with optional crop + letterbox.
+def produce_batches_from_dir(frames_dir, total, batch_size, num_workers, queue):
+    """Producer thread: read JPEGs in parallel via ThreadPoolExecutor, push batches to queue."""
+    pool = ThreadPoolExecutor(max_workers=num_workers)
 
-    Pre-reads all frames into memory for random access by workers.
-    For very large videos, consider using --frames_dir mode instead.
-    """
+    batch_indices = []
+    batch_tensors = []
 
-    def __init__(self, video_path, crop=None, img_size=518):
-        self.crop = crop
-        self.img_size = img_size
-        self.video_path = video_path
+    # Submit all reads
+    jobs = [(i, os.path.join(frames_dir, f"{i}.jpg")) for i in range(total)]
 
-        # We can't share cv2.VideoCapture across workers, so each worker
-        # will open its own. Store metadata only.
-        cap = cv2.VideoCapture(video_path)
-        self.total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        self.fps = cap.get(cv2.CAP_PROP_FPS)
-        cap.release()
+    for idx, tensor in pool.map(_read_jpeg, jobs):
+        if tensor is None:
+            continue
+        batch_indices.append(idx)
+        batch_tensors.append(tensor)
 
-    def __len__(self):
-        return self.total
+        if len(batch_tensors) == batch_size:
+            queue.put((torch.stack(batch_tensors), batch_indices))
+            batch_indices = []
+            batch_tensors = []
 
-    def __getitem__(self, idx):
-        # Each worker opens its own VideoCapture (seek is OK for indexed access)
-        cap = cv2.VideoCapture(self.video_path)
-        cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
+    # Last partial batch
+    if batch_tensors:
+        queue.put((torch.stack(batch_tensors), batch_indices))
+
+    pool.shutdown()
+    queue.put(None)  # Sentinel
+
+
+def produce_batches_from_video(video_path, crop, img_size, batch_size, queue):
+    """Producer thread: sequential video read (optimal for NFS), push batches to queue."""
+    cap = cv2.VideoCapture(video_path)
+
+    batch_indices = []
+    batch_tensors = []
+    fi = 0
+
+    while True:
         ret, img = cap.read()
-        cap.release()
-
-        if not ret or img is None:
-            return torch.zeros(3, 1, 1), idx
+        if not ret:
+            break
 
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        if self.crop:
-            y1, y2, x1, x2 = self.crop
+        if crop:
+            y1, y2, x1, x2 = crop
             img = img[y1:y2, x1:x2]
-        img = letterbox(img, self.img_size)
+        img = letterbox(img, img_size)
         tensor = IMAGENET_TRANSFORM(img)
-        return tensor, idx
+
+        batch_indices.append(fi)
+        batch_tensors.append(tensor)
+        fi += 1
+
+        if len(batch_tensors) == batch_size:
+            queue.put((torch.stack(batch_tensors), batch_indices))
+            batch_indices = []
+            batch_tensors = []
+
+    cap.release()
+
+    if batch_tensors:
+        queue.put((torch.stack(batch_tensors), batch_indices))
+
+    queue.put(None)  # Sentinel
 
 
 def main():
     p = argparse.ArgumentParser(
         description="Extract full-video DINOv2 features")
-    # Input: either --video or --frames_dir
     p.add_argument("--video", type=str, default=None,
-                   help="Input .mp4 path (Mode 1: read video directly)")
+                   help="Input .mp4 path (sequential read, best for NFS)")
     p.add_argument("--frames_dir", type=str, default=None,
-                   help="Pre-exported JPEG dir (Mode 2: from annotator export)")
+                   help="Pre-exported JPEG dir (parallel thread read)")
     p.add_argument("--output", required=True,
                    help="Output .pt path ([N, 1024] fp16)")
-    # Video mode options
     p.add_argument("--crop", type=str, default=None,
-                   help="Court crop as y1,y2,x1,x2 (video mode only)")
+                   help="Court crop y1,y2,x1,x2 (video mode only)")
     p.add_argument("--img_size", type=int, default=518,
-                   help="Letterbox target size (video mode only, 518=DINOv2 native)")
-    # Common
+                   help="Letterbox size (video mode only, 518=DINOv2 native)")
     p.add_argument("--batch_size", type=int, default=256)
-    p.add_argument("--num_workers", type=int, default=8,
-                   help="DataLoader workers for parallel JPEG loading")
+    p.add_argument("--num_workers", type=int, default=32,
+                   help="Thread pool size for JPEG reading (frames_dir mode)")
     p.add_argument("--device", type=str, default="auto",
                    help="auto = cuda if available else cpu (never MPS)")
     args = p.parse_args()
 
-    # Validate input
     if not args.video and not args.frames_dir:
         p.error("Must provide --video or --frames_dir")
     if args.video and args.frames_dir:
@@ -175,73 +181,86 @@ def main():
 
     device = "cuda" if args.device == "auto" and torch.cuda.is_available() else "cpu"
 
-    # Parse crop (video mode only)
     crop = None
     if args.crop:
         parts = [int(x) for x in args.crop.split(",")]
         assert len(parts) == 4, "Crop must be y1,y2,x1,x2"
         crop = tuple(parts)
 
-    # Build dataset
+    # Count total frames
     if args.frames_dir:
-        dataset = FramesDirDataset(args.frames_dir)
-        print(f"Frames dir: {args.frames_dir}")
-        # Show frame size from first frame
+        total_frames = 0
+        while os.path.exists(os.path.join(args.frames_dir, f"{total_frames}.jpg")):
+            total_frames += 1
+        if total_frames == 0:
+            total_frames = len([f for f in os.listdir(args.frames_dir) if f.endswith(".jpg")])
         sample = cv2.imread(os.path.join(args.frames_dir, "0.jpg"))
+        print(f"Frames dir: {args.frames_dir}")
         if sample is not None:
             print(f"  Frame size: {sample.shape[1]}x{sample.shape[0]}")
     else:
-        dataset = VideoDataset(args.video, crop=crop, img_size=args.img_size)
+        cap = cv2.VideoCapture(args.video)
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        cap.release()
         print(f"Video: {args.video}")
-        print(f"  FPS: {dataset.fps:.1f}")
+        print(f"  FPS: {fps:.1f}, img_size: {args.img_size}")
         if crop:
             print(f"  Court crop: y=[{crop[0]}:{crop[1]}], x=[{crop[2]}:{crop[3]}]")
-        print(f"  img_size: {args.img_size}")
 
-    total_frames = len(dataset)
     print(f"  Total frames: {total_frames}")
-    print(f"  batch_size: {args.batch_size}, num_workers: {args.num_workers}, device: {device}")
-
-    # DataLoader with parallel workers
-    loader = DataLoader(
-        dataset,
-        batch_size=args.batch_size,
-        shuffle=False,
-        num_workers=args.num_workers,
-        pin_memory=True,
-        drop_last=False,
-    )
+    print(f"  batch_size: {args.batch_size}, device: {device}")
+    if args.frames_dir:
+        print(f"  num_workers: {args.num_workers} (thread pool)")
 
     # Build model
     print("Loading DINOv2 ViT-L...")
     backbone, feat_dim = build_dinov2(device)
     print(f"  feat_dim: {feat_dim}")
 
-    # Extract features — pre-allocate output tensor
+    # Pre-allocate output
     all_features = torch.zeros(total_frames, feat_dim, dtype=torch.float16)
+
+    # Start producer thread (reads frames → pushes batches to queue)
+    # Queue size 2 = double buffering: producer fills next batch while GPU processes current
+    queue = Queue(maxsize=2)
+
+    if args.frames_dir:
+        producer = Thread(target=produce_batches_from_dir,
+                          args=(args.frames_dir, total_frames, args.batch_size,
+                                args.num_workers, queue))
+    else:
+        producer = Thread(target=produce_batches_from_video,
+                          args=(args.video, crop, args.img_size, args.batch_size, queue))
+    producer.start()
+
+    # Consumer: GPU inference
     t0 = time.time()
     frames_done = 0
 
-    for batch_tensors, batch_indices in loader:
-        # batch_tensors: [B, 3, H, W], batch_indices: [B]
+    while True:
+        item = queue.get()
+        if item is None:
+            break
+
+        batch_tensors, batch_indices = item
         batch_tensors = batch_tensors.to(device)
 
         with torch.no_grad():
             feats = backbone(batch_tensors)  # [B, 1024]
 
-        # Place features at correct indices (DataLoader may reorder with workers)
         feats_cpu = feats.cpu().half()
         for i, idx in enumerate(batch_indices):
-            all_features[idx.item()] = feats_cpu[i]
+            all_features[idx] = feats_cpu[i]
 
-        frames_done += batch_tensors.shape[0]
+        frames_done += len(batch_indices)
+        elapsed = time.time() - t0
+        fps_rate = frames_done / max(elapsed, 0.1)
+        eta = (total_frames - frames_done) / max(fps_rate, 1)
+        print(f"  {frames_done}/{total_frames} ({frames_done/total_frames*100:.1f}%) "
+              f"| {fps_rate:.0f} frames/s | ETA {eta:.0f}s")
 
-        if frames_done % (args.batch_size * 5) == 0 or frames_done == total_frames:
-            elapsed = time.time() - t0
-            fps_rate = frames_done / max(elapsed, 0.1)
-            eta = (total_frames - frames_done) / max(fps_rate, 1)
-            print(f"  {frames_done}/{total_frames} ({frames_done/total_frames*100:.1f}%) "
-                  f"| {fps_rate:.0f} frames/s | ETA {eta:.0f}s")
+    producer.join()
 
     # Save
     os.makedirs(os.path.dirname(args.output) or ".", exist_ok=True)
