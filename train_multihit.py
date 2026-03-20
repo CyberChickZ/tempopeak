@@ -85,7 +85,7 @@ class MultiHitModel(nn.Module):
 # Training
 # ---------------------------------------------------------------------------
 
-def train_one_epoch(model, loader, optimizer, device):
+def train_one_epoch(model, loader, optimizer, device, lambda_disp=0.1):
     """Train one epoch, return (avg_loss, avg_cls_loss, avg_disp_loss)."""
     model.train()
     total_loss = 0.0
@@ -104,7 +104,8 @@ def train_one_epoch(model, loader, optimizer, device):
 
         loss, cls_l, disp_l = cls_displacement_loss(
             cls_logits, disp_logits,
-            cls_target, disp_target, disp_mask, valid_len)
+            cls_target, disp_target, disp_mask, valid_len,
+            lambda_disp=lambda_disp)
 
         optimizer.zero_grad()
         loss.backward()
@@ -125,7 +126,7 @@ def train_one_epoch(model, loader, optimizer, device):
 
 @torch.no_grad()
 def evaluate(model, loader, device, tolerances=(1, 2, 3),
-             threshold=0.5, min_distance=10):
+             threshold=0.5, min_distance=10, lambda_disp=0.1):
     """Evaluate model: cls+disp detection → P/R/F1 at multiple tolerances.
 
     Returns dict with loss, cls_loss, disp_loss, P@k, R@k, F1@k, total_gt, total_pred.
@@ -152,7 +153,8 @@ def evaluate(model, loader, device, tolerances=(1, 2, 3),
 
         loss, cls_l, disp_l = cls_displacement_loss(
             cls_logits, disp_logits,
-            cls_target, disp_target, disp_mask, valid_len)
+            cls_target, disp_target, disp_mask, valid_len,
+            lambda_disp=lambda_disp)
         total_loss += loss.item()
         total_cls_loss += cls_l
         total_disp_loss += disp_l
@@ -291,11 +293,13 @@ def parse_args():
     # Training
     p.add_argument("--segment_len", type=int, default=2700)
     p.add_argument("--stride", type=int, default=None,
-                   help="Segment stride (default=segment_len, no overlap)")
+                   help="Segment stride (default=segment_len//2, 50%% overlap)")
     p.add_argument("--radius", type=int, default=5,
                    help="Positive label radius around each hit (frames)")
     p.add_argument("--lr", type=float, default=1e-3)
     p.add_argument("--weight_decay", type=float, default=1e-4)
+    p.add_argument("--lambda_disp", type=float, default=0.1,
+                   help="Displacement loss weight (default 0.1 to balance with cls)")
     p.add_argument("--epochs", type=int, default=50)
     p.add_argument("--batch_size", type=int, default=4)
     p.add_argument("--seed", type=int, default=42)
@@ -401,7 +405,8 @@ def main():
     # ── Eval-only mode ────────────────────────────────────────────
     if args.eval_only:
         t0 = time.time()
-        metrics = evaluate(model, val_loader, device)
+        metrics = evaluate(model, val_loader, device,
+                           lambda_disp=args.lambda_disp)
         eval_time = time.time() - t0
 
         print(f"\n[Eval] loss={metrics['loss']:.4f} "
@@ -440,12 +445,14 @@ def main():
         # Train
         t0 = time.time()
         train_loss, train_cls, train_disp = train_one_epoch(
-            model, train_loader, optimizer, device)
+            model, train_loader, optimizer, device,
+            lambda_disp=args.lambda_disp)
         train_time = time.time() - t0
 
         # Eval
         t0 = time.time()
-        metrics = evaluate(model, val_loader, device)
+        metrics = evaluate(model, val_loader, device,
+                           lambda_disp=args.lambda_disp)
         eval_time = time.time() - t0
 
         # Best check (F1@2 as primary metric)

@@ -103,7 +103,7 @@ class FullVideoDataset(Dataset):
 
         # Create segments
         if stride is None:
-            stride = segment_len
+            stride = segment_len // 2  # 50% overlap by default
 
         self.segments = []  # [(start, end, [local_hits])]
         for start in range(0, self.N, stride):
