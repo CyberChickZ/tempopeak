@@ -222,7 +222,6 @@ Thumbs.db
 
 # Project specific
 work_dirs/
-checkpoints/
 logs/
 data/
 # outputs/
@@ -245,3 +244,4 @@ datasets/yolo_refine/
 *.pt
 data/clips_tmp/
 *.tar.gz
+*.pt
