@@ -849,5 +849,13 @@ python train_multihit.py --benchmark --feat_dim 1024 --segment_len 2700
 
 ### 输出
 - 训练日志：`[Epoch N/500] loss=X | P@1=X% R@1=X% F1@1/2/3=X% (GT=N Pred=N) | train=Xs eval=Xs | best_F1@1=X%`
+- **CSV 日志**：`checkpoints/log_{head}.csv`（每 epoch 一行，22 列，每行 flush）
 - Checkpoint：`checkpoints/best_{head}_multihit.pt`、`checkpoints/last_{head}_multihit.pt`
 - Benchmark：每个 head 的 ms/segment 和参数量
+
+### 结果提取（无需重跑）
+```bash
+# 从所有 best checkpoint 提取 metrics → 终端表格 + CSV
+python extract_results.py
+# 输出：checkpoints/comparison_6head.csv
+```
