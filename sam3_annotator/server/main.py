@@ -623,6 +623,7 @@ def pl_detect_status():
 @app.get("/api/pl/clips")
 def pl_clips(workdir: str):
     import glob as _glob
+    import cv2 as _cv2
     if not os.path.isdir(workdir):
         return {"clips": []}
     clips = []
@@ -634,9 +635,14 @@ def pl_clips(workdir: str):
         if os.path.exists(json_path):
             with open(json_path) as f:
                 json_data = json.load(f)
+        # Get total_frames from video metadata
+        cap = _cv2.VideoCapture(mp4)
+        total_frames = int(cap.get(_cv2.CAP_PROP_FRAME_COUNT))
+        cap.release()
         clips.append({
             "name": name,
             "has_detection": os.path.exists(det_path),
+            "total_frames": total_frames,
             "hits": json_data.get("hits", json_data.get("HIT", [])),
             "key_frames": json_data.get("key_frames", {}),
             "hitters": json_data.get("hitters", []),
@@ -703,11 +709,32 @@ def pl_frame(workdir: str, name: str, frame: int):
 
 @app.get("/api/pl/detections")
 def pl_detections(workdir: str, name: str):
-    path = os.path.join(workdir, name + "_det.json")
-    if not os.path.exists(path):
-        return {"frames": {}}
-    with open(path) as f:
-        return json.load(f)
+    import cv2 as _cv2
+
+    det_path = os.path.join(workdir, name + "_det.json")
+    if os.path.exists(det_path):
+        with open(det_path) as f:
+            data = json.load(f)
+        # Ensure total_frames is present
+        if "total_frames" not in data:
+            video_path = os.path.join(workdir, name + ".mp4")
+            if os.path.exists(video_path):
+                cap = _cv2.VideoCapture(video_path)
+                data["total_frames"] = int(cap.get(_cv2.CAP_PROP_FRAME_COUNT))
+                cap.release()
+        return data
+
+    # No detection file — return video metadata only
+    video_path = os.path.join(workdir, name + ".mp4")
+    result = {"frames": {}, "fps": 30, "width": 1920, "height": 1080, "total_frames": 0}
+    if os.path.exists(video_path):
+        cap = _cv2.VideoCapture(video_path)
+        result["fps"] = cap.get(_cv2.CAP_PROP_FPS) or 30
+        result["width"] = int(cap.get(_cv2.CAP_PROP_FRAME_WIDTH)) or 1920
+        result["height"] = int(cap.get(_cv2.CAP_PROP_FRAME_HEIGHT)) or 1080
+        result["total_frames"] = int(cap.get(_cv2.CAP_PROP_FRAME_COUNT))
+        cap.release()
+    return result
 
 @app.post("/api/pl/save")
 def pl_save(req: PLSaveRequest):
@@ -795,16 +822,14 @@ def _run_pl_export(workdir: str, export_dir: str):
     # Suppress cv2 h264 warnings
     os.environ["OPENCV_LOG_LEVEL"] = "SILENT"
 
-    # Find annotated clips (have .json but not _det.json)
-    all_json = sorted(_glob.glob(os.path.join(workdir, "*.json")))
-    clip_list = []
-    for jp in all_json:
-        bn = os.path.basename(jp)
-        if bn.endswith("_det.json"):
-            continue
-        clip_name = os.path.splitext(bn)[0]
-        if os.path.exists(os.path.join(workdir, clip_name + ".mp4")):
-            clip_list.append((clip_name, jp))
+    # Find all clips: any .mp4 with a matching .json (annotation)
+    # Also include .mp4 files WITHOUT .json (export frames only)
+    all_mp4 = sorted(_glob.glob(os.path.join(workdir, "*.mp4")))
+    clip_list = []  # [(clip_name, json_path_or_None)]
+    for mp4 in all_mp4:
+        clip_name = os.path.splitext(os.path.basename(mp4))[0]
+        json_path = os.path.join(workdir, clip_name + ".json")
+        clip_list.append((clip_name, json_path if os.path.exists(json_path) else None))
 
     _pl_export_state.update({"running": True, "done_clips": 0, "total_clips": len(clip_list),
                              "done_frames": 0, "current": "", "error": ""})
@@ -813,12 +838,12 @@ def _run_pl_export(workdir: str, export_dir: str):
             _pl_export_state["current"] = clip_name
             video_path = os.path.join(workdir, clip_name + ".mp4")
 
-            with open(json_path, "r") as f:
-                annot_data = json.load(f)
+            # Load annotation data if available
+            annot_data = {}
+            if json_path:
+                with open(json_path, "r") as f:
+                    annot_data = json.load(f)
             frames_data = annot_data.get("frames", {})
-            if not frames_data:
-                _pl_export_state["done_clips"] += 1
-                continue
 
             clip_dir = os.path.join(export_dir, video_name, clip_name)
             frames_dir = os.path.join(clip_dir, "frames")
@@ -829,20 +854,41 @@ def _run_pl_export(workdir: str, export_dir: str):
                 _pl_export_state["done_clips"] += 1
                 continue
             try:
-                frame_numbers = sorted([int(k) for k in frames_data.keys()])
-                for frame_num in frame_numbers:
-                    cap.set(_cv2.CAP_PROP_POS_FRAMES, frame_num)
-                    ret, img = cap.read()
-                    if not ret:
-                        continue
-                    _cv2.imwrite(os.path.join(frames_dir, f"{frame_num}.jpg"),
-                                img, [_cv2.IMWRITE_JPEG_QUALITY, 95])
-                    _pl_export_state["done_frames"] += 1
+                total_video_frames = int(cap.get(_cv2.CAP_PROP_FRAME_COUNT))
+
+                if frames_data:
+                    # Has P1/P2 boxes: export only annotated frames (existing behavior)
+                    frame_numbers = sorted([int(k) for k in frames_data.keys()])
+                else:
+                    # No boxes: export ALL frames from video
+                    frame_numbers = list(range(total_video_frames))
+
+                # Sequential read for full export (much faster than seek per frame)
+                if not frames_data and total_video_frames > 0:
+                    cap.set(_cv2.CAP_PROP_POS_FRAMES, 0)
+                    for fi in range(total_video_frames):
+                        ret, img = cap.read()
+                        if not ret:
+                            break
+                        out_path = os.path.join(frames_dir, f"{fi}.jpg")
+                        if not os.path.exists(out_path):
+                            _cv2.imwrite(out_path, img,
+                                        [_cv2.IMWRITE_JPEG_QUALITY, 95])
+                        _pl_export_state["done_frames"] += 1
+                else:
+                    for frame_num in frame_numbers:
+                        cap.set(_cv2.CAP_PROP_POS_FRAMES, frame_num)
+                        ret, img = cap.read()
+                        if not ret:
+                            continue
+                        _cv2.imwrite(os.path.join(frames_dir, f"{frame_num}.jpg"),
+                                    img, [_cv2.IMWRITE_JPEG_QUALITY, 95])
+                        _pl_export_state["done_frames"] += 1
 
                 annot_out = {
                     "clip": clip_name, "video": video_name,
                     "total_frames": len(frame_numbers),
-                    "hits": annot_data.get("hits", []),
+                    "hits": annot_data.get("hits", annot_data.get("HIT", [])),
                     "hitters": annot_data.get("hitters", []),
                     "frames": frames_data
                 }

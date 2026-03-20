@@ -2039,7 +2039,7 @@ async function plSelectClip(idx) {
     plKeyFrames = clip.key_frames || {};
     plHitters = clip.hitters || new Array(plHits.length).fill(0);
 
-    // Load detections (includes fps, width, height)
+    // Load detections (includes fps, width, height, total_frames)
     const detRes = await fetch(`/api/pl/detections?workdir=${encodeURIComponent(plWorkdir)}&name=${clip.name}`);
     const detData = await detRes.json();
     plFps = detData.fps || 30;
@@ -2048,9 +2048,12 @@ async function plSelectClip(idx) {
     plDetections = {};
     Object.entries(detData.frames || {}).forEach(([k, v]) => { plDetections[parseInt(k)] = v; });
 
-    // Calculate total frames from detection data
-    const frameKeys = Object.keys(plDetections).map(Number);
-    plTotalFrames = frameKeys.length > 0 ? Math.max(...frameKeys) + 1 : 0;
+    // Total frames: prefer detection metadata, then clip metadata, then detection keys
+    plTotalFrames = detData.total_frames || clip.total_frames || 0;
+    if (plTotalFrames === 0) {
+        const frameKeys = Object.keys(plDetections).map(Number);
+        plTotalFrames = frameKeys.length > 0 ? Math.max(...frameKeys) + 1 : 0;
+    }
     document.getElementById('pl-total-frames').textContent = plTotalFrames;
 
     // Load resolved from clip (either from memory or from JSON frames)
