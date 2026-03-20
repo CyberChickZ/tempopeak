@@ -23,7 +23,7 @@ import cv2
 import numpy as np
 
 
-def letterbox(img, img_size=224):
+def letterbox(img, img_size=518):
     """Resize preserving aspect ratio, pad with black to img_size×img_size."""
     H, W = img.shape[:2]
     scale = img_size / max(H, W)
