@@ -253,19 +253,28 @@
                 <img id="hl-frame-img" src="" alt="">
                 <canvas id="hl-canvas"></canvas>
             </div>
+            <div id="hl-timeline-wrap">
+                <canvas id="hl-timeline-canvas"></canvas>
+            </div>
             <div id="hl-controls">
                 <button id="hl-prev-btn" class="icon-btn">❮</button>
                 <button id="hl-next-btn" class="icon-btn">❯</button>
                 <div class="frame-counter">
-                    Frame: <input type="number" id="hl-frame-input" value="0" min="0">
+                    Frame: <input type="number" id="hl-frame-input" value="0" min="0" style="width:90px;">
                     / <span id="hl-total-frames">0</span>
                 </div>
                 <span id="hl-hit-indicator" style="font-size:0.85rem;font-weight:bold;margin-left:10px;"></span>
+                <div style="margin-left:auto;display:flex;align-items:center;gap:4px;font-size:0.78rem;color:#94a3b8;">
+                    Zoom: <input type="number" id="hl-zoom-input" value="1" min="1" max="100" step="1" style="width:50px;padding:2px 4px;border:1px solid #334155;border-radius:3px;background:#1e293b;color:#e2e8f0;text-align:center;">x
+                </div>
             </div>
             <div class="ha-shortcuts">
                 <span>↑↓ clip</span>
-                <span>←→ frame</span>
+                <span>←→ frame (hold=2x)</span>
+                <span>⇧←→ prev/next HIT</span>
                 <span>Space: toggle HIT</span>
+                <span>,/. drag HIT ←/→</span>
+                <span>1: next notest_HIT</span>
                 <span>Del: remove HIT</span>
                 <span>⌘Z undo</span>
             </div>

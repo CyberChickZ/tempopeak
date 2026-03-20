@@ -932,7 +932,8 @@ def pl_fill_frame(req: PLFillFrameRequest):
 class HLSaveRequest(BaseModel):
     workdir: str
     name: str
-    hits: list
+    HIT: list
+    notest_HIT: list = []
 
 @app.get("/api/hl/clips")
 def hl_clips(workdir: str):
@@ -952,14 +953,16 @@ def hl_clips(workdir: str):
         # Check for existing json with hits
         json_path = os.path.join(workdir, name + ".json")
         hits = []
+        notest_hits = []
         if os.path.exists(json_path):
             try:
                 with open(json_path) as jf:
                     data = json.load(jf)
-                hits = data.get("hits", data.get("HIT", []))
+                hits = data.get("HIT", data.get("hits", []))
+                notest_hits = data.get("notest_HIT", [])
             except:
                 pass
-        clips.append({"name": name, "total_frames": total, "hits": hits})
+        clips.append({"name": name, "total_frames": total, "HIT": hits, "notest_HIT": notest_hits})
     return {"clips": clips}
 
 @app.post("/api/hl/save")
@@ -970,7 +973,9 @@ def hl_save(req: HLSaveRequest):
             data = json.load(f)
     else:
         data = {"video": req.name + ".mp4"}
-    data["hits"] = req.hits
+    data["HIT"] = req.HIT
+    data["notest_HIT"] = req.notest_HIT
+    data.pop("hits", None)  # remove legacy key
     with open(json_path, "w") as f:
         json.dump(data, f, indent=2)
     return {"ok": True}

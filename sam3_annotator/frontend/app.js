@@ -3064,15 +3064,19 @@ plInit();
 // HIT ANNOTATOR (hitlabeler) — hl prefix
 // ============================================================================
 let hlWorkdir = '/Users/harryzhang/git/tempopeak/datasets/v1/clips';
-let hlClips = [];         // [{name, total_frames, hits}]
+let hlClips = [];         // [{name, total_frames, HIT}]
 let hlCurrentIdx = -1;
 let hlCurrentFrame = 0;
 let hlTotalFrames = 0;
 let hlHits = [];          // [frame, ...] sorted
+let hlNotestHits = [];    // unreviewed notest_HIT frames (sorted, depletes as reviewed)
 let hlHistory = [];
 let hlFrameImg = null;
 let hlCanvas = null;
 let hlCtx = null;
+let hlTimelineCanvas = null;
+let hlTimelineCtx = null;
+let hlTimelineZoom = 1;    // canvas width multiplier
 
 // ── Init ──────────────────────────────────────────────────────
 function hlInit() {
@@ -3101,6 +3105,27 @@ function hlInit() {
     document.getElementById('hl-frame-input').addEventListener('change', e => {
         const v = parseInt(e.target.value);
         if (!isNaN(v)) hlSetFrame(v);
+    });
+
+    // Timeline
+    hlTimelineCanvas = document.getElementById('hl-timeline-canvas');
+    hlTimelineCtx = hlTimelineCanvas.getContext('2d');
+
+    hlTimelineCanvas.addEventListener('click', e => {
+        if (hlTotalFrames <= 0) return;
+        const rect = hlTimelineCanvas.getBoundingClientRect();
+        const pct = (e.clientX - rect.left) / rect.width;
+        hlSetFrame(Math.round(pct * hlTotalFrames));
+        if (hlTimelineZoom > 1) hlScrollTimelineToPlayhead();
+    });
+
+    document.getElementById('hl-zoom-input').addEventListener('change', e => {
+        const v = parseFloat(e.target.value);
+        if (!isNaN(v) && v >= 1) {
+            hlTimelineZoom = v;
+            hlDrawTimeline();
+            hlScrollTimelineToPlayhead();
+        }
     });
 
     hlLoadClips();
@@ -3132,8 +3157,8 @@ function hlRenderClipList() {
     el.innerHTML = '';
     hlClips.forEach((clip, i) => {
         const item = document.createElement('div');
-        item.className = 'clip-list-item' + (i === hlCurrentIdx ? ' active' : '') + (clip.hits && clip.hits.length > 0 ? ' annotated' : '');
-        const hitCount = clip.hits ? clip.hits.length : 0;
+        item.className = 'clip-list-item' + (i === hlCurrentIdx ? ' active' : '') + (clip.HIT && clip.HIT.length > 0 ? ' annotated' : '');
+        const hitCount = clip.HIT ? clip.HIT.length : 0;
         item.textContent = `${clip.name} ${hitCount > 0 ? `(${hitCount} HITs)` : '(—)'}`;
         item.onclick = () => hlSelectClip(i);
         el.appendChild(item);
@@ -3154,8 +3179,12 @@ async function hlSelectClip(idx) {
 
     hlCurrentFrame = 0;
     hlHistory = [];
-    hlHits = clip.hits ? [...clip.hits] : [];
+    hlHits = clip.HIT ? [...clip.HIT] : [];
+    hlNotestHits = clip.notest_HIT ? [...clip.notest_HIT] : [];
     hlTotalFrames = clip.total_frames || 0;
+    hlTimelineZoom = 1;
+    const zoomInput = document.getElementById('hl-zoom-input');
+    if (zoomInput) zoomInput.value = '1';
 
     document.getElementById('hl-clip-name').textContent = clip.name;
     document.getElementById('hl-total-frames').textContent = hlTotalFrames;
@@ -3182,6 +3211,12 @@ function hlSeekTo(frame) {
             const img = new Image();
             img.src = `/api/pl/frame?workdir=${encodeURIComponent(hlWorkdir)}&name=${clip.name}&frame=${pf}`;
         }
+    }
+
+    hlDrawTimeline();
+    // Auto-scroll the timeline container to keep playhead visible
+    if (hlTimelineZoom > 1) {
+        hlScrollTimelineToPlayhead();
     }
 }
 
@@ -3264,6 +3299,7 @@ function hlToggleHit() {
     hlDrawCanvas();
     hlUpdateHitCount();
     hlRenderClipList();
+    hlDrawTimeline();
 }
 
 // ── Delete HIT on current frame ──────────────────────────────────────
@@ -3277,24 +3313,45 @@ function hlDeleteHit() {
     hlDrawCanvas();
     hlUpdateHitCount();
     hlRenderClipList();
+    hlDrawTimeline();
 }
 
 function hlUpdateHitCount() {
-    document.getElementById('hl-hit-count').textContent = `${hlHits.length} HITs`;
+    const notestInfo = hlNotestHits.length > 0 ? ` | ${hlNotestHits.length} pending` : '';
+    document.getElementById('hl-hit-count').textContent = `${hlHits.length} HITs${notestInfo}`;
+}
+
+// ── Jump to next unreviewed notest_HIT ──────────────────────────────────
+function hlJumpNextNotest() {
+    if (hlNotestHits.length === 0) return;
+    hlSaveHistory();
+    const frame = hlNotestHits.shift(); // smallest first (sorted)
+    // Add to hlHits (sorted insert)
+    if (!hlHits.includes(frame)) {
+        let insertIdx = 0;
+        while (insertIdx < hlHits.length && hlHits[insertIdx] < frame) insertIdx++;
+        hlHits.splice(insertIdx, 0, frame);
+    }
+    hlSeekTo(frame);
+    hlUpdateHitCount();
+    hlRenderClipList();
 }
 
 // ── History / Undo ──────────────────────────────────────────────────────
 function hlSaveHistory() {
-    hlHistory.push([...hlHits]);
+    hlHistory.push({ HIT: [...hlHits], notest: [...hlNotestHits] });
     if (hlHistory.length > 50) hlHistory.shift();
 }
 
 function hlUndo() {
     if (hlHistory.length === 0) return;
-    hlHits = hlHistory.pop();
+    const state = hlHistory.pop();
+    hlHits = state.HIT;
+    hlNotestHits = state.notest;
     hlDrawCanvas();
     hlUpdateHitCount();
     hlRenderClipList();
+    hlDrawTimeline();
 }
 
 // ── Save ──────────────────────────────────────────────────────
@@ -3312,12 +3369,13 @@ async function hlSave() {
             body: JSON.stringify({
                 workdir: hlWorkdir,
                 name: clip.name,
-                hits: hlHits
+                HIT: hlHits,
+                notest_HIT: hlNotestHits
             })
         });
         const data = await res.json();
         if (data.ok) {
-            clip.hits = [...hlHits];
+            clip.HIT = [...hlHits];
             hlRenderClipList();
             btn.textContent = 'Saved!';
             setTimeout(() => { btn.textContent = 'Save'; btn.disabled = false; }, 2000);
@@ -3329,6 +3387,111 @@ async function hlSave() {
         btn.textContent = 'Save';
         btn.disabled = false;
     }
+}
+
+// ── Timeline ──────────────────────────────────────────────────────
+function hlScrollTimelineToPlayhead() {
+    const wrap = document.getElementById('hl-timeline-wrap');
+    if (!wrap || hlTotalFrames <= 0) return;
+    const pct = hlCurrentFrame / hlTotalFrames;
+    const px = pct * hlTimelineCanvas.clientWidth;
+    const center = wrap.clientWidth / 2;
+    wrap.scrollLeft = px - center;
+}
+
+function hlDrawTimeline() {
+    if (!hlTimelineCanvas || hlTotalFrames <= 0) return;
+    const wrap = hlTimelineCanvas.parentElement;
+    const wrapW = wrap.clientWidth;
+    if (!wrapW) return;
+    const h = 46; // fixed height (48px wrap minus 2px border)
+
+    // Canvas width = container width * zoom
+    const w = Math.round(wrapW * hlTimelineZoom);
+    hlTimelineCanvas.style.width = w + 'px';
+    hlTimelineCanvas.style.height = h + 'px';
+
+    const dpr = window.devicePixelRatio || 1;
+    hlTimelineCanvas.width = w * dpr;
+    hlTimelineCanvas.height = h * dpr;
+    const ctx = hlTimelineCtx;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    // Frame -> pixel
+    const fx = f => (f / hlTotalFrames) * w;
+
+    // Background
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, w, h);
+
+    // Tick marks
+    const framesPerPx = hlTotalFrames / w;
+    const tickInterval = Math.max(1, Math.pow(10, Math.floor(Math.log10(framesPerPx * 80))));
+    const majorInterval = tickInterval * 5;
+    ctx.font = '9px monospace';
+    ctx.textAlign = 'center';
+    for (let f = 0; f <= hlTotalFrames; f += tickInterval) {
+        const x = fx(f);
+        const isMajor = f % majorInterval === 0;
+        ctx.strokeStyle = isMajor ? '#475569' : '#1e293b';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(x, isMajor ? 0 : h * 0.6);
+        ctx.lineTo(x, h);
+        ctx.stroke();
+        if (isMajor) {
+            ctx.fillStyle = '#64748b';
+            ctx.fillText(f, x, 10);
+        }
+    }
+
+    // notest_HIT markers (orange)
+    for (const f of hlNotestHits) {
+        const x = fx(f);
+        ctx.fillStyle = '#f59e0b';
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x - 5, 10);
+        ctx.lineTo(x + 5, 10);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(x, 10);
+        ctx.lineTo(x, h);
+        ctx.stroke();
+    }
+
+    // HIT markers (red triangles + lines, like ha-timeline)
+    for (const f of hlHits) {
+        const x = fx(f);
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x - 5, 10);
+        ctx.lineTo(x + 5, 10);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(x, 10);
+        ctx.lineTo(x, h);
+        ctx.stroke();
+    }
+
+    // Playhead (white line with shadow, like ha-timeline)
+    const px = fx(hlCurrentFrame);
+    ctx.shadowColor = 'rgba(0,0,0,0.3)';
+    ctx.shadowBlur = 4;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(px, 0);
+    ctx.lineTo(px, h);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
 }
 
 // ── Keyboard for HIT Annotator ──────────────────────────────────────────────────────
@@ -3351,12 +3514,73 @@ document.addEventListener('keydown', e => {
         hlDeleteHit();
         return;
     }
+
+    // Shift+Left/Right: jump to prev/next HIT
+    if (e.shiftKey && e.key === 'ArrowLeft') {
+        e.preventDefault();
+        for (let i = hlHits.length - 1; i >= 0; i--) {
+            if (hlHits[i] < hlCurrentFrame) { hlSeekTo(hlHits[i]); break; }
+        }
+        return;
+    }
+    if (e.shiftKey && e.key === 'ArrowRight') {
+        e.preventDefault();
+        for (let i = 0; i < hlHits.length; i++) {
+            if (hlHits[i] > hlCurrentFrame) { hlSeekTo(hlHits[i]); break; }
+        }
+        return;
+    }
+
+    // Comma/Period: drag HIT left/right (move HIT and follow it)
+    if (e.key === ',') {
+        e.preventDefault();
+        const hitIdx = hlHits.indexOf(hlCurrentFrame);
+        if (hitIdx < 0 || hlCurrentFrame <= 0) return;
+        hlSaveHistory();
+        const newFrame = hlCurrentFrame - 1;
+        hlHits.splice(hitIdx, 1);
+        if (!hlHits.includes(newFrame)) {
+            let ins = 0;
+            while (ins < hlHits.length && hlHits[ins] < newFrame) ins++;
+            hlHits.splice(ins, 0, newFrame);
+        }
+        hlSeekTo(newFrame);
+        hlUpdateHitCount();
+        hlDrawCanvas();
+        return;
+    }
+    if (e.key === '.') {
+        e.preventDefault();
+        const hitIdx = hlHits.indexOf(hlCurrentFrame);
+        if (hitIdx < 0 || hlCurrentFrame >= hlTotalFrames - 1) return;
+        hlSaveHistory();
+        const newFrame = hlCurrentFrame + 1;
+        hlHits.splice(hitIdx, 1);
+        if (!hlHits.includes(newFrame)) {
+            let ins = 0;
+            while (ins < hlHits.length && hlHits[ins] < newFrame) ins++;
+            hlHits.splice(ins, 0, newFrame);
+        }
+        hlSeekTo(newFrame);
+        hlUpdateHitCount();
+        hlDrawCanvas();
+        return;
+    }
+
+    // 1: jump to next unreviewed notest_HIT
+    if (e.key === '1') {
+        e.preventDefault();
+        hlJumpNextNotest();
+        return;
+    }
+
+    // Arrow keys: frame step (2x speed on long press)
     if (e.key === 'ArrowLeft') {
         e.preventDefault();
-        hlSetFrame(hlCurrentFrame - 1);
+        hlSetFrame(hlCurrentFrame - (e.repeat ? 2 : 1));
     } else if (e.key === 'ArrowRight') {
         e.preventDefault();
-        hlSetFrame(hlCurrentFrame + 1);
+        hlSetFrame(hlCurrentFrame + (e.repeat ? 2 : 1));
     } else if (e.key === 'ArrowUp') {
         e.preventDefault();
         hlSelectClip(hlCurrentIdx - 1);

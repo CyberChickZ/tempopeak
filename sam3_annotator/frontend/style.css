@@ -1050,3 +1050,18 @@ header .primary-btn {
 #hl-controls .frame-counter {
     color: #e2e8f0;
 }
+
+#hl-timeline-wrap {
+    height: 48px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex-shrink: 0;
+    background: #0f172a;
+    border-top: 1px solid #1e293b;
+    border-bottom: 1px solid #1e293b;
+}
+
+#hl-timeline-canvas {
+    display: block;
+    cursor: crosshair;
+}
