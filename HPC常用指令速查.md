@@ -639,6 +639,51 @@ model.py 自动触发 `feat_proj = Linear(1024, 512)` 适配 temporal head。
 
 **关键发现**：Identity baseline 74.1%（ViT-B-16 仅 51.7%），说明 DINOv2 帧级特征已蕴含丰富时序信息。BiMamba2 79.3% 为全项目最佳。Transformer 从 ViT-B-16 最佳→DINOv2 最差，feat_proj 1024→512 瓶颈可能是原因。
 
+## 全视频 DINOv2 特征提取 (extract_features_fullvideo.py)
+
+脚本：`extract_features_fullvideo.py` — 直接从 .mp4 提取全视频 DINOv2 特征，不需要 export/ 目录。
+
+### HPC 运行
+
+```bash
+source /nfs/stak/users/zhanhaoc/hpc-share/conda/bin/activate
+conda activate sam_3d_body
+cd /nfs/hpc/share/zhanhaoc/hpe/tempopeak
+git pull
+srun --gres=gpu:1 --mem=64G --pty bash
+
+# Court crop → 518 (主实验，DINOv2 native resolution)
+python extract_features_fullvideo.py \
+    --video datasets/fullvideo/00001.mp4 \
+    --output datasets/fullvideo/00001_court518.pt \
+    --crop y1,y2,x1,x2 --img_size 518 --batch_size 16
+
+# Court crop → 224 (fast baseline)
+python extract_features_fullvideo.py \
+    --video datasets/fullvideo/00001.mp4 \
+    --output datasets/fullvideo/00001_court224.pt \
+    --crop y1,y2,x1,x2 --img_size 224 --batch_size 64
+```
+
+⚠️ `--crop` 需要先标定 COURT_CROP 坐标 (y1,y2,x1,x2)。不加 `--crop` 则用全帧 letterbox。
+
+### 参数
+
+| 参数 | 默认值 | 说明 |
+|---|---|---|
+| `--video` | (必填) | 输入 .mp4 路径 |
+| `--output` | (必填) | 输出 .pt 路径 ([N, 1024] fp16) |
+| `--crop` | (无) | Court crop: `y1,y2,x1,x2` |
+| `--img_size` | `518` | Letterbox 目标大小 (518=DINOv2 native, 224=fast) |
+| `--batch_size` | `16` | 518 下用 16，224 下可用 64 |
+
+### 提取时间预估 (H100)
+
+| 配置 | 时间 | 输出大小 |
+|---|---|---|
+| Court crop → 224, bs=64 | ~6 min | ~145 MB |
+| Court crop → 518, bs=16 | ~37 min | ~145 MB |
+
 ## Multi-Hit 训练 (T-DEED style cls+displacement)
 
 脚本：`train_multihit.py` — 全视频多击球检测，T-DEED 风格双头输出（分类 + 位移回归）。
