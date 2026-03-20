@@ -296,10 +296,10 @@ def parse_args():
                    help="Segment stride (default=segment_len//2, 50%% overlap)")
     p.add_argument("--radius", type=int, default=5,
                    help="Positive label radius around each hit (frames)")
-    p.add_argument("--lr", type=float, default=1e-3)
+    p.add_argument("--lr", type=float, default=3e-4)
     p.add_argument("--weight_decay", type=float, default=1e-4)
-    p.add_argument("--lambda_disp", type=float, default=0.1,
-                   help="Displacement loss weight (default 0.1 to balance with cls)")
+    p.add_argument("--lambda_disp", type=float, default=0.01,
+                   help="Displacement loss weight (default 0.01, cls-dominant)")
     p.add_argument("--epochs", type=int, default=50)
     p.add_argument("--batch_size", type=int, default=4)
     p.add_argument("--seed", type=int, default=42)

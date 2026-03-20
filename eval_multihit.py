@@ -22,8 +22,8 @@ from scipy.signal import find_peaks
 
 def cls_displacement_loss(cls_logits, disp_logits, cls_target, disp_target,
                           disp_mask, valid_len=None,
-                          focal_gamma=2.0, focal_alpha=0.25,
-                          lambda_disp=1.0):
+                          focal_gamma=2.0, focal_alpha=0.75,
+                          lambda_disp=0.01):
     """T-DEED style loss: focal BCE for cls + MSE for displacement.
 
     Args:
@@ -73,7 +73,7 @@ def cls_displacement_loss(cls_logits, disp_logits, cls_target, disp_target,
 # ---------------------------------------------------------------------------
 
 def cls_disp_detect(cls_logits, disp_logits, valid_len,
-                    threshold=0.5, min_distance=10):
+                    threshold=0.3, min_distance=10):
     """Detect hits from cls + displacement outputs.
 
     Args:
