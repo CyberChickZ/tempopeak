@@ -795,18 +795,20 @@ python scripts/optical_flow_viz.py --device cpu
 |---|---|
 | `train_multihit.py` | 训练入口（训练 / eval_only / benchmark 三种模式） |
 | `dataloader_multihit.py` | FullVideoDataset（全视频切段）+ ClipFolderDataset（clip 目录遍历） |
-| `eval_multihit.py` | 多峰 soft CE loss + peak detection + P/R/F1@k |
+| `eval_multihit.py` | T-DEED style: Focal BCE + MSE disp loss + cls peak detection + P/R/F1@k |
 
-### 训练（全视频模式）
+### 训练（全视频模式 — CE 导出特征）
 ```bash
 python train_multihit.py \
-    --features_pt data/00001_features.pt \
-    --hit_json datasets/v1/clips/0006/00001.json \
+    --features_pt datasets/v1/export/0006/00001/00001_ce518.pt \
+    --hit_json datasets/v1/export/0006/00001/annot.json \
     --temporal_head bimamba2 \
     --segment_len 2700 \
-    --epochs 50 \
+    --epochs 500 \
     --batch_size 4
 ```
+
+**注意**：数据自动 temporal split（前 80% 帧 train，后 20% 帧 val，零帧重叠）。
 
 ### 在旧 clip 数据上评估
 ```bash
@@ -833,17 +835,19 @@ python train_multihit.py --benchmark --feat_dim 1024 --segment_len 2700
 | `--temporal_head` | bimamba2 | 6 种 head 之一 |
 | `--feat_dim` | auto | 特征维度（从数据自动检测） |
 | `--segment_len` | 2700 | 段长（对应 ~90s @30fps） |
-| `--stride` | =segment_len | 段步长（可设小值增加训练样本） |
-| `--sigma` | 2.0 | Gaussian target σ |
-| `--lr` | 1e-3 | 学习率 |
-| `--epochs` | 50 | 训练轮数 |
+| `--stride` | 900 | 段步长（train 默认 900 即 67% overlap；val 用 segment_len 无 overlap） |
+| `--radius` | 5 | 正样本半径（hit ±5 帧标为正） |
+| `--lr` | 3e-4 | 学习率（CosineAnnealingLR 衰减到 1e-5） |
+| `--lambda_disp` | 0.01 | 位移 loss 权重（cls-dominant） |
+| `--epochs` | 50 | 训练轮数（6-head 对比建议 500） |
 | `--batch_size` | 4 | 批大小（Transformer T=2700 可能需 B=1） |
+| `--weight_decay` | 1e-4 | AdamW weight decay |
 | `--eval_only` | False | 仅评估模式 |
 | `--checkpoint` | None | 加载已训练权重 |
 | `--benchmark` | False | 全 head 推理计时 |
 | `--device` | auto | cuda / cpu（不用 MPS） |
 
 ### 输出
-- 训练日志：`[Epoch N/50] loss=X | P@2=X% R@2=X% F1@1/2/3=X% (GT=N Pred=N) | train=Xs eval=Xs | best_F1@2=X%`
+- 训练日志：`[Epoch N/500] loss=X | P@1=X% R@1=X% F1@1/2/3=X% (GT=N Pred=N) | train=Xs eval=Xs | best_F1@1=X%`
 - Checkpoint：`checkpoints/best_{head}_multihit.pt`、`checkpoints/last_{head}_multihit.pt`
 - Benchmark：每个 head 的 ms/segment 和参数量

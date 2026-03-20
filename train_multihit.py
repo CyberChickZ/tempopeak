@@ -85,7 +85,7 @@ class MultiHitModel(nn.Module):
 # Training
 # ---------------------------------------------------------------------------
 
-def train_one_epoch(model, loader, optimizer, device, lambda_disp=0.1):
+def train_one_epoch(model, loader, optimizer, device, lambda_disp=0.01):
     """Train one epoch, return (avg_loss, avg_cls_loss, avg_disp_loss)."""
     model.train()
     total_loss = 0.0
@@ -126,7 +126,7 @@ def train_one_epoch(model, loader, optimizer, device, lambda_disp=0.1):
 
 @torch.no_grad()
 def evaluate(model, loader, device, tolerances=(1, 2, 3),
-             threshold=0.5, min_distance=10, lambda_disp=0.1):
+             threshold=0.5, min_distance=10, lambda_disp=0.01):
     """Evaluate model: cls+disp detection → P/R/F1 at multiple tolerances.
 
     Returns dict with loss, cls_loss, disp_loss, P@k, R@k, F1@k, total_gt, total_pred.
@@ -411,8 +411,8 @@ def main():
 
         print(f"\n[Eval] loss={metrics['loss']:.4f} "
               f"(cls={metrics['cls_loss']:.4f} disp={metrics['disp_loss']:.4f}) | "
-              f"P@2={metrics['P@2']*100:.1f}% "
-              f"R@2={metrics['R@2']*100:.1f}% "
+              f"P@1={metrics['P@1']*100:.1f}% "
+              f"R@1={metrics['R@1']*100:.1f}% "
               f"F1@1={metrics['F1@1']*100:.1f}% "
               f"F1@2={metrics['F1@2']*100:.1f}% "
               f"F1@3={metrics['F1@3']*100:.1f}% "
@@ -455,11 +455,11 @@ def main():
                            lambda_disp=args.lambda_disp)
         eval_time = time.time() - t0
 
-        # Best check (F1@2 as primary metric)
-        f1_2 = metrics["F1@2"]
-        is_best = f1_2 > best_f1
+        # Best check (F1@1 as primary metric — ±1 frame = ±33ms @30fps)
+        f1_1 = metrics["F1@1"]
+        is_best = f1_1 > best_f1
         if is_best:
-            best_f1 = f1_2
+            best_f1 = f1_1
             torch.save({
                 "epoch": epoch,
                 "model_state_dict": model.state_dict(),
@@ -471,14 +471,14 @@ def main():
         star = " *" if is_best else ""
         print(f"[Epoch {epoch}/{args.epochs}] "
               f"loss={train_loss:.4f} (cls={train_cls:.4f} disp={train_disp:.4f}) | "
-              f"P@2={metrics['P@2']*100:.1f}% "
-              f"R@2={metrics['R@2']*100:.1f}% "
+              f"P@1={metrics['P@1']*100:.1f}% "
+              f"R@1={metrics['R@1']*100:.1f}% "
               f"F1@1={metrics['F1@1']*100:.1f}% "
               f"F1@2={metrics['F1@2']*100:.1f}% "
               f"F1@3={metrics['F1@3']*100:.1f}% "
               f"(GT={metrics['total_gt']} Pred={metrics['total_pred']}) "
               f"| train={train_time:.1f}s eval={eval_time:.1f}s "
-              f"| best_F1@2={best_f1*100:.1f}%{star}")
+              f"| best_F1@1={best_f1*100:.1f}%{star}")
 
         scheduler.step()
 
@@ -497,7 +497,7 @@ def main():
         "args": vars(args),
     }, os.path.join(ckpt_dir, f"last_{args.temporal_head}_multihit.pt"))
 
-    print(f"\nDone. Best F1@2={best_f1*100:.1f}% → "
+    print(f"\nDone. Best F1@1={best_f1*100:.1f}% → "
           f"checkpoints/{best_tag}.pt")
 
 
