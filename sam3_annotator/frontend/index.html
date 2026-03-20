@@ -15,6 +15,7 @@
     <button class="tab-btn" data-tab="videoclipper">Video Clipper</button>
     <button class="tab-btn" data-tab="hitlabeler">HIT Annotator</button>
     <button class="tab-btn" data-tab="personlabel">Person Labeler</button>
+    <button class="tab-btn" data-tab="cropexport">Crop Export</button>
 </div>
 
 <!-- ============ SAM3 Annotator Tab ============ -->
@@ -307,6 +308,11 @@
             <div id="pl-det-progress" style="font-size:0.78rem;color:#64748b;min-height:18px;"></div>
             <div id="pl-clip-list" class="clip-list" style="flex:1;overflow-y:auto;"></div>
             <button id="pl-drawbox-btn" class="secondary-btn" style="width:100%;">Draw Box (D)</button>
+            <div style="display:flex;gap:6px;">
+                <button id="pl-crop-btn" class="secondary-btn" style="flex:1;">Court Crop (C)</button>
+                <button id="pl-crop-toggle" class="secondary-btn" style="width:36px;font-size:0.75rem;" title="Toggle crop overlay">👁</button>
+            </div>
+            <div id="pl-crop-info" style="font-size:0.72rem;color:#06b6d4;min-height:16px;font-family:monospace;word-break:break-all;"></div>
             <div style="display:flex;align-items:center;gap:6px;font-size:0.78rem;">
                 <input type="checkbox" id="pl-clear-all" style="width:auto;margin:0;">
                 <label for="pl-clear-all" style="cursor:pointer;color:#64748b;">Clear ALL clips</label>
@@ -359,6 +365,78 @@
     </div>
 </div>
 
-<script src="app.js?v=27"></script>
+<!-- ============ Crop Export Tab ============ -->
+<div id="cropexport-screen" class="screen">
+    <div id="ce-layout">
+        <!-- Left Sidebar -->
+        <div id="ce-sidebar">
+            <div style="display:flex;gap:6px;">
+                <input type="text" id="ce-workdir-input" class="modern-input"
+                    value="/Users/harryzhang/git/tempopeak/datasets/v1/clips"
+                    style="flex:1;min-width:0;">
+                <button id="ce-browse-btn" class="secondary-btn">Browse</button>
+            </div>
+            <button id="ce-load-btn" class="secondary-btn" style="width:100%;">Load</button>
+            <div id="ce-clip-list" class="clip-list" style="flex:1;overflow-y:auto;"></div>
+
+            <div class="ha-section-label" style="margin-top:8px;">Boxes</div>
+            <div style="font-size:0.78rem;color:#94a3b8;padding:2px 0;">
+                Draw <span style="color:#ef4444;font-weight:bold;">Box 1</span> (big, bottom) then
+                <span style="color:#10b981;font-weight:bold;">Box 2</span> (small, top)
+            </div>
+            <div id="ce-box-info" style="font-size:0.72rem;color:#06b6d4;min-height:36px;font-family:monospace;word-break:break-all;"></div>
+            <button id="ce-clear-boxes-btn" class="secondary-btn" style="width:100%;color:#ef4444;border-color:#ef4444;">Clear Boxes</button>
+
+            <div class="ha-section-label" style="margin-top:8px;">Export Settings</div>
+            <div style="display:flex;gap:6px;align-items:center;font-size:0.8rem;">
+                <label style="color:#94a3b8;">Size:</label>
+                <input type="number" id="ce-img-size" value="518" min="64" max="2048" step="1" class="modern-input" style="width:70px;">
+                <label style="color:#94a3b8;">Q:</label>
+                <input type="number" id="ce-quality" value="85" min="10" max="100" step="5" class="modern-input" style="width:60px;">
+            </div>
+            <div style="display:flex;gap:6px;align-items:center;font-size:0.8rem;margin-top:4px;">
+                <label style="color:#94a3b8;">Out:</label>
+                <input type="text" id="ce-out-dir" class="modern-input"
+                    value="/Users/harryzhang/git/tempopeak/datasets/v1/export"
+                    style="flex:1;min-width:0;">
+            </div>
+
+            <button id="ce-export-btn" class="primary-btn" style="margin-top:8px;background:#8b5cf6;border-color:#7c3aed;">Export</button>
+            <div id="ce-export-progress" style="font-size:0.78rem;color:#64748b;min-height:18px;"></div>
+        </div>
+
+        <!-- Main Area -->
+        <div id="ce-main">
+            <div id="ce-info-bar">
+                <span id="ce-clip-name">No clip loaded</span>
+                <span id="ce-drawing-status" style="margin-left:auto;font-size:0.78rem;color:#f59e0b;"></span>
+            </div>
+            <div id="ce-video-wrap" style="flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#0f172a;">
+                <img id="ce-frame-img" src="" alt="" style="max-width:100%;max-height:100%;object-fit:contain;">
+                <canvas id="ce-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;"></canvas>
+            </div>
+            <div id="ce-preview-wrap" style="height:150px;background:#1e293b;border-top:1px solid #334155;display:flex;align-items:center;justify-content:center;gap:16px;">
+                <canvas id="ce-preview-canvas" style="max-height:140px;border:1px solid #475569;"></canvas>
+                <div id="ce-preview-info" style="font-size:0.75rem;color:#94a3b8;font-family:monospace;white-space:pre-line;"></div>
+            </div>
+            <div id="ce-controls">
+                <button id="ce-prev-btn" class="icon-btn">❮</button>
+                <button id="ce-next-btn" class="icon-btn">❯</button>
+                <div class="frame-counter">
+                    Frame: <input type="number" id="ce-frame-input" value="0" min="0" style="width:90px;">
+                    / <span id="ce-total-frames">0</span>
+                </div>
+            </div>
+            <div class="ha-shortcuts">
+                <span>↑↓ clip</span>
+                <span>←→ frame</span>
+                <span>Draw: box1 first, box2 second</span>
+                <span>R: reset boxes</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="app.js?v=28"></script>
 </body>
 </html>

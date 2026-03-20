@@ -521,6 +521,7 @@ class PLSaveRequest(BaseModel):
     hitters: list  # [0|1|2, ...] same length as hits
     key_frames: dict  # {frame_str: {p1: detIdx|{x,y}, p2: detIdx|{x,y}}}
     frames: dict  # {frame_str: {p1: {x1,y1,x2,y2}, p2: {...}}}
+    court_crop: dict = None  # {frame_str: {x1,y1,x2,y2}} optional
 
 class PLFillFrameRequest(BaseModel):
     workdir: str
@@ -646,7 +647,8 @@ def pl_clips(workdir: str):
             "hits": json_data.get("hits", json_data.get("HIT", [])),
             "key_frames": json_data.get("key_frames", {}),
             "hitters": json_data.get("hitters", []),
-            "frames": json_data.get("frames", {})  # resolved boxes
+            "frames": json_data.get("frames", {}),  # resolved boxes
+            "court_crop": json_data.get("court_crop", None)
         })
     return {"clips": clips}
 
@@ -749,6 +751,10 @@ def pl_save(req: PLSaveRequest):
     data["hitters"] = req.hitters
     data["key_frames"] = req.key_frames
     data["frames"] = req.frames
+    if req.court_crop:
+        data["court_crop"] = req.court_crop
+    elif "court_crop" in data:
+        del data["court_crop"]
     with open(json_path, "w") as f:
         json.dump(data, f, indent=2)
     return {"ok": True}
@@ -1025,6 +1031,171 @@ def hl_save(req: HLSaveRequest):
     with open(json_path, "w") as f:
         json.dump(data, f, indent=2)
     return {"ok": True}
+
+
+# ─── Crop Export ─────────────────────────────────────────────────────
+
+class CESaveBoxesRequest(BaseModel):
+    workdir: str
+    name: str
+    box1: dict  # {x1,y1,x2,y2}
+    box2: dict  # {x1,y1,x2,y2}
+
+class CEExportRequest(BaseModel):
+    workdir: str
+    name: str
+    box1: dict
+    box2: dict
+    img_size: int = 518
+    quality: int = 85
+    out_dir: str
+
+@app.get("/api/ce/clips")
+def ce_clips(workdir: str):
+    """Scan workdir for .mp4 files, return names + total_frames."""
+    import glob as _glob
+    import cv2 as _cv2
+    if not os.path.isdir(workdir):
+        return {"clips": []}
+    clips = []
+    for mp4 in sorted(_glob.glob(os.path.join(workdir, "*.mp4"))):
+        name = os.path.splitext(os.path.basename(mp4))[0]
+        cap = _cv2.VideoCapture(mp4)
+        total = int(cap.get(_cv2.CAP_PROP_FRAME_COUNT))
+        cap.release()
+        clips.append({"name": name, "total_frames": total})
+    return {"clips": clips}
+
+
+@app.get("/api/ce/boxes")
+def ce_get_boxes(workdir: str, name: str):
+    """Load saved crop boxes from JSON."""
+    json_path = os.path.join(workdir, name + ".json")
+    box1, box2 = None, None
+    if os.path.exists(json_path):
+        try:
+            with open(json_path) as f:
+                data = json.load(f)
+            box1 = data.get("crop_box1", None)
+            box2 = data.get("crop_box2", None)
+        except Exception:
+            pass
+    return {"box1": box1, "box2": box2}
+
+
+@app.post("/api/ce/save_boxes")
+def ce_save_boxes(req: CESaveBoxesRequest):
+    """Save crop boxes to the clip's JSON file."""
+    json_path = os.path.join(req.workdir, req.name + ".json")
+    if os.path.exists(json_path):
+        with open(json_path) as f:
+            data = json.load(f)
+    else:
+        data = {"video": req.name + ".mp4"}
+    data["crop_box1"] = req.box1
+    data["crop_box2"] = req.box2
+    with open(json_path, "w") as f:
+        json.dump(data, f, indent=2)
+    return {"ok": True}
+
+
+@app.post("/api/ce/export")
+def ce_export(req: CEExportRequest):
+    """Export cropped+stacked+letterboxed frames as SSE stream."""
+    import cv2 as _cv2
+    import numpy as np
+
+    video_path = os.path.join(req.workdir, req.name + ".mp4")
+    if not os.path.exists(video_path):
+        raise HTTPException(status_code=404, detail="Video not found")
+
+    b1 = req.box1  # big box (bottom)
+    b2 = req.box2  # small box (top)
+    img_size = req.img_size
+    quality = req.quality
+
+    # Determine output directory: out_dir / video_folder / clip_name
+    video_folder = os.path.basename(req.workdir.rstrip("/")) or "unknown"
+    clip_dir = os.path.join(req.out_dir, video_folder, req.name)
+    frames_dir = os.path.join(clip_dir, "frames")
+    os.makedirs(frames_dir, exist_ok=True)
+
+    cap = _cv2.VideoCapture(video_path)
+    total_frames = int(cap.get(_cv2.CAP_PROP_FRAME_COUNT))
+    fps = cap.get(_cv2.CAP_PROP_FPS) or 30
+
+    b1w = b1["x2"] - b1["x1"]
+    b1h = b1["y2"] - b1["y1"]
+    b2w = b2["x2"] - b2["x1"]
+    b2h = b2["y2"] - b2["y1"]
+    scale_ratio = b1w / b2w
+    b2h_scaled = int(round(b2h * scale_ratio))
+    stack_w = b1w
+    stack_h = b2h_scaled + b1h
+
+    encode_params = [_cv2.IMWRITE_JPEG_QUALITY, quality]
+
+    def generate():
+        fi = 0
+        while True:
+            ret, img = cap.read()
+            if not ret:
+                break
+
+            # Crop box2 (small) and resize to match box1 width
+            crop2 = img[b2["y1"]:b2["y2"], b2["x1"]:b2["x2"]]
+            crop2_resized = _cv2.resize(crop2, (b1w, b2h_scaled))
+
+            # Crop box1 (big)
+            crop1 = img[b1["y1"]:b1["y2"], b1["x1"]:b1["x2"]]
+
+            # Stack: resized box2 on top, box1 on bottom
+            stacked = np.vstack([crop2_resized, crop1])
+
+            # Letterbox to square
+            sq_scale = img_size / max(stack_w, stack_h)
+            new_w = int(stack_w * sq_scale)
+            new_h = int(stack_h * sq_scale)
+            resized = _cv2.resize(stacked, (new_w, new_h))
+            canvas = np.zeros((img_size, img_size, 3), dtype=np.uint8)
+            y_off = (img_size - new_h) // 2
+            x_off = (img_size - new_w) // 2
+            canvas[y_off:y_off+new_h, x_off:x_off+new_w] = resized
+
+            out_path = os.path.join(frames_dir, f"{fi}.jpg")
+            _cv2.imwrite(out_path, canvas, encode_params)
+
+            fi += 1
+            if fi % 100 == 0 or fi == total_frames:
+                yield f"data: {json.dumps({'type': 'progress', 'done': fi, 'total': total_frames})}\n\n"
+
+        cap.release()
+
+        # Save annot.json
+        annot_data = {}
+        json_path = os.path.join(req.workdir, req.name + ".json")
+        if os.path.exists(json_path):
+            with open(json_path) as f:
+                annot_data = json.load(f)
+
+        annot = {
+            "clip": req.name,
+            "video": video_folder,
+            "total_frames": fi,
+            "fps": fps,
+            "hits": annot_data.get("HIT", annot_data.get("hits", [])),
+            "hitters": annot_data.get("hitters", []),
+            "crop_box1": b1,
+            "crop_box2": b2,
+            "img_size": img_size,
+            "stack_size": {"w": stack_w, "h": stack_h},
+        }
+        with open(os.path.join(clip_dir, "annot.json"), "w") as f:
+            json.dump(annot, f, indent=2)
+
+        yield f"data: {json.dumps({'type': 'done', 'total': fi, 'out_dir': clip_dir})}\n\n"
+
+    return StreamingResponse(generate(), media_type="text/event-stream")
 
 
 # Serve Frontend

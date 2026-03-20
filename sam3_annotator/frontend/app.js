@@ -82,6 +82,12 @@ tabBtns.forEach(btn => {
             if (crPollingTimer) crStopPolling();
             // Delay to allow layout to settle before drawing canvas
             setTimeout(() => plDrawCanvas(), 50);
+        } else if (tabId === 'cropexport') {
+            if (videoEl && !videoEl.paused) videoEl.pause();
+            if (haVideo && !haVideo.paused) { haVideo.pause(); haIsPlaying = false; }
+            if (crPollingTimer) crStopPolling();
+            if (!ceCanvas) ceInit();
+            setTimeout(() => ceDrawCanvas(), 50);
         } else {
             if (haVideo && !haVideo.paused) { haVideo.pause(); haIsPlaying = false; }
             if (crPollingTimer) crStopPolling();
@@ -1564,6 +1570,14 @@ let plDrawBoxMode = false;
 let plDrawingBox = null; // {x1, y1, x2, y2} while drawing
 let plDrawStart = null;  // {x, y} in video coords
 
+// Court crop mode
+let plCropMode = false;
+let plCropDrawing = null;  // {x1,y1,x2,y2} while drawing
+let plCropStart = null;    // {x,y} in video coords
+let plCourtCrops = {};     // {frameIdx: {x1,y1,x2,y2}} per-frame crops
+let plFusedCrop = null;    // averaged crop from all frames
+let plShowCrop = true;     // toggle crop overlay visibility
+
 // ── IoU helper ─────────────────────────────────────────────────
 function iou(a, b) {
     if (!a || !b) return 0;
@@ -1888,6 +1902,31 @@ function plDrawCanvas() {
         plCtx.fillRect(x1, y1, x2 - x1, y2 - y1);
     }
 
+    // Court crop overlays
+    if (plShowCrop) {
+        // Per-frame crop (cyan dashed)
+        const frameCrop = plCropDrawing || plCourtCrops[plCurrentFrame];
+        if (frameCrop) {
+            const cx1 = offX + frameCrop.x1 * scale, cy1 = offY + frameCrop.y1 * scale;
+            const cx2 = offX + frameCrop.x2 * scale, cy2 = offY + frameCrop.y2 * scale;
+            plCtx.strokeStyle = '#06b6d4';
+            plCtx.lineWidth = 2;
+            plCtx.setLineDash([6, 4]);
+            plCtx.strokeRect(cx1, cy1, cx2 - cx1, cy2 - cy1);
+            plCtx.setLineDash([]);
+            plCtx.fillStyle = 'rgba(6, 182, 212, 0.08)';
+            plCtx.fillRect(cx1, cy1, cx2 - cx1, cy2 - cy1);
+        }
+        // Fused crop (yellow solid)
+        if (plFusedCrop) {
+            const fx1 = offX + plFusedCrop.x1 * scale, fy1 = offY + plFusedCrop.y1 * scale;
+            const fx2 = offX + plFusedCrop.x2 * scale, fy2 = offY + plFusedCrop.y2 * scale;
+            plCtx.strokeStyle = '#eab308';
+            plCtx.lineWidth = 2;
+            plCtx.strokeRect(fx1, fy1, fx2 - fx1, fy2 - fy1);
+        }
+    }
+
     // HIT marker at top center
     const hitEl = document.getElementById('pl-hit-indicator');
     if (hitIdx >= 0) {
@@ -1978,6 +2017,9 @@ function plSaveToMemory() {
     clip.key_frames = JSON.parse(JSON.stringify(plKeyFrames));
     clip.hitters = [...plHitters];
     clip.resolved = JSON.parse(JSON.stringify(plResolved));
+    if (Object.keys(plCourtCrops).length > 0) {
+        clip.court_crop = JSON.parse(JSON.stringify(plCourtCrops));
+    }
 }
 
 // ── Clip list ─────────────────────────────────────────────────
@@ -2074,6 +2116,16 @@ async function plSelectClip(idx) {
         plResolved = {};
     }
 
+    // Load court crop data
+    plCourtCrops = {};
+    plFusedCrop = null;
+    if (clip.court_crop) {
+        for (const [k, v] of Object.entries(clip.court_crop)) {
+            plCourtCrops[parseInt(k)] = v;
+        }
+        plComputeFusedCrop();
+    }
+
     // Load first frame
     plSeekTo(0);
     plRenderClipList();
@@ -2099,7 +2151,63 @@ function plToggleDrawBox() {
     }
 }
 
+function plToggleCropMode() {
+    plCropMode = !plCropMode;
+    const btn = document.getElementById('pl-crop-btn');
+    if (plCropMode) {
+        // Exit draw box mode if active
+        if (plDrawBoxMode) plToggleDrawBox();
+        btn.classList.add('active');
+        btn.style.background = '#06b6d4';
+        btn.style.color = '#fff';
+        plCanvas.style.cursor = 'crosshair';
+    } else {
+        btn.classList.remove('active');
+        btn.style.background = '';
+        btn.style.color = '';
+        plCanvas.style.cursor = '';
+        plCropDrawing = null;
+        plCropStart = null;
+        plDrawCanvas();
+    }
+}
+
+function plComputeFusedCrop() {
+    const keys = Object.keys(plCourtCrops);
+    if (keys.length === 0) { plFusedCrop = null; plUpdateCropInfo(); return; }
+    let sx1 = 0, sy1 = 0, sx2 = 0, sy2 = 0;
+    keys.forEach(k => {
+        const c = plCourtCrops[k];
+        sx1 += c.x1; sy1 += c.y1; sx2 += c.x2; sy2 += c.y2;
+    });
+    const n = keys.length;
+    plFusedCrop = {
+        x1: Math.round(sx1 / n), y1: Math.round(sy1 / n),
+        x2: Math.round(sx2 / n), y2: Math.round(sy2 / n)
+    };
+    plUpdateCropInfo();
+}
+
+function plUpdateCropInfo() {
+    const el = document.getElementById('pl-crop-info');
+    if (!el) return;
+    if (plFusedCrop) {
+        const { y1, y2, x1, x2 } = plFusedCrop;
+        el.textContent = `COURT_CROP = (${y1}, ${y2}, ${x1}, ${x2})  [${Object.keys(plCourtCrops).length} frames]`;
+    } else {
+        el.textContent = '';
+    }
+}
+
 function plHandleMouseDown(e) {
+    if (plCropMode) {
+        const rect = plCanvas.getBoundingClientRect();
+        const cx = e.clientX - rect.left, cy = e.clientY - rect.top;
+        const { offX, offY, scale } = plRenderState;
+        plCropStart = { x: (cx - offX) / scale, y: (cy - offY) / scale };
+        plCropDrawing = { x1: plCropStart.x, y1: plCropStart.y, x2: plCropStart.x, y2: plCropStart.y };
+        return;
+    }
     if (!plDrawBoxMode) return;
     const rect = plCanvas.getBoundingClientRect();
     const cx = e.clientX - rect.left, cy = e.clientY - rect.top;
@@ -2111,6 +2219,18 @@ function plHandleMouseDown(e) {
 }
 
 function plHandleMouseMove(e) {
+    if (plCropMode && plCropStart) {
+        const rect = plCanvas.getBoundingClientRect();
+        const cx = e.clientX - rect.left, cy = e.clientY - rect.top;
+        const { offX, offY, scale } = plRenderState;
+        const vx = (cx - offX) / scale, vy = (cy - offY) / scale;
+        plCropDrawing = {
+            x1: Math.min(plCropStart.x, vx), y1: Math.min(plCropStart.y, vy),
+            x2: Math.max(plCropStart.x, vx), y2: Math.max(plCropStart.y, vy)
+        };
+        plDrawCanvas();
+        return;
+    }
     if (!plDrawBoxMode || !plDrawStart) return;
     const rect = plCanvas.getBoundingClientRect();
     const cx = e.clientX - rect.left, cy = e.clientY - rect.top;
@@ -2127,6 +2247,26 @@ function plHandleMouseMove(e) {
 }
 
 function plHandleMouseUp(e) {
+    // Crop mode: finalize crop rectangle
+    if (plCropMode && plCropStart) {
+        if (plCropDrawing) {
+            const box = {
+                x1: Math.max(0, Math.round(plCropDrawing.x1)),
+                y1: Math.max(0, Math.round(plCropDrawing.y1)),
+                x2: Math.min(plVidW, Math.round(plCropDrawing.x2)),
+                y2: Math.min(plVidH, Math.round(plCropDrawing.y2))
+            };
+            if (box.x2 - box.x1 > 20 && box.y2 - box.y1 > 20) {
+                plCourtCrops[plCurrentFrame] = box;
+                plComputeFusedCrop();
+                plDirty = true;
+            }
+        }
+        plCropDrawing = null;
+        plCropStart = null;
+        plDrawCanvas();
+        return;
+    }
     if (!plDrawBoxMode || !plDrawingBox) return;
 
     let box = plDrawingBox;
@@ -2457,7 +2597,8 @@ async function plSave() {
                 hits: plHits,
                 hitters: plHitters,
                 key_frames: plKeyFrames,
-                frames
+                frames,
+                court_crop: Object.keys(plCourtCrops).length > 0 ? plCourtCrops : undefined
             })
         });
         const data = await res.json();
@@ -2961,6 +3102,11 @@ function plInit() {
     plCanvas.addEventListener('mousemove', plHandleMouseMove);
     plCanvas.addEventListener('mouseup', plHandleMouseUp);
     plCanvas.addEventListener('mouseleave', () => {
+        if (plCropDrawing) {
+            plCropDrawing = null;
+            plCropStart = null;
+            plDrawCanvas();
+        }
         if (plDrawingBox) {
             plDrawingBox = null;
             plDrawStart = null;
@@ -2976,6 +3122,12 @@ function plInit() {
     document.getElementById('pl-load-btn').addEventListener('click', plLoadClips);
     document.getElementById('pl-detect-btn').addEventListener('click', plStartDetection);
     document.getElementById('pl-drawbox-btn').addEventListener('click', plToggleDrawBox);
+    document.getElementById('pl-crop-btn').addEventListener('click', plToggleCropMode);
+    document.getElementById('pl-crop-toggle').addEventListener('click', () => {
+        plShowCrop = !plShowCrop;
+        document.getElementById('pl-crop-toggle').style.opacity = plShowCrop ? '1' : '0.4';
+        plDrawCanvas();
+    });
     document.getElementById('pl-fillgaps-btn').addEventListener('click', plFillGaps);
     document.getElementById('pl-clear-btn').addEventListener('click', plClearClip);
     document.getElementById('pl-delete-btn').addEventListener('click', plDeleteClip);
@@ -3003,6 +3155,11 @@ document.addEventListener('keydown', e => {
     if (e.key === 'd' || e.key === 'D') {
         if (!e.metaKey && !e.ctrlKey) {
             e.preventDefault(); plToggleDrawBox(); return;
+        }
+    }
+    if (e.key === 'c' || e.key === 'C') {
+        if (!e.metaKey && !e.ctrlKey) {
+            e.preventDefault(); plToggleCropMode(); return;
         }
     }
     if (e.key === ' ') {
@@ -3592,6 +3749,454 @@ document.addEventListener('keydown', e => {
         hlSelectClip(hlCurrentIdx + 1);
     }
 });
+// ============================================================================
+// CROP EXPORT — ce prefix
+// ============================================================================
+let ceWorkdir = '/Users/harryzhang/git/tempopeak/datasets/v1/clips';
+let ceClips = [];           // [{name, total_frames}]
+let ceCurrentIdx = -1;
+let ceCurrentFrame = 0;
+let ceTotalFrames = 0;
+let ceFrameImg = null;
+let ceCanvas = null;
+let ceCtx = null;
+let cePreviewCanvas = null;
+let cePreviewCtx = null;
+let ceRenderState = { offX: 0, offY: 0, scale: 1 };
+
+// Two boxes: box1 = big (bottom), box2 = small (top), in video coords
+let ceBox1 = null;          // {x1,y1,x2,y2}
+let ceBox2 = null;          // {x1,y1,x2,y2}
+let ceDrawingBox = null;    // {x1,y1,x2,y2} while dragging
+let ceDrawStart = null;     // {x,y} mouse down in video coords
+let ceVidW = 0;
+let ceVidH = 0;
+
+// ── Init ──────────────────────────────────────────────────────
+function ceInit() {
+    ceFrameImg = document.getElementById('ce-frame-img');
+    ceCanvas = document.getElementById('ce-canvas');
+    ceCtx = ceCanvas.getContext('2d');
+    cePreviewCanvas = document.getElementById('ce-preview-canvas');
+    cePreviewCtx = cePreviewCanvas.getContext('2d');
+
+    const ceVideoWrap = document.getElementById('ce-video-wrap');
+    const ceResizeObserver = new ResizeObserver(() => {
+        if (activeTab === 'cropexport') ceDrawCanvas();
+    });
+    ceResizeObserver.observe(ceVideoWrap);
+
+    ceCanvas.addEventListener('mousedown', ceHandleMouseDown);
+    ceCanvas.addEventListener('mousemove', ceHandleMouseMove);
+    ceCanvas.addEventListener('mouseup', ceHandleMouseUp);
+    ceCanvas.addEventListener('mouseleave', () => {
+        if (ceDrawingBox) { ceDrawingBox = null; ceDrawStart = null; ceDrawCanvas(); }
+    });
+
+    document.getElementById('ce-browse-btn').addEventListener('click', async () => {
+        const res = await fetch('/api/browse_dir');
+        const data = await res.json();
+        if (data.ok) { document.getElementById('ce-workdir-input').value = data.path; ceLoadClips(); }
+    });
+    document.getElementById('ce-load-btn').addEventListener('click', ceLoadClips);
+    document.getElementById('ce-clear-boxes-btn').addEventListener('click', () => {
+        ceBox1 = null; ceBox2 = null;
+        ceUpdateBoxInfo();
+        ceDrawCanvas();
+        ceDrawPreview();
+    });
+    document.getElementById('ce-export-btn').addEventListener('click', ceExport);
+    document.getElementById('ce-prev-btn').addEventListener('click', () => ceSetFrame(ceCurrentFrame - 1));
+    document.getElementById('ce-next-btn').addEventListener('click', () => ceSetFrame(ceCurrentFrame + 1));
+    document.getElementById('ce-frame-input').addEventListener('change', e => {
+        const v = parseInt(e.target.value); if (!isNaN(v)) ceSetFrame(v);
+    });
+
+    ceLoadClips();
+}
+
+// ── Load Clips ──────────────────────────────────────────────────
+async function ceLoadClips() {
+    ceWorkdir = document.getElementById('ce-workdir-input').value.trim();
+    if (!ceWorkdir) return;
+    try {
+        const res = await fetch(`/api/ce/clips?workdir=${encodeURIComponent(ceWorkdir)}`);
+        const data = await res.json();
+        ceClips = data.clips || [];
+    } catch (e) {
+        ceClips = [];
+    }
+    ceBuildClipList();
+    if (ceClips.length > 0) ceSelectClip(0);
+}
+
+function ceBuildClipList() {
+    const list = document.getElementById('ce-clip-list');
+    list.innerHTML = '';
+    ceClips.forEach((clip, idx) => {
+        const div = document.createElement('div');
+        div.className = 'clip-item' + (idx === ceCurrentIdx ? ' active' : '');
+        div.textContent = `${clip.name} (${clip.total_frames}f)`;
+        div.addEventListener('click', () => ceSelectClip(idx));
+        list.appendChild(div);
+    });
+}
+
+async function ceSelectClip(idx) {
+    if (idx < 0 || idx >= ceClips.length) return;
+    ceCurrentIdx = idx;
+    const clip = ceClips[idx];
+    ceTotalFrames = clip.total_frames;
+    ceCurrentFrame = 0;
+    ceVidW = 0;
+    ceVidH = 0;
+
+    // Load saved boxes from JSON if they exist
+    try {
+        const res = await fetch(`/api/ce/boxes?workdir=${encodeURIComponent(ceWorkdir)}&name=${encodeURIComponent(clip.name)}`);
+        const data = await res.json();
+        ceBox1 = data.box1 || null;
+        ceBox2 = data.box2 || null;
+    } catch (e) {
+        ceBox1 = null;
+        ceBox2 = null;
+    }
+
+    document.getElementById('ce-clip-name').textContent = clip.name;
+    document.getElementById('ce-total-frames').textContent = ceTotalFrames;
+    document.getElementById('ce-frame-input').value = 0;
+    document.getElementById('ce-frame-input').max = ceTotalFrames - 1;
+
+    ceBuildClipList();
+    ceLoadFrame();
+}
+
+function ceSetFrame(f) {
+    f = Math.max(0, Math.min(ceTotalFrames - 1, f));
+    if (f === ceCurrentFrame) return;
+    ceCurrentFrame = f;
+    document.getElementById('ce-frame-input').value = f;
+    ceLoadFrame();
+}
+
+async function ceLoadFrame() {
+    if (ceCurrentIdx < 0) return;
+    const clip = ceClips[ceCurrentIdx];
+    const url = `/api/pl/frame?workdir=${encodeURIComponent(ceWorkdir)}&name=${encodeURIComponent(clip.name)}&frame=${ceCurrentFrame}`;
+    ceFrameImg.onload = () => {
+        if (!ceVidW) {
+            ceVidW = ceFrameImg.naturalWidth;
+            ceVidH = ceFrameImg.naturalHeight;
+        }
+        ceDrawCanvas();
+        ceDrawPreview();
+    };
+    ceFrameImg.src = url;
+}
+
+// ── Canvas Drawing ──────────────────────────────────────────────
+function ceDrawCanvas() {
+    if (!ceCanvas || !ceFrameImg || !ceFrameImg.naturalWidth) return;
+    const wrap = document.getElementById('ce-video-wrap');
+    const canvasW = wrap.clientWidth, canvasH = wrap.clientHeight;
+    const vw = ceFrameImg.naturalWidth, vh = ceFrameImg.naturalHeight;
+    if (!vw || !vh || !canvasW || !canvasH) return;
+
+    const scale = Math.min(canvasW / vw, canvasH / vh);
+    const renderW = vw * scale, renderH = vh * scale;
+    const offX = (canvasW - renderW) / 2;
+    const offY = (canvasH - renderH) / 2;
+    ceRenderState = { offX, offY, scale, canvasW, canvasH };
+
+    const dpr = window.devicePixelRatio || 1;
+    ceCanvas.width = canvasW * dpr;
+    ceCanvas.height = canvasH * dpr;
+    ceCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ceCtx.clearRect(0, 0, canvasW, canvasH);
+
+    // Draw Box 1 (big, bottom) — red
+    if (ceBox1) {
+        ceCtx.strokeStyle = '#ef4444';
+        ceCtx.lineWidth = 2;
+        const x = offX + ceBox1.x1 * scale, y = offY + ceBox1.y1 * scale;
+        const w = (ceBox1.x2 - ceBox1.x1) * scale, h = (ceBox1.y2 - ceBox1.y1) * scale;
+        ceCtx.strokeRect(x, y, w, h);
+        ceCtx.font = 'bold 13px sans-serif';
+        ceCtx.fillStyle = '#ef4444';
+        ceCtx.fillRect(x, y - 18, 80, 18);
+        ceCtx.fillStyle = '#fff';
+        ceCtx.fillText('Box1 (big)', x + 4, y - 4);
+    }
+
+    // Draw Box 2 (small, top) — green
+    if (ceBox2) {
+        ceCtx.strokeStyle = '#10b981';
+        ceCtx.lineWidth = 2;
+        const x = offX + ceBox2.x1 * scale, y = offY + ceBox2.y1 * scale;
+        const w = (ceBox2.x2 - ceBox2.x1) * scale, h = (ceBox2.y2 - ceBox2.y1) * scale;
+        ceCtx.strokeRect(x, y, w, h);
+        ceCtx.font = 'bold 13px sans-serif';
+        ceCtx.fillStyle = '#10b981';
+        ceCtx.fillRect(x, y - 18, 90, 18);
+        ceCtx.fillStyle = '#fff';
+        ceCtx.fillText('Box2 (small)', x + 4, y - 4);
+    }
+
+    // Drawing in progress
+    if (ceDrawingBox) {
+        const isBox2 = ceBox1 !== null;
+        ceCtx.strokeStyle = isBox2 ? '#10b981' : '#ef4444';
+        ceCtx.lineWidth = 2;
+        ceCtx.setLineDash([6, 3]);
+        const x = offX + ceDrawingBox.x1 * scale, y = offY + ceDrawingBox.y1 * scale;
+        const w = (ceDrawingBox.x2 - ceDrawingBox.x1) * scale, h = (ceDrawingBox.y2 - ceDrawingBox.y1) * scale;
+        ceCtx.strokeRect(x, y, w, h);
+        ceCtx.setLineDash([]);
+    }
+
+    ceUpdateBoxInfo();
+    ceUpdateDrawingStatus();
+}
+
+function ceUpdateBoxInfo() {
+    const el = document.getElementById('ce-box-info');
+    let txt = '';
+    if (ceBox1) txt += `Box1: (${ceBox1.x1},${ceBox1.y1})-(${ceBox1.x2},${ceBox1.y2}) ${ceBox1.x2-ceBox1.x1}x${ceBox1.y2-ceBox1.y1}\n`;
+    if (ceBox2) txt += `Box2: (${ceBox2.x1},${ceBox2.y1})-(${ceBox2.x2},${ceBox2.y2}) ${ceBox2.x2-ceBox2.x1}x${ceBox2.y2-ceBox2.y1}`;
+    el.textContent = txt || 'No boxes drawn';
+}
+
+function ceUpdateDrawingStatus() {
+    const el = document.getElementById('ce-drawing-status');
+    if (!ceBox1) el.textContent = 'Draw Box 1 (big, bottom)';
+    else if (!ceBox2) el.textContent = 'Draw Box 2 (small, top)';
+    else el.textContent = 'Both boxes set';
+}
+
+// ── Preview ──────────────────────────────────────────────────
+function ceDrawPreview() {
+    const info = document.getElementById('ce-preview-info');
+    if (!ceBox1 || !ceBox2 || !ceFrameImg || !ceFrameImg.naturalWidth) {
+        cePreviewCanvas.width = 1;
+        cePreviewCanvas.height = 1;
+        cePreviewCtx.clearRect(0, 0, 1, 1);
+        info.textContent = 'Draw both boxes to see preview';
+        return;
+    }
+
+    // Compute sizes
+    const b1w = ceBox1.x2 - ceBox1.x1, b1h = ceBox1.y2 - ceBox1.y1;
+    const b2w = ceBox2.x2 - ceBox2.x1, b2h = ceBox2.y2 - ceBox2.y1;
+    // Scale box2 to match box1 width
+    const scaleRatio = b1w / b2w;
+    const b2hScaled = Math.round(b2h * scaleRatio);
+    // Stacked: top = resized box2, bottom = box1
+    const stackW = b1w;
+    const stackH = b2hScaled + b1h;
+    // Letterbox to square
+    const imgSize = parseInt(document.getElementById('ce-img-size').value) || 518;
+    const sqScale = imgSize / Math.max(stackW, stackH);
+    const finalW = Math.round(stackW * sqScale);
+    const finalH = Math.round(stackH * sqScale);
+    const padX = Math.floor((imgSize - finalW) / 2);
+    const padY = Math.floor((imgSize - finalH) / 2);
+
+    // Draw preview (scaled to fit 140px height)
+    const previewScale = 140 / imgSize;
+    const pW = Math.round(imgSize * previewScale);
+    const pH = Math.round(imgSize * previewScale);
+    cePreviewCanvas.width = pW;
+    cePreviewCanvas.height = pH;
+
+    // Black background
+    cePreviewCtx.fillStyle = '#000';
+    cePreviewCtx.fillRect(0, 0, pW, pH);
+
+    // Draw box2 (resized, on top)
+    cePreviewCtx.drawImage(ceFrameImg,
+        ceBox2.x1, ceBox2.y1, b2w, b2h,  // source
+        padX * previewScale, padY * previewScale,  // dest x,y
+        finalW * previewScale, (b2hScaled / stackH * finalH) * previewScale  // dest w,h
+    );
+
+    // Draw box1 (on bottom)
+    cePreviewCtx.drawImage(ceFrameImg,
+        ceBox1.x1, ceBox1.y1, b1w, b1h,  // source
+        padX * previewScale, (padY + b2hScaled / stackH * finalH) * previewScale,
+        finalW * previewScale, (b1h / stackH * finalH) * previewScale
+    );
+
+    // Show info
+    info.textContent = `Stack: ${stackW}x${stackH}\nBox2 scale: ${scaleRatio.toFixed(2)}x\nLetterbox: ${imgSize}x${imgSize}\nContent: ${finalW}x${finalH}+pad(${padX},${padY})`;
+}
+
+// ── Mouse Handlers ──────────────────────────────────────────
+function ceScreenToVideo(e) {
+    const rect = ceCanvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const { offX, offY, scale } = ceRenderState;
+    const vx = Math.round((mx - offX) / scale);
+    const vy = Math.round((my - offY) / scale);
+    return { x: Math.max(0, Math.min(ceVidW, vx)), y: Math.max(0, Math.min(ceVidH, vy)) };
+}
+
+function ceHandleMouseDown(e) {
+    if (ceBox1 && ceBox2) return; // both boxes already drawn
+    const pt = ceScreenToVideo(e);
+    ceDrawStart = pt;
+    ceDrawingBox = { x1: pt.x, y1: pt.y, x2: pt.x, y2: pt.y };
+}
+
+function ceHandleMouseMove(e) {
+    if (!ceDrawStart || !ceDrawingBox) return;
+    const pt = ceScreenToVideo(e);
+    ceDrawingBox = {
+        x1: Math.min(ceDrawStart.x, pt.x), y1: Math.min(ceDrawStart.y, pt.y),
+        x2: Math.max(ceDrawStart.x, pt.x), y2: Math.max(ceDrawStart.y, pt.y)
+    };
+    ceDrawCanvas();
+}
+
+function ceHandleMouseUp(e) {
+    if (!ceDrawStart || !ceDrawingBox) return;
+    const pt = ceScreenToVideo(e);
+    const box = {
+        x1: Math.min(ceDrawStart.x, pt.x), y1: Math.min(ceDrawStart.y, pt.y),
+        x2: Math.max(ceDrawStart.x, pt.x), y2: Math.max(ceDrawStart.y, pt.y)
+    };
+    // Ignore tiny boxes
+    if ((box.x2 - box.x1) < 10 || (box.y2 - box.y1) < 10) {
+        ceDrawStart = null; ceDrawingBox = null;
+        ceDrawCanvas();
+        return;
+    }
+
+    if (!ceBox1) {
+        ceBox1 = box;
+    } else if (!ceBox2) {
+        ceBox2 = box;
+    }
+    ceDrawStart = null;
+    ceDrawingBox = null;
+    ceDrawCanvas();
+    ceDrawPreview();
+
+    // Auto-save boxes when both are set
+    if (ceBox1 && ceBox2) ceSaveBoxes();
+}
+
+// ── Save/Load Boxes ──────────────────────────────────────
+async function ceSaveBoxes() {
+    if (ceCurrentIdx < 0) return;
+    const clip = ceClips[ceCurrentIdx];
+    try {
+        await fetch('/api/ce/save_boxes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                workdir: ceWorkdir,
+                name: clip.name,
+                box1: ceBox1,
+                box2: ceBox2
+            })
+        });
+    } catch (e) {
+        console.error('Failed to save boxes:', e);
+    }
+}
+
+// ── Export ──────────────────────────────────────────────────
+async function ceExport() {
+    if (!ceBox1 || !ceBox2) {
+        alert('Draw both boxes first!');
+        return;
+    }
+    if (ceCurrentIdx < 0) return;
+    const clip = ceClips[ceCurrentIdx];
+    const imgSize = parseInt(document.getElementById('ce-img-size').value) || 518;
+    const quality = parseInt(document.getElementById('ce-quality').value) || 85;
+    const outDir = document.getElementById('ce-out-dir').value.trim();
+    if (!outDir) { alert('Set output directory'); return; }
+
+    const btn = document.getElementById('ce-export-btn');
+    btn.disabled = true;
+    btn.textContent = 'Exporting...';
+    const progress = document.getElementById('ce-export-progress');
+    progress.textContent = 'Starting...';
+
+    try {
+        const res = await fetch('/api/ce/export', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                workdir: ceWorkdir,
+                name: clip.name,
+                box1: ceBox1,
+                box2: ceBox2,
+                img_size: imgSize,
+                quality: quality,
+                out_dir: outDir
+            })
+        });
+
+        // Stream SSE-like response
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop();
+            for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                    try {
+                        const msg = JSON.parse(line.slice(6));
+                        if (msg.type === 'progress') {
+                            progress.textContent = `${msg.done}/${msg.total} frames`;
+                        } else if (msg.type === 'done') {
+                            progress.textContent = `Done! ${msg.total} frames → ${msg.out_dir}`;
+                        } else if (msg.type === 'error') {
+                            progress.textContent = `Error: ${msg.message}`;
+                        }
+                    } catch (e) {}
+                }
+            }
+        }
+    } catch (e) {
+        progress.textContent = `Error: ${e.message}`;
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Export';
+    }
+}
+
+// ── Keyboard ──────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+    if (activeTab !== 'cropexport') return;
+    if (e.target.tagName === 'INPUT') return;
+
+    if (e.key === 'r' || e.key === 'R') {
+        e.preventDefault();
+        ceBox1 = null; ceBox2 = null;
+        ceUpdateBoxInfo();
+        ceDrawCanvas();
+        ceDrawPreview();
+        return;
+    }
+    if (e.key === 'ArrowLeft') {
+        e.preventDefault(); ceSetFrame(ceCurrentFrame - (e.repeat ? 2 : 1));
+    } else if (e.key === 'ArrowRight') {
+        e.preventDefault(); ceSetFrame(ceCurrentFrame + (e.repeat ? 2 : 1));
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault(); ceSelectClip(ceCurrentIdx - 1);
+    } else if (e.key === 'ArrowDown') {
+        e.preventDefault(); ceSelectClip(ceCurrentIdx + 1);
+    }
+});
+
 // ── Warn before leaving with unsaved changes ──────────────────────────────────────────────────────
 window.addEventListener("beforeunload", (e) => {
     if (plDirty) {

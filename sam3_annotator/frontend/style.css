@@ -1065,3 +1065,56 @@ header .primary-btn {
     display: block;
     cursor: crosshair;
 }
+
+/* ============ Crop Export Tab ============ */
+#ce-layout {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+#ce-sidebar {
+    width: 240px;
+    flex-shrink: 0;
+    min-height: 0;
+    border-right: 1px solid var(--border-color);
+    background: var(--panel-bg);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow-y: auto;
+}
+
+#ce-main {
+    flex: 1;
+    min-height: 0;
+    background: #0f172a;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+}
+
+#ce-info-bar {
+    background: #1e293b;
+    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #e2e8f0;
+    font-size: 0.85rem;
+}
+
+#ce-controls {
+    background: #1e293b;
+    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#ce-controls .frame-counter {
+    color: #e2e8f0;
+}
