@@ -84,16 +84,26 @@ def build_backbone(name: str, device: str) -> tuple[nn.Module, int]:
 
 
 def crop_square(img: np.ndarray, bbox: dict | None, img_size: int = 448) -> np.ndarray:
-    """Crop square around bbox center, resize to img_size."""
+    """Crop square around bbox center, resize to img_size.
+
+    When bbox is None, resizes the full frame (no crop) to preserve all content.
+    """
     H, W = img.shape[:2]
     if bbox is None:
-        side = min(H, W)
-        cy, cx = H // 2, W // 2
-    else:
-        x1, y1 = int(bbox["x1"]), int(bbox["y1"])
-        x2, y2 = int(bbox["x2"]), int(bbox["y2"])
-        cx, cy = (x1 + x2) // 2, (y1 + y2) // 2
-        side = int(max(x2 - x1, y2 - y1) * BBOX_PAD)
+        # No bbox: letterbox full frame (preserve aspect ratio, black padding)
+        scale = img_size / max(H, W)
+        new_w, new_h = int(W * scale), int(H * scale)
+        resized = cv2.resize(img, (new_w, new_h))
+        canvas = np.zeros((img_size, img_size, 3), dtype=np.uint8)
+        y_off = (img_size - new_h) // 2
+        x_off = (img_size - new_w) // 2
+        canvas[y_off:y_off + new_h, x_off:x_off + new_w] = resized
+        return canvas
+
+    x1, y1 = int(bbox["x1"]), int(bbox["y1"])
+    x2, y2 = int(bbox["x2"]), int(bbox["y2"])
+    cx, cy = (x1 + x2) // 2, (y1 + y2) // 2
+    side = int(max(x2 - x1, y2 - y1) * BBOX_PAD)
 
     half = side // 2
     x0 = max(0, cx - half)
