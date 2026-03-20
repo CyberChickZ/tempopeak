@@ -26,6 +26,7 @@ Usage:
 """
 
 import argparse
+import csv
 import os
 import random
 import time
@@ -441,6 +442,19 @@ def main():
     best_tag = f"best_{args.temporal_head}_multihit"
     best_f1 = 0.0
 
+    # CSV log — one file per head, auto-append if resumed
+    csv_path = os.path.join(ckpt_dir, f"log_{args.temporal_head}.csv")
+    csv_fields = [
+        "epoch", "train_loss", "train_cls", "train_disp",
+        "val_loss", "val_cls", "val_disp",
+        "P@1", "R@1", "F1@1", "P@2", "R@2", "F1@2", "P@3", "R@3", "F1@3",
+        "GT", "Pred", "best_F1@1", "train_s", "eval_s", "lr",
+    ]
+    csv_file = open(csv_path, "w", newline="")
+    csv_writer = csv.DictWriter(csv_file, fieldnames=csv_fields)
+    csv_writer.writeheader()
+    print(f"CSV log: {csv_path}")
+
     for epoch in range(1, args.epochs + 1):
         # Train
         t0 = time.time()
@@ -480,6 +494,33 @@ def main():
               f"| train={train_time:.1f}s eval={eval_time:.1f}s "
               f"| best_F1@1={best_f1*100:.1f}%{star}")
 
+        # Write CSV row
+        csv_writer.writerow({
+            "epoch": epoch,
+            "train_loss": f"{train_loss:.6f}",
+            "train_cls": f"{train_cls:.6f}",
+            "train_disp": f"{train_disp:.6f}",
+            "val_loss": f"{metrics['loss']:.6f}",
+            "val_cls": f"{metrics['cls_loss']:.6f}",
+            "val_disp": f"{metrics['disp_loss']:.6f}",
+            "P@1": f"{metrics['P@1']:.4f}",
+            "R@1": f"{metrics['R@1']:.4f}",
+            "F1@1": f"{metrics['F1@1']:.4f}",
+            "P@2": f"{metrics['P@2']:.4f}",
+            "R@2": f"{metrics['R@2']:.4f}",
+            "F1@2": f"{metrics['F1@2']:.4f}",
+            "P@3": f"{metrics['P@3']:.4f}",
+            "R@3": f"{metrics['R@3']:.4f}",
+            "F1@3": f"{metrics['F1@3']:.4f}",
+            "GT": metrics["total_gt"],
+            "Pred": metrics["total_pred"],
+            "best_F1@1": f"{best_f1:.4f}",
+            "train_s": f"{train_time:.1f}",
+            "eval_s": f"{eval_time:.1f}",
+            "lr": f"{optimizer.param_groups[0]['lr']:.6f}",
+        })
+        csv_file.flush()
+
         scheduler.step()
 
         # After epoch 1: single-sample inference timing
@@ -488,6 +529,8 @@ def main():
                                      device)
             print(f"  → Inference: {ms:.1f} ms/segment "
                   f"(T={args.segment_len}, B=1)")
+
+    csv_file.close()
 
     # Save last
     torch.save({
@@ -499,6 +542,7 @@ def main():
 
     print(f"\nDone. Best F1@1={best_f1*100:.1f}% → "
           f"checkpoints/{best_tag}.pt")
+    print(f"CSV log → {csv_path}")
 
 
 if __name__ == "__main__":
