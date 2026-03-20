@@ -1067,6 +1067,10 @@ header .primary-btn {
 }
 
 /* ============ Crop Export Tab ============ */
+#cropexport-screen.active {
+    flex-direction: row;
+}
+
 #ce-layout {
     display: flex;
     flex: 1;
