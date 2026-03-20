@@ -589,7 +589,7 @@ python train.py --temporal_head=identity --t_max=32 --data_dir=datasets/v1/expor
 | `--batch_size` | `32` | 每批处理帧数 |
 | `--device` | `auto` | `auto` = cuda > cpu |
 
-### HPC Exp C — DINOv2 Backbone 5-Head 消融 (待执行)
+### HPC Exp C — DINOv2 Backbone 5-Head 消融 (T=32 已完成 ✅)
 
 ```bash
 source /nfs/stak/users/zhanhaoc/hpc-share/conda/bin/activate
@@ -598,7 +598,7 @@ cd /nfs/hpc/share/zhanhaoc/hpe/tempopeak
 git pull
 srun --gres=gpu:1 --mem=64G --pty bash
 
-# 1. 提取 DINOv2 特征 (D=1024)
+# 1. 提取 DINOv2 特征 (D=1024) — ⚠️ 必须先执行！否则 train.py OOM
 python extract_features.py --data_dir=datasets/v1/export --backbone=dinov2 --batch_size=32
 
 # 2. 验证特征提取成功
@@ -612,7 +612,7 @@ for head in identity bilstm mamba2 bimamba2 transformer; do
       --epochs=30 --batch_size=256 --lr=1e-3
 done
 
-# 4. Exp C2: T_max sweep (BiMamba2 + Transformer)
+# 4. Exp C2: T_max sweep (BiMamba2 + Transformer) — 待执行
 for tmax in 16 32 64; do
     for head in bimamba2 transformer; do
         python train.py --temporal_head=$head --t_max=$tmax \
@@ -624,6 +624,20 @@ done
 
 DINOv2 ViT-L: D=1024, ~304M params (frozen), CLS token 特征。
 model.py 自动触发 `feat_proj = Linear(1024, 512)` 适配 temporal head。
+
+⚠️ **OOM 陷阱**：若未提前提取特征，train.py 回退到 `Mode: images`，batch_size=256 × T=32 张图片通过 ViT-L 需要 ~98 GiB VRAM → OOM。必须先执行 Step 1。
+
+#### Exp C T=32 结果 (2025-03-20)
+
+| Head | Acc@1 | Acc@2 | MAE | ΔAcc@1 vs ViT-B-16 |
+|---|---|---|---|---|
+| **Identity** | **74.1%** | 82.8% | 1.14 | +22.4pp |
+| BiLSTM | 69.0% | 79.3% | 1.52 | +17.3pp |
+| Mamba2 | 72.4% | 82.8% | 1.24 | +17.3pp |
+| **BiMamba2** | **79.3%** | **86.2%** | **0.93** | +20.7pp |
+| Transformer | 55.2% | 65.5% | 2.10 | −8.6pp |
+
+**关键发现**：Identity baseline 74.1%（ViT-B-16 仅 51.7%），说明 DINOv2 帧级特征已蕴含丰富时序信息。BiMamba2 79.3% 为全项目最佳。Transformer 从 ViT-B-16 最佳→DINOv2 最差，feat_proj 1024→512 瓶颈可能是原因。
 
 ## Optical Flow 可视化 (RAFT-Large)
 
