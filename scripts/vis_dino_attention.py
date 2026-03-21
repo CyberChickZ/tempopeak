@@ -45,12 +45,17 @@ IMAGENET_TRANSFORM = transforms.Compose([
 
 
 def load_dinov2(device):
-    """Load DINOv2 ViT-L with attention output enabled."""
-    from transformers import Dinov2Model, Dinov2Config
+    """Load DINOv2 ViT-L with attention output enabled.
 
-    config = Dinov2Config.from_pretrained("facebook/dinov2-large")
+    Uses attn_implementation="eager" to force non-SDPA attention,
+    which is required for output_attentions=True to return actual weights.
+    (SDPA uses F.scaled_dot_product_attention which doesn't return weights.)
+    """
+    from transformers import Dinov2Model
+
     model = Dinov2Model.from_pretrained(
-        "facebook/dinov2-large", config=config,
+        "facebook/dinov2-large",
+        attn_implementation="eager",
     ).to(device).eval()
 
     for p in model.parameters():
@@ -73,41 +78,26 @@ def letterbox(img, size):
 
 
 def get_attention_map(model, img_tensor, device):
-    """Get CLS→patch attention weights from last layer via forward hook.
+    """Get CLS→patch attention weights from last layer.
+
+    Requires model loaded with attn_implementation="eager" so that
+    output_attentions=True returns actual attention weight tensors.
 
     Returns:
         attn_map: [grid_size, grid_size] attention weights (mean across heads)
     """
     img_tensor = img_tensor.unsqueeze(0).to(device)
 
-    # Use hook to capture attention weights (more reliable than output_attentions)
-    captured_attn = []
-
-    def hook_fn(module, input, output):
-        # DINOv2 attention module returns (context, attn_weights)
-        if isinstance(output, tuple) and len(output) >= 2:
-            captured_attn.append(output[1])
-
-    # Register hook on last encoder layer's attention
-    last_attn_layer = model.encoder.layer[-1].attention.attention
-    handle = last_attn_layer.register_forward_hook(hook_fn)
-
     with torch.no_grad():
-        try:
-            outputs = model(pixel_values=img_tensor, output_attentions=True)
-        except Exception:
-            outputs = model(pixel_values=img_tensor)
+        outputs = model(pixel_values=img_tensor, output_attentions=True)
 
-    handle.remove()
+    if not outputs.attentions:
+        raise RuntimeError(
+            "output_attentions returned empty. "
+            "Ensure model was loaded with attn_implementation='eager'.")
 
-    # Try hook first, fall back to outputs.attentions
-    if captured_attn:
-        last_attn = captured_attn[-1]  # [1, n_heads, n_tokens, n_tokens]
-    elif hasattr(outputs, "attentions") and outputs.attentions:
-        last_attn = outputs.attentions[-1]
-    else:
-        raise RuntimeError("Could not capture attention weights. "
-                           "Check transformers version and DINOv2 model API.")
+    # Last layer attention: [1, n_heads, 1+n_patches, 1+n_patches]
+    last_attn = outputs.attentions[-1]
 
     # CLS token (index 0) attending to patch tokens (index 1:)
     cls_attn = last_attn[0, :, 0, 1:]  # [n_heads, n_patches]

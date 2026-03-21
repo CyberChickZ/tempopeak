@@ -252,15 +252,32 @@ def main():
         print(f"  n_patches: {n_patches} ({grid_side}x{grid_side} grid)")
         print(f"  Estimated output: {est_gb:.1f} GB fp16")
 
-    # Pre-allocate output via mmap (avoids OOM for large spatial tensors)
+    # Determine output shape
     if args.mode == "spatial":
         feat_shape = (total_frames, n_patches, feat_dim)
     else:
         feat_shape = (total_frames, feat_dim)
 
-    mmap_path = args.output + ".tmp.bin"
-    all_features = np.memmap(mmap_path, dtype=np.float16, mode="w+", shape=feat_shape)
-    print(f"  mmap: {mmap_path} ({np.prod(feat_shape)*2/1e9:.1f} GB on disk)")
+    est_bytes = np.prod(feat_shape) * 2  # fp16
+    use_chunks = est_bytes > 50e9  # >50 GB → save in chunks to avoid OOM
+    CHUNK_FRAMES = 5000  # ~14 GB per chunk for spatial 518
+
+    if use_chunks:
+        # Chunked mode: save directly to .npy files, no large pre-allocation
+        output_dir = args.output.replace(".pt", "_chunks")
+        os.makedirs(output_dir, exist_ok=True)
+        print(f"  Chunked mode: {CHUNK_FRAMES} frames/chunk → {output_dir}/")
+        print(f"  Total: {est_bytes/1e9:.0f} GB across ~{(total_frames + CHUNK_FRAMES - 1) // CHUNK_FRAMES} chunks")
+        # RAM buffer for current chunk only
+        if args.mode == "spatial":
+            chunk_buf = np.zeros((CHUNK_FRAMES, n_patches, feat_dim), dtype=np.float16)
+        else:
+            chunk_buf = np.zeros((CHUNK_FRAMES, feat_dim), dtype=np.float16)
+        chunk_start = 0
+        chunk_idx = 0
+        saved_chunks = []
+    else:
+        all_features = torch.zeros(*feat_shape, dtype=torch.float16)
 
     # Start producer thread (reads frames → pushes batches to queue)
     # Queue size 2 = double buffering: producer fills next batch while GPU processes current
@@ -279,6 +296,13 @@ def main():
     t0 = time.time()
     frames_done = 0
 
+    def _save_chunk(chunk_buf, chunk_start, actual_len, output_dir, chunk_idx):
+        """Save one chunk as .npy file."""
+        chunk_path = os.path.join(output_dir, "chunk_%05d.npy" % chunk_idx)
+        np.save(chunk_path, chunk_buf[:actual_len])
+        return {"path": chunk_path, "start": chunk_start,
+                "end": chunk_start + actual_len, "frames": actual_len}
+
     while True:
         item = queue.get()
         if item is None:
@@ -288,11 +312,27 @@ def main():
         batch_tensors = batch_tensors.to(device)
 
         with torch.no_grad():
-            feats = backbone(batch_tensors)  # [B, 1024]
+            feats = backbone(batch_tensors)
 
         feats_cpu = feats.cpu().half()
-        for i, idx in enumerate(batch_indices):
-            all_features[idx] = feats_cpu[i].numpy()
+
+        if use_chunks:
+            for i, idx in enumerate(batch_indices):
+                local = idx - chunk_start
+                if local >= CHUNK_FRAMES:
+                    # Save current chunk, start new one
+                    info = _save_chunk(chunk_buf, chunk_start,
+                                       CHUNK_FRAMES, output_dir, chunk_idx)
+                    saved_chunks.append(info)
+                    print(f"    → saved {info['path']} ({info['frames']} frames)")
+                    chunk_idx += 1
+                    chunk_start += CHUNK_FRAMES
+                    chunk_buf[:] = 0
+                    local = idx - chunk_start
+                chunk_buf[local] = feats_cpu[i].numpy()
+        else:
+            for i, idx in enumerate(batch_indices):
+                all_features[idx] = feats_cpu[i]
 
         frames_done += len(batch_indices)
         elapsed = time.time() - t0
@@ -305,32 +345,40 @@ def main():
 
     # Save
     os.makedirs(os.path.dirname(args.output) or ".", exist_ok=True)
-    all_features.flush()
 
-    # For large spatial tensors (>50 GB), save as .npy to avoid loading all into RAM.
-    # np.save on a memmap streams directly from disk → disk, no RAM spike.
-    # For small tensors (CLS mode), save as .pt for backward compatibility.
-    est_bytes = np.prod(feat_shape) * 2  # fp16
-    if est_bytes > 50e9:
-        npy_path = args.output.replace(".pt", ".npy")
-        print(f"\nLarge tensor ({est_bytes/1e9:.0f} GB), saving as .npy (RAM-safe)...")
-        np.save(npy_path, all_features)
-        del all_features
-        os.remove(mmap_path)
+    if use_chunks:
+        # Save final partial chunk
+        remaining = total_frames - chunk_start
+        if remaining > 0:
+            info = _save_chunk(chunk_buf, chunk_start,
+                               remaining, output_dir, chunk_idx)
+            saved_chunks.append(info)
+            print(f"    → saved {info['path']} ({info['frames']} frames)")
+        del chunk_buf
+
+        # Write manifest
+        import json
+        manifest = {
+            "total_frames": total_frames,
+            "feat_shape": list(feat_shape),
+            "dtype": "float16",
+            "chunks": saved_chunks,
+        }
+        manifest_path = os.path.join(output_dir, "manifest.json")
+        with open(manifest_path, "w") as f:
+            json.dump(manifest, f, indent=2)
+
         elapsed = time.time() - t0
-        size_mb = os.path.getsize(npy_path) / (1024 * 1024)
-        print(f"Done. {total_frames} frames → {feat_shape} fp16")
+        total_size = sum(os.path.getsize(c["path"]) for c in saved_chunks)
+        print(f"\nDone. {total_frames} frames → {len(saved_chunks)} chunks")
         print(f"  Time: {elapsed:.0f}s ({total_frames/elapsed:.0f} frames/s)")
-        print(f"  File: {npy_path} ({size_mb/1024:.1f} GB)")
+        print(f"  Dir: {output_dir}/ ({total_size/1e9:.1f} GB total)")
+        print(f"  Manifest: {manifest_path}")
     else:
-        print(f"\nConverting mmap → .pt ...")
-        final_tensor = torch.from_numpy(np.array(all_features))
-        torch.save(final_tensor, args.output)
-        del final_tensor, all_features
-        os.remove(mmap_path)
+        torch.save(all_features, args.output)
         elapsed = time.time() - t0
         size_mb = os.path.getsize(args.output) / (1024 * 1024)
-        print(f"Done. {total_frames} frames → {feat_shape} fp16")
+        print(f"\nDone. {total_frames} frames → {feat_shape} fp16")
         print(f"  Time: {elapsed:.0f}s ({total_frames/elapsed:.0f} frames/s)")
         print(f"  File: {args.output} ({size_mb:.1f} MB)")
 

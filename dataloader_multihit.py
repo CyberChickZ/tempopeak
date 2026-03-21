@@ -78,6 +78,46 @@ def cls_displacement_target(hit_indices, T, radius=5):
 
 
 # ---------------------------------------------------------------------------
+# Chunked array wrapper for large spatial features
+# ---------------------------------------------------------------------------
+
+class _ChunkedArray:
+    """Lazy-loading wrapper over chunked .npy files.
+
+    Supports indexing like arr[start:end] by reading only the needed chunks.
+    Each chunk is mmap'd so no RAM is used until sliced.
+    """
+    def __init__(self, chunks, feat_shape):
+        # chunks: list of (start, end, np.memmap)
+        self.chunks = sorted(chunks, key=lambda c: c[0])
+        self.shape = tuple(feat_shape)
+        self.ndim = len(self.shape)
+
+    def __getitem__(self, key):
+        if isinstance(key, slice):
+            start = key.start or 0
+            stop = key.stop or self.shape[0]
+            parts = []
+            for cs, ce, arr in self.chunks:
+                if ce <= start or cs >= stop:
+                    continue
+                local_start = max(0, start - cs)
+                local_end = min(ce - cs, stop - cs)
+                parts.append(arr[local_start:local_end])
+            if not parts:
+                import numpy as np
+                return np.zeros((0,) + self.shape[1:], dtype=np.float16)
+            import numpy as np
+            return np.concatenate(parts, axis=0)
+        else:
+            # Single index
+            for cs, ce, arr in self.chunks:
+                if cs <= key < ce:
+                    return arr[key - cs]
+            raise IndexError(f"Index {key} out of range [0, {self.shape[0]})")
+
+
+# ---------------------------------------------------------------------------
 # Dataset 1: Full Video → fixed-length segments
 # ---------------------------------------------------------------------------
 
@@ -98,12 +138,31 @@ class FullVideoDataset(Dataset):
 
     @staticmethod
     def _load_spatial_or_flow(path):
-        """Load .pt or .npy file. Returns (data, is_mmap).
+        """Load .pt, .npy, or chunked directory. Returns (data, is_mmap).
 
-        .npy files are loaded with mmap_mode='r' for zero-RAM usage (ideal for 200+ GB).
-        .pt files are loaded normally into RAM.
+        Supported formats:
+          .pt           → torch.load into RAM
+          .npy          → numpy mmap (zero RAM)
+          directory/    → chunked .npy files with manifest.json (zero RAM)
         """
         import numpy as np
+        import json as _json
+        import os
+
+        # Chunked directory mode (from extract_features_fullvideo.py --mode spatial)
+        if os.path.isdir(path):
+            manifest_path = os.path.join(path, "manifest.json")
+            if not os.path.exists(manifest_path):
+                raise FileNotFoundError(f"No manifest.json in chunk dir: {path}")
+            with open(manifest_path) as f:
+                manifest = _json.load(f)
+            # Load all chunks as mmap, concatenate lazily via _ChunkedArray
+            chunks = []
+            for ci in manifest["chunks"]:
+                arr = np.load(ci["path"], mmap_mode="r")
+                chunks.append((ci["start"], ci["end"], arr))
+            return _ChunkedArray(chunks, manifest["feat_shape"]), True
+
         if path.endswith(".npy"):
             data = np.load(path, mmap_mode="r")
             return data, True
