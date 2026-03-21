@@ -942,3 +942,172 @@ python train_multihit.py \
 | `--lambda_flow` | 0.5 | Flow KL loss 初始权重 |
 | `--flow_anneal_epochs` | 50 | Flow KL 衰减到 0 的 epoch 数 |
 | `--epochs` | 300 | 默认改为 300 |
+
+---
+
+## 论文编译（Local Mac）
+
+### LaTeX 环境
+- 编译器：`texlive`（via `brew install texlive`）
+- pdflatex 路径：`/opt/homebrew/bin/pdflatex`
+- 模板：CVPR 2016 Author Kit（`paper/cvpr2016AuthorKit/`）
+
+### 编译命令
+```bash
+cd /Users/harryzhang/git/tempopeak/paper/latex
+
+# 完整编译（含引用解析）
+pdflatex -interaction=nonstopmode tempopeak.tex && \
+bibtex tempopeak && \
+pdflatex -interaction=nonstopmode tempopeak.tex && \
+pdflatex -interaction=nonstopmode tempopeak.tex
+
+# 快速编译（不更新引用）
+pdflatex -interaction=nonstopmode tempopeak.tex
+
+# 预览
+cp tempopeak.pdf ~/Downloads/TempoPeak_paper.pdf && open ~/Downloads/TempoPeak_paper.pdf
+```
+
+### 论文目录结构
+
+| 路径 | 说明 |
+|---|---|
+| `paper/latex/tempopeak.tex` | 论文主文件（CVPR 模板） |
+| `paper/latex/refs.bib` | 参考文献 BibTeX（13 条） |
+| `paper/latex/cvpr.sty` | CVPR 样式文件 |
+| `paper/latex/ieee.bst` | IEEE 引用格式 |
+| `paper/img/` | 论文插图目录 |
+| `paper/pptx_images/` | PPT 提取的图片素材（备用） |
+| `paper/cvpr2016AuthorKit/` | 原始 CVPR 模板（参考用） |
+
+### 论文插图清单
+
+| 文件名 | 论文 Figure | 说明 |
+|---|---|---|
+| `pipeline.jpg` | Fig 1 (fig*) | Pipeline 流程图 + BiMamba2 架构细节 |
+| `loss_compare.png` | Fig 2 | Gaussian CE vs EDL 监督信号对比 |
+| `bilstm_collapse.png` | Fig 3 | BiLSTM 过拟合 vs Mamba2 稳定训练曲线 |
+| `result_scatter.png` | Fig 4 | Acc@1 vs 参数量散点图（气泡=MAE） |
+| `window_sweep.png` | Fig 5 | T-sweep 折线图（BiMamba2 水平线 Δ=0pp） |
+| `ssm_equation.png` | 未使用 | SSM 状态方程图解 |
+| `fig_annotator.png` | 备用 | 标注工具截图 |
+| `fig_frame_sequence_near.png` | 备用 | 近端球员击球连续帧序列 |
+| `fig_frame_sequence_far.png` | 备用 | 远端球员击球连续帧序列 |
+| `fig_results_table.png` | 备用 | PPT 完整结果表格截图 |
+
+---
+
+## 518-native Spatial 特征提取 (修复后)
+
+`extract_features_fullvideo.py` 已修复 hardcoded 196 问题（commit `28fdd5d`），改用 np.memmap 避免 209GB OOM（commit `1697f9c`）。
+
+```bash
+source /nfs/stak/users/zhanhaoc/hpc-share/conda/bin/activate
+conda activate sam_3d_body
+cd /nfs/hpc/share/zhanhaoc/hpe/tempopeak
+git pull
+
+# tmux 1: spatial tokens (需要 GPU, ~6 min H100)
+# 注意: 需要 --mem=512G 节点（209GB mmap 临时文件 + torch.save 转换）
+srun --gres=gpu:1 --mem=512G --pty bash
+
+python extract_features_fullvideo.py \
+    --frames_dir datasets/v1/export/0006/00001/frames_518 \
+    --output datasets/v1/export/0006/00001/00001_spatial518.pt \
+    --batch_size 64 --mode spatial
+
+# 预期输出:
+#   n_patches: 1369 (37x37 grid)
+#   Estimated output: 209.0 GB fp16
+#   mmap: ...00001_spatial518.pt.tmp.bin (209.0 GB on disk)
+#   → [74159, 1369, 1024] fp16
+
+# tmux 2: flow (CPU, ~2.6h)
+python extract_flow.py \
+    --frames_dir datasets/v1/export/0006/00001/frames_518 \
+    --output datasets/v1/export/0006/00001/00001_flow518.pt \
+    --grid 37
+# → [74159, 1369] fp16
+```
+
+### 关键变更 (vs 旧 224 版本)
+
+| | 旧 224 | 新 518-native |
+|---|---|---|
+| spatial.pt | `[N, 196, 1024]` ~28 GB | `[N, 1369, 1024]` **~209 GB** |
+| flow.pt | `[N, 196]` ~28 MB (grid=14) | `[N, 1369]` **~204 MB** (grid=37) |
+| 预分配方式 | `torch.zeros()` in RAM | **np.memmap** on disk |
+| `--frames_dir` | 任意尺寸 | **518×518** pre-exported |
+| srun --mem | 64G | **512G** |
+| 训练 batch_size | 4 | **2** |
+
+---
+
+## Paper Visualization 脚本
+
+### Vis 6+7: Softmax 分布 + Error 分布 (vis_softmax_errors.py)
+
+加载 5 个 `best_{head}_32.pt` checkpoint，对 val set 推理，收集 softmax 概率分布 + signed error。
+
+```bash
+# HPC (不需要 GPU，DINOv2 features 已预提取)
+cd /nfs/hpc/share/zhanhaoc/hpe/tempopeak
+python scripts/vis_softmax_errors.py \
+    --data_dir datasets/v1/export \
+    --output_dir paper/vis_data
+```
+
+| 参数 | 默认值 | 说明 |
+|---|---|---|
+| `--data_dir` | datasets/v1/export | clip 数据目录 |
+| `--ckpt_dir` | checkpoints | checkpoint 目录 |
+| `--output_dir` | paper/vis_data | 输出目录 |
+| `--t_max` | 32 | 序列长度 |
+| `--batch_size` | 64 | 推理 batch size |
+
+输出文件:
+
+| 文件 | 内容 |
+|---|---|
+| `vis6_softmax_{head}.pt` | `[N_val, 32]` softmax 概率分布 |
+| `vis7_errors_{head}.pt` | `[N_val]` signed errors (int) |
+| `vis67_gt.pt` | `[N_val]` ground truth frame indices |
+| `vis67_vlen.pt` | `[N_val]` valid lengths |
+| `vis67_summary.json` | 各 head metrics + 代表性 sample 索引 |
+
+### Vis 5: Temporal Cosine Similarity (vis_cosine_sim.py)
+
+```bash
+# HPC (不需要 GPU)
+python scripts/vis_cosine_sim.py \
+    --clip_dir datasets/v1/export/0001/00001 \
+    --backbone vit_small \
+    --output paper/vis_data/vis5_cosine_sim.npz
+```
+
+| 参数 | 默认值 | 说明 |
+|---|---|---|
+| `--clip_dir` | (必填) | clip 目录 |
+| `--backbone` | vit_small | 预提取特征的 backbone |
+| `--player` | p1 | 球员 |
+| `--hit_idx` | 0 | 第几个 hit (0-based) |
+
+### Vis 2: DINOv2 Attention Heatmap (vis_dino_attention.py)
+
+```bash
+# HPC (需要 GPU，加载 DINOv2 ViT-L)
+srun --gres=gpu:1 --mem=64G --pty bash
+
+python scripts/vis_dino_attention.py \
+    --clip_dir datasets/v1/export/0001/00001 \
+    --output_dir paper/vis_data
+
+# 或直接传图片:
+python scripts/vis_dino_attention.py \
+    --image1 path/to/hit.jpg \
+    --image2 path/to/nonhit.jpg \
+    --output_dir paper/vis_data
+```
+
+输出: `vis2_attn_hit.png`, `vis2_attn_nonhit.png`, `vis2_attention_maps.npz`
