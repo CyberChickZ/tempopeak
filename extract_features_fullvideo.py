@@ -1,4 +1,8 @@
-"""Extract per-frame DINOv2 features → single [N, D] .pt file.
+"""Extract per-frame DINOv2 features → single .pt file.
+
+Two modes (--mode):
+  cls     → [N, 1024] CLS token per frame (default, backward compatible)
+  spatial → [N, 196, 1024] patch tokens per frame (for CrossAttnPooling)
 
 Two input modes:
   --video      Read .mp4 directly (sequential, fast on NFS)
@@ -7,17 +11,17 @@ Two input modes:
 Uses threaded prefetch to overlap disk IO and GPU compute.
 
 Usage:
-  # From .mp4 (recommended — sequential IO, fastest on NFS)
+  # CLS tokens (default)
   python extract_features_fullvideo.py \
       --video datasets/v1/export/0006/00001/00001.mp4 \
       --output datasets/v1/export/0006/00001/00001_518.pt \
       --img_size 518 --batch_size 256
 
-  # From annotator-exported JPEGs
+  # Spatial patch tokens (for CrossAttnPooling)
   python extract_features_fullvideo.py \
-      --frames_dir datasets/v1/export/0006/00001/frames_518 \
-      --output datasets/v1/export/0006/00001/00001_ce518.pt \
-      --batch_size 256 --num_workers 32
+      --video datasets/v1/export/0006/00001/00001.mp4 \
+      --output datasets/v1/export/0006/00001/00001_spatial.pt \
+      --img_size 224 --batch_size 128 --mode spatial
 """
 
 import argparse
@@ -40,22 +44,32 @@ IMAGENET_TRANSFORM = transforms.Compose([
 ])
 
 
-def build_dinov2(device):
-    """Build frozen DINOv2 ViT-L backbone. Returns (model, feat_dim=1024)."""
+def build_dinov2(device, mode="cls"):
+    """Build frozen DINOv2 ViT-L backbone.
+
+    Args:
+        mode: "cls"     → returns [B, 1024] CLS token
+              "spatial" → returns [B, 196, 1024] patch tokens (excl CLS)
+
+    Returns (model, feat_dim=1024).
+    """
     from transformers import AutoModel
 
     dinov2 = AutoModel.from_pretrained("facebook/dinov2-large")
 
     class _DINOv2Feats(nn.Module):
-        def __init__(self, model):
+        def __init__(self, model, mode):
             super().__init__()
             self.model = model
+            self.mode = mode
 
         def forward(self, x):
             outputs = self.model(pixel_values=x)
-            return outputs.last_hidden_state[:, 0, :]  # CLS token [B, 1024]
+            if self.mode == "spatial":
+                return outputs.last_hidden_state[:, 1:, :]  # [B, 196, 1024]
+            return outputs.last_hidden_state[:, 0, :]        # [B, 1024]
 
-    backbone = _DINOv2Feats(dinov2).to(device).eval()
+    backbone = _DINOv2Feats(dinov2, mode).to(device).eval()
     for p in backbone.parameters():
         p.requires_grad = False
     return backbone, 1024
@@ -170,6 +184,9 @@ def main():
     p.add_argument("--batch_size", type=int, default=256)
     p.add_argument("--num_workers", type=int, default=32,
                    help="Thread pool size for JPEG reading (frames_dir mode)")
+    p.add_argument("--mode", type=str, default="cls",
+                   choices=["cls", "spatial"],
+                   help="cls → [N,1024] CLS token; spatial → [N,196,1024] patch tokens")
     p.add_argument("--device", type=str, default="auto",
                    help="auto = cuda if available else cpu (never MPS)")
     args = p.parse_args()
@@ -214,12 +231,15 @@ def main():
         print(f"  num_workers: {args.num_workers} (thread pool)")
 
     # Build model
-    print("Loading DINOv2 ViT-L...")
-    backbone, feat_dim = build_dinov2(device)
-    print(f"  feat_dim: {feat_dim}")
+    print(f"Loading DINOv2 ViT-L (mode={args.mode})...")
+    backbone, feat_dim = build_dinov2(device, mode=args.mode)
+    print(f"  feat_dim: {feat_dim}, mode: {args.mode}")
 
     # Pre-allocate output
-    all_features = torch.zeros(total_frames, feat_dim, dtype=torch.float16)
+    if args.mode == "spatial":
+        all_features = torch.zeros(total_frames, 196, feat_dim, dtype=torch.float16)
+    else:
+        all_features = torch.zeros(total_frames, feat_dim, dtype=torch.float16)
 
     # Start producer thread (reads frames → pushes batches to queue)
     # Queue size 2 = double buffering: producer fills next batch while GPU processes current

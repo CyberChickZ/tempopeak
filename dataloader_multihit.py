@@ -1,21 +1,22 @@
 """Multi-hit dataloader for TempoPeak (T-DEED style cls+displacement targets).
 
-Two dataset classes:
-  FullVideoDataset  — pre-extracted [N,D] features + HIT JSON → fixed-length segments
-  ClipFolderDataset — scan export/ clip folders, one sample per player per clip
+两个 Dataset:
+  FullVideoDataset  — 单视频 [N,D] 或 [N,196,D] features + HIT JSON → 固定长度 segment
+  ClipFolderDataset — 扫描 export/ clip 目录, 每个 (clip, player) 一个样本
 
-Usage:
-  # Full video mode (training on 00001.mp4)
+spatial/flow 模式:
+  传入 spatial_pt + flow_pt 时, __getitem__ 额外返回:
+    patches:  [segment_len, 196, 1024]  fp32
+    flow_mag: [segment_len, 196]        fp32
+  CrossAttnPooling 在 train_multihit.py 里消费这两个字段.
+  推理时不传 spatial_pt/flow_pt, 退化为普通 CLS token 模式.
+
+使用:
   train_loader, val_loader, feat_dim = build_multihit_dataloaders(
-      features_pt="data/00001_features.pt",
-      hit_json="datasets/v1/clips/0006/00001.json",
-  )
-
-  # Clip folder mode (eval on old annotated clips)
-  _, val_loader, feat_dim = build_multihit_dataloaders(
-      clip_data_dir="datasets/v1/export",
-      backbone="resnet18",
-      eval_only=True,
+      features_pt="data/00001_ce224.pt",
+      spatial_pt="data/00001_spatial.pt",   # 可选
+      flow_pt="data/00001_flow.pt",          # 可选
+      hit_json="data/annot.json",
   )
 """
 
@@ -26,96 +27,137 @@ from torch.utils.data import Dataset, DataLoader
 
 
 # ---------------------------------------------------------------------------
-# Target generation (T-DEED style: classification + displacement)
+# Target generation (T-DEED style)
 # ---------------------------------------------------------------------------
 
 def cls_displacement_target(hit_indices, T, radius=5):
-    """Classification + displacement target for T-DEED style detection.
+    """分类 + displacement 目标.
 
     Args:
-        hit_indices: list[int] hit frame positions (segment-local).
-        T: sequence length.
-        radius: frames within ±radius of a hit are positive.
+        hit_indices: list[int] segment-local hit 帧位置
+        T:           序列长度
+        radius:      ±radius 帧内为正样本
 
     Returns:
-        cls_target:  [T] float, 1.0 if within radius of any hit, else 0.0
-        disp_target: [T] float, signed offset to nearest hit (0 if no hits)
-        disp_mask:   [T] float, 1.0 for positive frames (only regress near hits)
+        cls_target:  [T] float, 1.0 if within radius of any hit
+        disp_target: [T] float, signed offset to nearest hit
+        disp_mask:   [T] float, 1.0 for positive frames only
+
+    Tensor 示意 (T=10, hit_indices=[4], radius=2):
+      t:          0  1  2  3  4  5  6  7  8  9
+      cls_target: 0  0  1  1  1  1  1  0  0  0
+      disp_target:0  0  2  1  0 -1 -2  0  0  0
+      disp_mask:  0  0  1  1  1  1  1  0  0  0
     """
-    cls_target = torch.zeros(T)
+    cls_target  = torch.zeros(T)
     disp_target = torch.zeros(T)
-    disp_mask = torch.zeros(T)
+    disp_mask   = torch.zeros(T)
 
     if not hit_indices:
         return cls_target, disp_target, disp_mask
 
     hits = torch.tensor(hit_indices, dtype=torch.float32)
-    t = torch.arange(T, dtype=torch.float32)
+    t    = torch.arange(T, dtype=torch.float32)
 
-    # For each frame, find distance to nearest hit
-    # [T, 1] - [1, N_hits] → [T, N_hits]
-    dists = t.unsqueeze(1) - hits.unsqueeze(0)
+    # [T, N_hits] distance matrix
+    dists     = t.unsqueeze(1) - hits.unsqueeze(0)
     abs_dists = dists.abs()
-    nearest_idx = abs_dists.argmin(dim=1)       # [T]
-    nearest_disp = dists[torch.arange(T), nearest_idx]  # [T] signed
 
-    # Classification: positive if within radius
-    cls_target = (abs_dists.min(dim=1).values <= radius).float()
+    nearest_idx  = abs_dists.argmin(dim=1)             # [T]
+    nearest_disp = dists[torch.arange(T), nearest_idx] # [T] signed
 
-    # Displacement: signed offset to nearest hit (only valid for positive frames)
+    cls_target  = (abs_dists.min(dim=1).values <= radius).float()
     disp_target = nearest_disp
-    disp_mask = cls_target  # only regress on positive frames
+    disp_mask   = cls_target
 
     return cls_target, disp_target, disp_mask
 
 
 # ---------------------------------------------------------------------------
-# Dataset 1: Full Video → segments
+# Dataset 1: Full Video → fixed-length segments
 # ---------------------------------------------------------------------------
 
 class FullVideoDataset(Dataset):
-    """Single long video cut into fixed-length segments.
+    """单长视频切成固定长度 segment.
 
-    Input:
-        features_pt — pre-extracted features [N, D] (one row per frame)
-        hit_json    — JSON with "HIT" (or "hits") array of global frame indices
+    CLS token 模式 (默认):
+      features_pt shape: [N, 1024]
+      __getitem__ 返回 features: [segment_len, 1024]
 
-    Each segment is a training sample with 0+ hits mapped to local indices.
+    Spatial 模式 (传入 spatial_pt + flow_pt):
+      spatial_pt shape: [N, 196, 1024]
+      flow_pt shape:    [N, 196]
+      __getitem__ 额外返回:
+        patches:  [segment_len, 196, 1024]
+        flow_mag: [segment_len, 196]
     """
 
     def __init__(self, features_pt, hit_json,
-                 segment_len=2700, stride=None, radius=5,
+                 spatial_pt=None,
+                 flow_pt=None,
+                 segment_len=2700,
+                 stride=None,
+                 radius=5,
                  frame_range=None):
         self.segment_len = segment_len
         self.radius = radius
 
-        # Load features
+        # --- 加载 CLS features ---
         all_features = torch.load(features_pt, weights_only=True).float()
         if all_features.dim() == 3:
             all_features = all_features.squeeze(1)  # [N,1,D] → [N,D]
         assert all_features.dim() == 2, \
-            f"Expected [N, D] features, got {all_features.shape}"
+            f"features_pt 期望 [N,D], 实际 {all_features.shape}"
 
-        # Load hits
+        # --- 加载 hits ---
         with open(hit_json) as f:
             data = json.load(f)
         all_hits = sorted(data.get("HIT", data.get("hits", [])))
 
-        # Apply frame_range (for temporal train/val split)
+        # --- frame_range 裁剪 (temporal train/val split) ---
         if frame_range is not None:
             start_f, end_f = frame_range
-            self.features = all_features[start_f:end_f]
-            self.all_hits = [h - start_f for h in all_hits
-                             if start_f <= h < end_f]
+            all_features = all_features[start_f:end_f]
+            all_hits = [h - start_f for h in all_hits
+                        if start_f <= h < end_f]
         else:
-            self.features = all_features
-            self.all_hits = all_hits
+            start_f = 0
 
+        self.features = all_features
+        self.all_hits = all_hits
         self.N, self.feat_dim = self.features.shape
 
-        # Create segments
+        # --- 可选: spatial patch tokens [N, 196, 1024] ---
+        self.spatial = None
+        if spatial_pt is not None:
+            print(f"加载 spatial tokens: {spatial_pt} ...")
+            sp = torch.load(spatial_pt, weights_only=True).float()
+            assert sp.dim() == 3 and sp.shape[1] == 196, \
+                f"spatial_pt 期望 [N,196,1024], 实际 {sp.shape}"
+            if frame_range is not None:
+                sp = sp[start_f:end_f]
+            assert sp.shape[0] == self.N, \
+                f"spatial_pt 帧数 {sp.shape[0]} 与 features_pt {self.N} 不匹配"
+            self.spatial = sp
+            print(f"  spatial: {self.spatial.shape}  "
+                  f"({self.spatial.numel()*2/1e9:.1f} GB fp16-equiv in RAM as fp32)")
+
+        # --- 可选: optical flow [N, 196] ---
+        self.flow = None
+        if flow_pt is not None:
+            print(f"加载 flow: {flow_pt} ...")
+            fl = torch.load(flow_pt, weights_only=True).float()
+            assert fl.dim() == 2 and fl.shape[1] == 196, \
+                f"flow_pt 期望 [N,196], 实际 {fl.shape}"
+            if frame_range is not None:
+                fl = fl[start_f:end_f]
+            assert fl.shape[0] == self.N, \
+                f"flow_pt 帧数 {fl.shape[0]} 与 features_pt {self.N} 不匹配"
+            self.flow = fl
+
+        # --- 切 segment ---
         if stride is None:
-            stride = 900  # ~67% overlap for segment_len=2700
+            stride = 900  # 67% overlap for segment_len=2700
 
         self.segments = []  # [(start, end, [local_hits])]
         for start in range(0, self.N, stride):
@@ -131,25 +173,44 @@ class FullVideoDataset(Dataset):
         start, end, hits = self.segments[idx]
         valid_len = end - start
 
-        feats = self.features[start:end]  # [valid_len, D]
-
-        # Pad to segment_len
+        # --- CLS features ---
+        feats = self.features[start:end]              # [valid_len, D]
         if valid_len < self.segment_len:
             pad = feats[-1:].expand(self.segment_len - valid_len, -1)
-            feats = torch.cat([feats, pad])
+            feats = torch.cat([feats, pad])            # [segment_len, D]
 
         cls_target, disp_target, disp_mask = cls_displacement_target(
             hits, self.segment_len, radius=self.radius)
 
-        return {
-            "features": feats,           # [segment_len, D]
-            "cls_target": cls_target,    # [segment_len]
-            "disp_target": disp_target,  # [segment_len]
-            "disp_mask": disp_mask,      # [segment_len]
-            "hit_indices": hits,         # list[int] (segment-local)
-            "valid_len": valid_len,      # int
-            "segment_start": start,      # int (global offset)
+        result = {
+            "features":     feats,           # [segment_len, D]
+            "cls_target":   cls_target,      # [segment_len]
+            "disp_target":  disp_target,     # [segment_len]
+            "disp_mask":    disp_mask,       # [segment_len]
+            "hit_indices":  hits,            # list[int]
+            "valid_len":    valid_len,       # int
+            "segment_start": start,          # int (global offset)
         }
+
+        # --- Spatial patch tokens (可选) ---
+        if self.spatial is not None:
+            patches = self.spatial[start:end]         # [valid_len, 196, 1024]
+            if valid_len < self.segment_len:
+                pad = patches[-1:].expand(
+                    self.segment_len - valid_len, -1, -1)
+                patches = torch.cat([patches, pad])   # [segment_len, 196, 1024]
+            result["patches"] = patches
+
+        # --- Optical flow (可选) ---
+        if self.flow is not None:
+            flow = self.flow[start:end]               # [valid_len, 196]
+            if valid_len < self.segment_len:
+                pad = flow[-1:].expand(
+                    self.segment_len - valid_len, -1)
+                flow = torch.cat([flow, pad])          # [segment_len, 196]
+            result["flow_mag"] = flow
+
+        return result
 
 
 # ---------------------------------------------------------------------------
@@ -157,24 +218,22 @@ class FullVideoDataset(Dataset):
 # ---------------------------------------------------------------------------
 
 class ClipFolderDataset(Dataset):
-    """Scan export/ directory for annotated clip folders.
+    """扫描 export/ 目录的带标注 clip folder.
 
-    Directory structure:
+    目录结构:
         data_dir/
-        ├── {video_id}/
-        │   ├── {clip_id}/
-        │   │   ├── annot.json
-        │   │   └── features/{backbone}/{player}/*.pt
-
-    Each (clip, player) pair = one sample. Supports multi-hit per player.
+        └── {video_id}/
+            └── {clip_id}/
+                ├── annot.json
+                └── features/{backbone}/{player}/*.pt
     """
 
     def __init__(self, data_dir, backbone="dinov2", radius=5, max_len=2700):
         self.backbone = backbone
-        self.radius = radius
-        self.max_len = max_len
+        self.radius   = radius
+        self.max_len  = max_len
         self.data_dir = Path(data_dir)
-        self.feat_dim = None  # auto-detected
+        self.feat_dim = None
 
         self.samples = []  # [(clip_dir, player_key, [hit_frames], total_frames)]
 
@@ -191,25 +250,22 @@ class ClipFolderDataset(Dataset):
                 with open(annot_path) as f:
                     annot = json.load(f)
 
-                hits = annot.get("hits", [])
-                hitters = annot.get("hitters", [])
+                hits         = annot.get("hits", [])
+                hitters      = annot.get("hitters", [])
                 total_frames = annot.get("total_frames", 0)
 
-                if total_frames == 0 or len(hits) == 0:
+                if total_frames == 0 or not hits:
                     continue
 
-                # Group hits by player
                 player_hits = {}
-                for h, p in zip(hits, hitters):
-                    pkey = f"p{p}"
-                    player_hits.setdefault(pkey, []).append(h)
+                for h, pl in zip(hits, hitters):
+                    player_hits.setdefault(f"p{pl}", []).append(h)
 
                 for pkey, phits in player_hits.items():
                     feat_dir = clip_dir / "features" / backbone / pkey
                     if not feat_dir.exists():
                         continue
 
-                    # Auto-detect feat_dim from first file
                     if self.feat_dim is None:
                         pts = sorted(feat_dir.glob("*.pt"))
                         if pts:
@@ -220,7 +276,7 @@ class ClipFolderDataset(Dataset):
                         (str(clip_dir), pkey, sorted(phits), total_frames))
 
         if self.feat_dim is None:
-            self.feat_dim = 512  # fallback
+            self.feat_dim = 512
 
         print(f"ClipFolderDataset: {len(self.samples)} samples, "
               f"feat_dim={self.feat_dim}, backbone={backbone}")
@@ -230,29 +286,26 @@ class ClipFolderDataset(Dataset):
 
     def __getitem__(self, idx):
         clip_dir, player, hits, total = self.samples[idx]
-        clip_dir = Path(clip_dir)
-        feat_dir = clip_dir / "features" / self.backbone / player
+        feat_dir = Path(clip_dir) / "features" / self.backbone / player
 
-        # Load features frame by frame
         feats = []
         for fi in range(total):
             pt = feat_dir / f"{fi}.pt"
             if pt.exists():
                 t = torch.load(pt, weights_only=True)
                 if t.dim() > 1:
-                    t = t.squeeze()  # [1,D] → [D]
+                    t = t.squeeze()
                 feats.append(t)
             elif feats:
-                feats.append(feats[-1].clone())  # missing → repeat prev
+                feats.append(feats[-1].clone())
 
         if not feats:
             feats = [torch.zeros(self.feat_dim)]
 
-        feats = torch.stack(feats)  # [T_clip, D]
+        feats = torch.stack(feats)       # [T_clip, D]
         T = feats.shape[0]
         valid_len = min(T, self.max_len)
 
-        # Pad or truncate
         if T < self.max_len:
             pad = feats[-1:].expand(self.max_len - T, -1)
             feats = torch.cat([feats, pad])
@@ -264,37 +317,50 @@ class ClipFolderDataset(Dataset):
             hits, self.max_len, radius=self.radius)
 
         return {
-            "features": feats,           # [max_len, D]
-            "cls_target": cls_target,    # [max_len]
-            "disp_target": disp_target,  # [max_len]
-            "disp_mask": disp_mask,      # [max_len]
-            "hit_indices": hits,         # list[int]
-            "valid_len": valid_len,      # int
-            "segment_start": 0,          # always 0 for clips
+            "features":      feats,
+            "cls_target":    cls_target,
+            "disp_target":   disp_target,
+            "disp_mask":     disp_mask,
+            "hit_indices":   hits,
+            "valid_len":     valid_len,
+            "segment_start": 0,
         }
 
 
 # ---------------------------------------------------------------------------
-# Collate + DataLoader factory
+# Collate
 # ---------------------------------------------------------------------------
 
 def _collate(batch):
-    """Custom collate: hit_indices stays as list of lists."""
-    return {
-        "features": torch.stack([b["features"] for b in batch]),
-        "cls_target": torch.stack([b["cls_target"] for b in batch]),
-        "disp_target": torch.stack([b["disp_target"] for b in batch]),
-        "disp_mask": torch.stack([b["disp_mask"] for b in batch]),
-        "hit_indices": [b["hit_indices"] for b in batch],
-        "valid_len": torch.tensor([b["valid_len"] for b in batch]),
+    """patches / flow_mag 字段只在 spatial 模式下存在, 按需 stack."""
+    result = {
+        "features":      torch.stack([b["features"]      for b in batch]),
+        "cls_target":    torch.stack([b["cls_target"]    for b in batch]),
+        "disp_target":   torch.stack([b["disp_target"]   for b in batch]),
+        "disp_mask":     torch.stack([b["disp_mask"]     for b in batch]),
+        "hit_indices":   [b["hit_indices"]               for b in batch],
+        "valid_len":     torch.tensor([b["valid_len"]    for b in batch]),
         "segment_start": torch.tensor([b["segment_start"] for b in batch]),
     }
+    if "patches" in batch[0]:
+        result["patches"]  = torch.stack([b["patches"]  for b in batch])
+        # [B, segment_len, 196, 1024]
+    if "flow_mag" in batch[0]:
+        result["flow_mag"] = torch.stack([b["flow_mag"] for b in batch])
+        # [B, segment_len, 196]
+    return result
 
+
+# ---------------------------------------------------------------------------
+# DataLoader factory
+# ---------------------------------------------------------------------------
 
 def build_multihit_dataloaders(
     # Full video mode
     features_pt=None,
     hit_json=None,
+    spatial_pt=None,      # 可选: [N, 196, 1024] spatial patch tokens
+    flow_pt=None,         # 可选: [N, 196] Farneback flow magnitude
     # Clip folder mode
     clip_data_dir=None,
     backbone="dinov2",
@@ -307,34 +373,34 @@ def build_multihit_dataloaders(
     seed=42,
     eval_only=False,
 ):
-    """Build train/val DataLoaders for multi-hit training.
+    """构建 train/val DataLoader.
 
     Returns:
         (train_loader, val_loader, feat_dim)
-        train_loader is None when eval_only=True.
+        eval_only=True 时 train_loader=None.
     """
     if features_pt and hit_json:
         if eval_only:
-            dataset = FullVideoDataset(
+            ds = FullVideoDataset(
                 features_pt, hit_json,
+                spatial_pt=spatial_pt, flow_pt=flow_pt,
                 segment_len=segment_len, stride=stride, radius=radius,
             )
-            feat_dim = dataset.feat_dim
-            print(f"Dataset: {len(dataset)} samples, feat_dim={feat_dim}")
             val_loader = DataLoader(
-                dataset, batch_size=batch_size, shuffle=False,
+                ds, batch_size=batch_size, shuffle=False,
                 collate_fn=_collate, pin_memory=True,
             )
-            return None, val_loader, feat_dim
+            return None, val_loader, ds.feat_dim
 
-        # Temporal split: front 80% train, back 20% val (zero frame overlap)
-        all_features = torch.load(features_pt, weights_only=True)
-        N = all_features.shape[0] if all_features.dim() == 2 else all_features.shape[0]
-        del all_features  # free memory, datasets will reload
+        # Temporal split: front 80% train, back 20% val
+        tmp = torch.load(features_pt, weights_only=True)
+        N = tmp.shape[0]
+        del tmp
         split = int(N * (1 - val_split))
 
         train_ds = FullVideoDataset(
             features_pt, hit_json,
+            spatial_pt=spatial_pt, flow_pt=flow_pt,
             segment_len=segment_len,
             stride=stride or 900,
             radius=radius,
@@ -342,40 +408,41 @@ def build_multihit_dataloaders(
         )
         val_ds = FullVideoDataset(
             features_pt, hit_json,
+            spatial_pt=spatial_pt, flow_pt=flow_pt,
             segment_len=segment_len,
-            stride=segment_len,  # no overlap in val
+            stride=segment_len,   # val: no overlap
             radius=radius,
             frame_range=(split, N),
         )
         feat_dim = train_ds.feat_dim
-        print(f"Temporal split: train [{0}:{split}] {len(train_ds)} segs, "
+
+        print(f"Temporal split: train [0:{split}] {len(train_ds)} segs, "
               f"val [{split}:{N}] {len(val_ds)} segs, feat_dim={feat_dim}")
+        spatial_mode = train_ds.spatial is not None
+        print(f"Spatial mode: {spatial_mode}  "
+              f"Flow mode: {train_ds.flow is not None}")
 
     elif clip_data_dir:
-        dataset = ClipFolderDataset(
+        ds = ClipFolderDataset(
             clip_data_dir, backbone=backbone,
             radius=radius, max_len=segment_len,
         )
-        feat_dim = dataset.feat_dim
-        print(f"Dataset: {len(dataset)} samples, feat_dim={feat_dim}")
+        feat_dim = ds.feat_dim
 
         if eval_only:
             val_loader = DataLoader(
-                dataset, batch_size=batch_size, shuffle=False,
+                ds, batch_size=batch_size, shuffle=False,
                 collate_fn=_collate, pin_memory=True,
             )
             return None, val_loader, feat_dim
 
-        # Random split for clip data (no overlap issue)
-        n = len(dataset)
+        n = len(ds)
         n_val = max(1, int(n * val_split))
-        n_train = n - n_val
         gen = torch.Generator().manual_seed(seed)
         train_ds, val_ds = torch.utils.data.random_split(
-            dataset, [n_train, n_val], generator=gen,
-        )
+            ds, [n - n_val, n_val], generator=gen)
     else:
-        raise ValueError("Provide (features_pt + hit_json) or clip_data_dir")
+        raise ValueError("需要 (features_pt + hit_json) 或 clip_data_dir")
 
     train_loader = DataLoader(
         train_ds, batch_size=batch_size, shuffle=True,

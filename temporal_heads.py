@@ -271,6 +271,47 @@ class BiMamba2Head(nn.Module):
         return torch.cat([fwd, bwd], dim=-1)
 
 
+class GatedBiMamba2Head(nn.Module):
+    """Bidirectional SSM with learned gate fusion.
+
+    Core fix: replaces concat(fwd, bwd) → gate*fwd + (1-gate)*bwd.
+    out_dim = 256 (weighted average, not concatenation).
+    """
+    out_dim = 256
+
+    def __init__(self, d_in: int = 512, d_model: int = 256, layers: int = 2):
+        super().__init__()
+        self.proj = nn.Linear(d_in, d_model)
+        if _HAS_MAMBA_SSM:
+            self.fwd_layers = nn.ModuleList(
+                [_make_mamba2_layer(d_model) for _ in range(layers)])
+            self.bwd_layers = nn.ModuleList(
+                [_make_mamba2_layer(d_model) for _ in range(layers)])
+        else:
+            self.fwd_layers = nn.ModuleList(
+                [_SSMLayer(d_model) for _ in range(layers)])
+            self.bwd_layers = nn.ModuleList(
+                [_SSMLayer(d_model) for _ in range(layers)])
+        self.gate_proj = nn.Linear(d_model * 2, d_model)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.proj(x)                    # [B, T, 256]
+
+        fwd = x
+        for layer in self.fwd_layers:
+            fwd = layer(fwd)                # [B, T, 256]
+
+        bwd = torch.flip(x, [1])
+        for layer in self.bwd_layers:
+            bwd = layer(bwd)
+        bwd = torch.flip(bwd, [1])          # [B, T, 256]
+
+        gate = torch.sigmoid(self.gate_proj(
+            torch.cat([fwd, bwd], dim=-1)))  # [B, T, 256]
+
+        return gate * fwd + (1 - gate) * bwd  # [B, T, 256]
+
+
 # ---------------------------------------------------------------------------
 # Registry
 # ---------------------------------------------------------------------------
@@ -282,6 +323,7 @@ HEAD_REGISTRY: dict[str, type[nn.Module]] = {
     "transformer": TransformerHead,
     "mamba2": Mamba2Head,
     "bimamba2": BiMamba2Head,
+    "gated_bimamba2": GatedBiMamba2Head,
 }
 
 

@@ -90,7 +90,7 @@ find datasets/v1/export -name "*.jpg" | wc -l   # 应为 14946
 | `train.py` | 训练入口 |
 | `dataloader.py` | ClipDataset（支持 annot.json 导出格式 + 原始 .json+.mp4 格式） |
 | `model.py` | TempoPeakModel：frozen ResNet-18 → temporal head → Linear → logits |
-| `temporal_heads.py` | 6 种 temporal head：identity, bilstm, mstcn, transformer, mamba2, bimamba2 |
+| `temporal_heads.py` | 7 种 temporal head：identity, bilstm, mstcn, transformer, mamba2, bimamba2, gated_bimamba2 |
 | `eval.py` | 指标计算：MAE, Acc@1/3/5, Entropy；Gaussian soft CE loss；Expected Displacement Loss |
 | `config.py` | argparse 配置 |
 
@@ -850,7 +850,9 @@ python train_multihit.py --benchmark --feat_dim 1024 --segment_len 2700
 ### 输出
 - 训练日志：`[Epoch N/500] loss=X | P@1=X% R@1=X% F1@1/2/3=X% (GT=N Pred=N) | train=Xs eval=Xs | best_F1@1=X%`
 - **CSV 日志**：`checkpoints/log_{head}.csv`（每 epoch 一行，22 列，每行 flush）
+- **CSV (CrossAttn)**：`checkpoints/log_{head}_ca.csv`（加 `_ca` 后缀，多 `lambda_flow_eff`/`train_flow` 列）
 - Checkpoint：`checkpoints/best_{head}_multihit.pt`、`checkpoints/last_{head}_multihit.pt`
+- Checkpoint (CrossAttn)：`checkpoints/best_{head}_ca_multihit.pt`
 - Benchmark：每个 head 的 ms/segment 和参数量
 
 ### 结果提取（无需重跑）
@@ -859,3 +861,84 @@ python train_multihit.py --benchmark --feat_dim 1024 --segment_len 2700
 python extract_results.py
 # 输出：checkpoints/comparison_6head.csv
 ```
+
+## Farneback 光流提取 (extract_flow.py)
+
+脚本：`extract_flow.py` — 提取每帧 Farneback 光流幅值，空间均值到 14×14 grid，输出 [N, 196] fp16。
+
+```bash
+# CPU 即可，不占 GPU (~25 min for 74k frames)
+python extract_flow.py \
+    --video datasets/v1/export/0006/00001/00001.mp4 \
+    --output datasets/v1/export/0006/00001/00001_flow.pt
+```
+
+| 参数 | 默认值 | 说明 |
+|---|---|---|
+| `--video` | (必填) | 输入 .mp4 路径 |
+| `--output` | (必填) | 输出 .pt 路径 ([N, 196] fp16) |
+| `--grid` | 14 | 空间 grid (14×14 = 196 = DINOv2 patch 数) |
+
+输出 ~28 MB for 74k frames。Frame 0 全零。
+
+## Spatial Patch Token 提取
+
+在 `extract_features_fullvideo.py` 基础上新增 `--mode spatial`：
+
+```bash
+# Spatial patch tokens (~5 min, H100)
+python extract_features_fullvideo.py \
+    --video datasets/v1/export/0006/00001/00001.mp4 \
+    --output datasets/v1/export/0006/00001/00001_spatial.pt \
+    --img_size 224 --batch_size 128 --mode spatial
+```
+
+| `--mode` | 输出形状 | 说明 |
+|---|---|---|
+| `cls` (默认) | [N, 1024] | CLS token（旧版兼容） |
+| `spatial` | [N, 196, 1024] | patch tokens（CrossAttnPooling 用） |
+
+`spatial` 模式 ~27.8 GB for 74k frames (fp16)。
+
+## 联合训练 (CrossAttnPooling + Flow KL)
+
+在 `train_multihit.py` 基础上新增 `--use_cross_attn` + `--spatial_pt` + `--flow_pt`：
+
+```bash
+# E1: GatedBiMamba2 alone (验证 gate 效果)
+python train_multihit.py \
+    --features_pt datasets/v1/export/0006/00001/00001_ce224.pt \
+    --hit_json datasets/v1/export/0006/00001/annot.json \
+    --temporal_head gated_bimamba2 \
+    --segment_len 2700 --epochs 300 --batch_size 4 --lr 3e-4
+
+# E2: 主实验 (CrossAttn + Flow + GatedBiMamba2)
+python train_multihit.py \
+    --features_pt datasets/v1/export/0006/00001/00001_ce224.pt \
+    --spatial_pt  datasets/v1/export/0006/00001/00001_spatial.pt \
+    --flow_pt     datasets/v1/export/0006/00001/00001_flow.pt \
+    --hit_json    datasets/v1/export/0006/00001/annot.json \
+    --temporal_head gated_bimamba2 --use_cross_attn \
+    --segment_len 2700 --epochs 300 --batch_size 4 --lr 3e-4
+
+# E3: CrossAttn + BiLSTM (ablation)
+python train_multihit.py \
+    --features_pt datasets/v1/export/0006/00001/00001_ce224.pt \
+    --spatial_pt  datasets/v1/export/0006/00001/00001_spatial.pt \
+    --flow_pt     datasets/v1/export/0006/00001/00001_flow.pt \
+    --hit_json    datasets/v1/export/0006/00001/annot.json \
+    --temporal_head bilstm --use_cross_attn \
+    --segment_len 2700 --epochs 300 --batch_size 4 --lr 3e-4
+```
+
+### 新增参数
+
+| 参数 | 默认值 | 说明 |
+|---|---|---|
+| `--spatial_pt` | None | Spatial patch tokens [N,196,1024] .pt |
+| `--flow_pt` | None | Farneback flow [N,196] .pt |
+| `--use_cross_attn` | False | 启用 CrossAttnPooling 替换 Linear |
+| `--temporal_head` | gated_bimamba2 | 默认改为 gated_bimamba2（新增 choice） |
+| `--lambda_flow` | 0.5 | Flow KL loss 初始权重 |
+| `--flow_anneal_epochs` | 50 | Flow KL 衰减到 0 的 epoch 数 |
+| `--epochs` | 300 | 默认改为 300 |
