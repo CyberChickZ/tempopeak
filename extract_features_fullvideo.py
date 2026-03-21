@@ -2,7 +2,8 @@
 
 Two modes (--mode):
   cls     → [N, 1024] CLS token per frame (default, backward compatible)
-  spatial → [N, 196, 1024] patch tokens per frame (for CrossAttnPooling)
+  spatial → [N, n_patches, 1024] patch tokens per frame (for CrossAttnPooling)
+           n_patches depends on img_size: 196 for 224px, 1369 for 518px
 
 Two input modes:
   --video      Read .mp4 directly (sequential, fast on NFS)
@@ -49,7 +50,7 @@ def build_dinov2(device, mode="cls"):
 
     Args:
         mode: "cls"     → returns [B, 1024] CLS token
-              "spatial" → returns [B, 196, 1024] patch tokens (excl CLS)
+              "spatial" → returns [B, n_patches, 1024] patch tokens (excl CLS)
 
     Returns (model, feat_dim=1024).
     """
@@ -66,7 +67,7 @@ def build_dinov2(device, mode="cls"):
         def forward(self, x):
             outputs = self.model(pixel_values=x)
             if self.mode == "spatial":
-                return outputs.last_hidden_state[:, 1:, :]  # [B, 196, 1024]
+                return outputs.last_hidden_state[:, 1:, :]  # [B, n_patches, 1024]
             return outputs.last_hidden_state[:, 0, :]        # [B, 1024]
 
     backbone = _DINOv2Feats(dinov2, mode).to(device).eval()
@@ -186,7 +187,7 @@ def main():
                    help="Thread pool size for JPEG reading (frames_dir mode)")
     p.add_argument("--mode", type=str, default="cls",
                    choices=["cls", "spatial"],
-                   help="cls → [N,1024] CLS token; spatial → [N,196,1024] patch tokens")
+                   help="cls → [N,1024] CLS token; spatial → [N,n_patches,1024] patch tokens")
     p.add_argument("--device", type=str, default="auto",
                    help="auto = cuda if available else cpu (never MPS)")
     args = p.parse_args()
@@ -235,9 +236,25 @@ def main():
     backbone, feat_dim = build_dinov2(device, mode=args.mode)
     print(f"  feat_dim: {feat_dim}, mode: {args.mode}")
 
+    # Determine n_patches dynamically (196 for 224px, 1369 for 518px)
+    if args.mode == "spatial":
+        if args.frames_dir:
+            sample_img = cv2.imread(os.path.join(args.frames_dir, "0.jpg"))
+            sh, sw = sample_img.shape[:2]
+        else:
+            sh = sw = args.img_size
+        with torch.no_grad():
+            dummy = torch.randn(1, 3, sh, sw, device=device)
+            n_patches = backbone(dummy).shape[1]
+            del dummy
+        grid_side = int(n_patches ** 0.5)
+        est_gb = total_frames * n_patches * feat_dim * 2 / 1e9
+        print(f"  n_patches: {n_patches} ({grid_side}x{grid_side} grid)")
+        print(f"  Estimated output: {est_gb:.1f} GB fp16")
+
     # Pre-allocate output
     if args.mode == "spatial":
-        all_features = torch.zeros(total_frames, 196, feat_dim, dtype=torch.float16)
+        all_features = torch.zeros(total_frames, n_patches, feat_dim, dtype=torch.float16)
     else:
         all_features = torch.zeros(total_frames, feat_dim, dtype=torch.float16)
 
