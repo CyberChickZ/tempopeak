@@ -166,6 +166,11 @@ def main():
     if device == "auto":
         device = "cuda" if torch.cuda.is_available() else "cpu"
 
+    # Force pure-PyTorch SSM fallback on CPU (CUDA Mamba2 kernel won't work)
+    if device == "cpu":
+        import temporal_heads
+        temporal_heads._HAS_MAMBA_SSM = False
+
     os.makedirs(args.output_dir, exist_ok=True)
 
     # Build val loader (same split as training)
