@@ -109,45 +109,45 @@ def find_representative_samples(results, gt):
     """
     N = len(gt)
     head_correct = {}  # head -> [N] bool
+    available_heads = [h for h in HEADS if h in results]
 
-    for head in HEADS:
+    for head in available_heads:
         preds = results[head]["preds"]
         errors = (preds - gt).abs()
         head_correct[head] = errors <= 1
 
     reps = {}
 
-    # All correct
+    # All correct (across available heads only)
     all_mask = torch.ones(N, dtype=torch.bool)
-    for head in HEADS:
+    for head in available_heads:
         all_mask &= head_correct[head]
     indices = all_mask.nonzero(as_tuple=True)[0]
     if len(indices) > 0:
-        # Pick one with smallest total error across all heads
         best_idx = indices[0].item()
         reps["all_correct"] = best_idx
 
-    # Only BiMamba2 correct
-    bimamba_only = head_correct["bimamba2"].clone()
-    for head in HEADS:
-        if head != "bimamba2":
-            bimamba_only &= ~head_correct[head]
-    indices = bimamba_only.nonzero(as_tuple=True)[0]
-    if len(indices) > 0:
-        reps["only_bimamba2"] = indices[0].item()
+    # Only BiMamba2 correct (if available)
+    if "bimamba2" in head_correct:
+        bimamba_only = head_correct["bimamba2"].clone()
+        for head in available_heads:
+            if head != "bimamba2":
+                bimamba_only &= ~head_correct[head]
+        indices = bimamba_only.nonzero(as_tuple=True)[0]
+        if len(indices) > 0:
+            reps["only_bimamba2"] = indices[0].item()
 
-    # BiMamba2 correct, at least 2 others wrong
-    bimamba_best = head_correct["bimamba2"].clone()
-    others_wrong_count = torch.zeros(N, dtype=torch.long)
-    for head in HEADS:
-        if head != "bimamba2":
-            others_wrong_count += (~head_correct[head]).long()
-    bimamba_best &= (others_wrong_count >= 2)
-    indices = bimamba_best.nonzero(as_tuple=True)[0]
-    if len(indices) > 0:
-        # Pick one with most others wrong
-        best_i = others_wrong_count[indices].argmax()
-        reps["bimamba2_best"] = indices[best_i].item()
+        # BiMamba2 correct, at least 2 others wrong
+        bimamba_best = head_correct["bimamba2"].clone()
+        others_wrong_count = torch.zeros(N, dtype=torch.long)
+        for head in available_heads:
+            if head != "bimamba2":
+                others_wrong_count += (~head_correct[head]).long()
+        bimamba_best &= (others_wrong_count >= 2)
+        indices = bimamba_best.nonzero(as_tuple=True)[0]
+        if len(indices) > 0:
+            best_i = others_wrong_count[indices].argmax()
+            reps["bimamba2_best"] = indices[best_i].item()
 
     return reps
 
