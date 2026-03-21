@@ -73,18 +73,41 @@ def letterbox(img, size):
 
 
 def get_attention_map(model, img_tensor, device):
-    """Get CLS→patch attention weights from last layer.
+    """Get CLS→patch attention weights from last layer via forward hook.
 
     Returns:
         attn_map: [grid_size, grid_size] attention weights (mean across heads)
     """
     img_tensor = img_tensor.unsqueeze(0).to(device)
 
-    with torch.no_grad():
-        outputs = model(pixel_values=img_tensor, output_attentions=True)
+    # Use hook to capture attention weights (more reliable than output_attentions)
+    captured_attn = []
 
-    # Last layer attention: [1, n_heads, n_tokens, n_tokens]
-    last_attn = outputs.attentions[-1]  # [1, 16, 1+n_patches, 1+n_patches]
+    def hook_fn(module, input, output):
+        # DINOv2 attention module returns (context, attn_weights)
+        if isinstance(output, tuple) and len(output) >= 2:
+            captured_attn.append(output[1])
+
+    # Register hook on last encoder layer's attention
+    last_attn_layer = model.encoder.layer[-1].attention.attention
+    handle = last_attn_layer.register_forward_hook(hook_fn)
+
+    with torch.no_grad():
+        try:
+            outputs = model(pixel_values=img_tensor, output_attentions=True)
+        except Exception:
+            outputs = model(pixel_values=img_tensor)
+
+    handle.remove()
+
+    # Try hook first, fall back to outputs.attentions
+    if captured_attn:
+        last_attn = captured_attn[-1]  # [1, n_heads, n_tokens, n_tokens]
+    elif hasattr(outputs, "attentions") and outputs.attentions:
+        last_attn = outputs.attentions[-1]
+    else:
+        raise RuntimeError("Could not capture attention weights. "
+                           "Check transformers version and DINOv2 model API.")
 
     # CLS token (index 0) attending to patch tokens (index 1:)
     cls_attn = last_attn[0, :, 0, 1:]  # [n_heads, n_patches]

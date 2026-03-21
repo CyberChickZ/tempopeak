@@ -6,16 +6,20 @@
 
 spatial/flow 模式:
   传入 spatial_pt + flow_pt 时, __getitem__ 额外返回:
-    patches:  [segment_len, 196, 1024]  fp32
-    flow_mag: [segment_len, 196]        fp32
+    patches:  [segment_len, n_patches, 1024]  fp32
+    flow_mag: [segment_len, n_patches]        fp32
   CrossAttnPooling 在 train_multihit.py 里消费这两个字段.
   推理时不传 spatial_pt/flow_pt, 退化为普通 CLS token 模式.
+
+  支持 .pt 和 .npy 格式:
+    .pt  → 加载到 RAM (适合 <50GB 文件)
+    .npy → numpy mmap 按需读取 (适合 200+ GB 的 518-native spatial)
 
 使用:
   train_loader, val_loader, feat_dim = build_multihit_dataloaders(
       features_pt="data/00001_ce224.pt",
-      spatial_pt="data/00001_spatial.pt",   # 可选
-      flow_pt="data/00001_flow.pt",          # 可选
+      spatial_pt="data/00001_spatial518.npy",  # 可选, .pt 或 .npy
+      flow_pt="data/00001_flow518.pt",          # 可选
       hit_json="data/annot.json",
   )
 """
@@ -92,6 +96,21 @@ class FullVideoDataset(Dataset):
         flow_mag: [segment_len, 196]
     """
 
+    @staticmethod
+    def _load_spatial_or_flow(path):
+        """Load .pt or .npy file. Returns (data, is_mmap).
+
+        .npy files are loaded with mmap_mode='r' for zero-RAM usage (ideal for 200+ GB).
+        .pt files are loaded normally into RAM.
+        """
+        import numpy as np
+        if path.endswith(".npy"):
+            data = np.load(path, mmap_mode="r")
+            return data, True
+        else:
+            data = torch.load(path, weights_only=True)
+            return data, False
+
     def __init__(self, features_pt, hit_json,
                  spatial_pt=None,
                  flow_pt=None,
@@ -127,33 +146,59 @@ class FullVideoDataset(Dataset):
         self.all_hits = all_hits
         self.N, self.feat_dim = self.features.shape
 
-        # --- 可选: spatial patch tokens [N, 196, 1024] ---
+        # --- 可选: spatial patch tokens [N, n_patches, 1024] ---
         self.spatial = None
+        self._spatial_npy = None  # numpy mmap reference (if .npy)
+        self._spatial_range = None  # frame_range for mmap slicing
         if spatial_pt is not None:
             print(f"加载 spatial tokens: {spatial_pt} ...")
-            sp = torch.load(spatial_pt, weights_only=True).float()
-            assert sp.dim() == 3 and sp.shape[1] == 196, \
-                f"spatial_pt 期望 [N,196,1024], 实际 {sp.shape}"
-            if frame_range is not None:
+            sp, is_mmap = self._load_spatial_or_flow(spatial_pt)
+            assert sp.ndim == 3, \
+                f"spatial_pt 期望 [N, n_patches, D], 实际 {sp.shape}"
+            n_total = sp.shape[0]
+            if frame_range is not None and not is_mmap:
                 sp = sp[start_f:end_f]
-            assert sp.shape[0] == self.N, \
-                f"spatial_pt 帧数 {sp.shape[0]} 与 features_pt {self.N} 不匹配"
-            self.spatial = sp
-            print(f"  spatial: {self.spatial.shape}  "
-                  f"({self.spatial.numel()*2/1e9:.1f} GB fp16-equiv in RAM as fp32)")
+            if is_mmap:
+                # mmap mode: store numpy reference, slice in __getitem__
+                self._spatial_npy = sp
+                self._spatial_range = (start_f, end_f) if frame_range else (0, n_total)
+                effective_n = (self._spatial_range[1] - self._spatial_range[0])
+                assert effective_n == self.N, \
+                    f"spatial_pt 帧数 {effective_n} 与 features_pt {self.N} 不匹配"
+                print(f"  spatial: {sp.shape} mmap (0 GB RAM, reads on demand)")
+            else:
+                assert sp.shape[0] == self.N, \
+                    f"spatial_pt 帧数 {sp.shape[0]} 与 features_pt {self.N} 不匹配"
+                self.spatial = sp
+                print(f"  spatial: {self.spatial.shape}  "
+                      f"({self.spatial.numel()*2/1e9:.1f} GB fp16-equiv in RAM)")
 
-        # --- 可选: optical flow [N, 196] ---
+        # --- 可选: optical flow [N, n_patches] ---
         self.flow = None
         if flow_pt is not None:
             print(f"加载 flow: {flow_pt} ...")
-            fl = torch.load(flow_pt, weights_only=True).float()
-            assert fl.dim() == 2 and fl.shape[1] == 196, \
-                f"flow_pt 期望 [N,196], 实际 {fl.shape}"
+            fl, _ = self._load_spatial_or_flow(flow_pt)
+            if isinstance(fl, torch.Tensor):
+                fl = fl.float()
+            else:
+                fl = torch.from_numpy(fl.copy() if hasattr(fl, 'copy') else fl).float()
+            assert fl.dim() == 2, \
+                f"flow_pt 期望 [N, n_patches], 实际 {fl.shape}"
             if frame_range is not None:
                 fl = fl[start_f:end_f]
             assert fl.shape[0] == self.N, \
                 f"flow_pt 帧数 {fl.shape[0]} 与 features_pt {self.N} 不匹配"
             self.flow = fl
+
+        # --- spatial-flow 一致性校验 ---
+        sp_patches = None
+        if self.spatial is not None:
+            sp_patches = self.spatial.shape[1]
+        elif self._spatial_npy is not None:
+            sp_patches = self._spatial_npy.shape[1]
+        if sp_patches is not None and self.flow is not None:
+            assert sp_patches == self.flow.shape[1], \
+                f"spatial n_patches={sp_patches} != flow n_patches={self.flow.shape[1]}"
 
         # --- 切 segment ---
         if stride is None:
@@ -192,22 +237,28 @@ class FullVideoDataset(Dataset):
             "segment_start": start,          # int (global offset)
         }
 
-        # --- Spatial patch tokens (可选) ---
-        if self.spatial is not None:
-            patches = self.spatial[start:end]         # [valid_len, 196, 1024]
+        # --- Spatial patch tokens (可选, 支持 mmap) ---
+        if self.spatial is not None or self._spatial_npy is not None:
+            if self._spatial_npy is not None:
+                # mmap mode: read only the needed segment from disk
+                s0, _ = self._spatial_range
+                patches = torch.from_numpy(
+                    self._spatial_npy[s0 + start:s0 + end].copy()).float()
+            else:
+                patches = self.spatial[start:end].float()
             if valid_len < self.segment_len:
                 pad = patches[-1:].expand(
                     self.segment_len - valid_len, -1, -1)
-                patches = torch.cat([patches, pad])   # [segment_len, 196, 1024]
+                patches = torch.cat([patches, pad])
             result["patches"] = patches
 
         # --- Optical flow (可选) ---
         if self.flow is not None:
-            flow = self.flow[start:end]               # [valid_len, 196]
+            flow = self.flow[start:end].float()       # [valid_len, n_patches]
             if valid_len < self.segment_len:
                 pad = flow[-1:].expand(
                     self.segment_len - valid_len, -1)
-                flow = torch.cat([flow, pad])          # [segment_len, 196]
+                flow = torch.cat([flow, pad])          # [segment_len, n_patches]
             result["flow_mag"] = flow
 
         return result

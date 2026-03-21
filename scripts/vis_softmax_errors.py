@@ -40,7 +40,7 @@ HEADS = ["identity", "bilstm", "mamba2", "bimamba2", "transformer"]
 
 def load_model(head_name, ckpt_path, device):
     """Load checkpoint and reconstruct model."""
-    ckpt = torch.load(ckpt_path, map_location=device, weights_only=False)
+    ckpt = torch.load(ckpt_path, map_location="cpu", weights_only=False)
     args = ckpt["args"]
 
     # Detect feature mode from checkpoint args

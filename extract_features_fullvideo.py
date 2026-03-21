@@ -303,20 +303,36 @@ def main():
 
     producer.join()
 
-    # Save: mmap → torch tensor → .pt file
+    # Save
     os.makedirs(os.path.dirname(args.output) or ".", exist_ok=True)
     all_features.flush()
-    print(f"\nFlush complete, converting mmap → .pt ...")
-    final_tensor = torch.from_numpy(np.array(all_features))  # mmap → copy → tensor
-    torch.save(final_tensor, args.output)
-    del final_tensor, all_features
-    os.remove(mmap_path)
 
-    elapsed = time.time() - t0
-    size_mb = os.path.getsize(args.output) / (1024 * 1024)
-    print(f"Done. {total_frames} frames → {feat_shape} fp16")
-    print(f"  Time: {elapsed:.0f}s ({total_frames/elapsed:.0f} frames/s)")
-    print(f"  File: {args.output} ({size_mb:.1f} MB)")
+    # For large spatial tensors (>50 GB), save as .npy to avoid loading all into RAM.
+    # np.save on a memmap streams directly from disk → disk, no RAM spike.
+    # For small tensors (CLS mode), save as .pt for backward compatibility.
+    est_bytes = np.prod(feat_shape) * 2  # fp16
+    if est_bytes > 50e9:
+        npy_path = args.output.replace(".pt", ".npy")
+        print(f"\nLarge tensor ({est_bytes/1e9:.0f} GB), saving as .npy (RAM-safe)...")
+        np.save(npy_path, all_features)
+        del all_features
+        os.remove(mmap_path)
+        elapsed = time.time() - t0
+        size_mb = os.path.getsize(npy_path) / (1024 * 1024)
+        print(f"Done. {total_frames} frames → {feat_shape} fp16")
+        print(f"  Time: {elapsed:.0f}s ({total_frames/elapsed:.0f} frames/s)")
+        print(f"  File: {npy_path} ({size_mb/1024:.1f} GB)")
+    else:
+        print(f"\nConverting mmap → .pt ...")
+        final_tensor = torch.from_numpy(np.array(all_features))
+        torch.save(final_tensor, args.output)
+        del final_tensor, all_features
+        os.remove(mmap_path)
+        elapsed = time.time() - t0
+        size_mb = os.path.getsize(args.output) / (1024 * 1024)
+        print(f"Done. {total_frames} frames → {feat_shape} fp16")
+        print(f"  Time: {elapsed:.0f}s ({total_frames/elapsed:.0f} frames/s)")
+        print(f"  File: {args.output} ({size_mb:.1f} MB)")
 
 
 if __name__ == "__main__":
