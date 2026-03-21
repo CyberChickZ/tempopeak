@@ -104,25 +104,32 @@ def _read_jpeg(args):
 
 
 def produce_batches_from_dir(frames_dir, total, batch_size, num_workers, queue):
-    """Producer thread: read JPEGs in parallel via ThreadPoolExecutor, push batches to queue."""
+    """Producer thread: read JPEGs in parallel via ThreadPoolExecutor, push batches to queue.
+
+    Processes in windows of batch_size*4 frames to avoid submitting all 74k jobs
+    at once (pool.map creates all futures eagerly → decoded tensors pile up in RAM).
+    """
     pool = ThreadPoolExecutor(max_workers=num_workers)
 
     batch_indices = []
     batch_tensors = []
+    WINDOW = batch_size * 4  # submit at most this many frames at a time
 
-    # Submit all reads
-    jobs = [(i, os.path.join(frames_dir, f"{i}.jpg")) for i in range(total)]
+    for win_start in range(0, total, WINDOW):
+        win_end = min(win_start + WINDOW, total)
+        jobs = [(i, os.path.join(frames_dir, f"{i}.jpg"))
+                for i in range(win_start, win_end)]
 
-    for idx, tensor in pool.map(_read_jpeg, jobs):
-        if tensor is None:
-            continue
-        batch_indices.append(idx)
-        batch_tensors.append(tensor)
+        for idx, tensor in pool.map(_read_jpeg, jobs):
+            if tensor is None:
+                continue
+            batch_indices.append(idx)
+            batch_tensors.append(tensor)
 
-        if len(batch_tensors) == batch_size:
-            queue.put((torch.stack(batch_tensors), batch_indices))
-            batch_indices = []
-            batch_tensors = []
+            if len(batch_tensors) == batch_size:
+                queue.put((torch.stack(batch_tensors), batch_indices))
+                batch_indices = []
+                batch_tensors = []
 
     # Last partial batch
     if batch_tensors:
