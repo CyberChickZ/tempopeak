@@ -252,11 +252,15 @@ def main():
         print(f"  n_patches: {n_patches} ({grid_side}x{grid_side} grid)")
         print(f"  Estimated output: {est_gb:.1f} GB fp16")
 
-    # Pre-allocate output
+    # Pre-allocate output via mmap (avoids OOM for large spatial tensors)
     if args.mode == "spatial":
-        all_features = torch.zeros(total_frames, n_patches, feat_dim, dtype=torch.float16)
+        feat_shape = (total_frames, n_patches, feat_dim)
     else:
-        all_features = torch.zeros(total_frames, feat_dim, dtype=torch.float16)
+        feat_shape = (total_frames, feat_dim)
+
+    mmap_path = args.output + ".tmp.bin"
+    all_features = np.memmap(mmap_path, dtype=np.float16, mode="w+", shape=feat_shape)
+    print(f"  mmap: {mmap_path} ({np.prod(feat_shape)*2/1e9:.1f} GB on disk)")
 
     # Start producer thread (reads frames → pushes batches to queue)
     # Queue size 2 = double buffering: producer fills next batch while GPU processes current
@@ -288,7 +292,7 @@ def main():
 
         feats_cpu = feats.cpu().half()
         for i, idx in enumerate(batch_indices):
-            all_features[idx] = feats_cpu[i]
+            all_features[idx] = feats_cpu[i].numpy()
 
         frames_done += len(batch_indices)
         elapsed = time.time() - t0
@@ -299,13 +303,18 @@ def main():
 
     producer.join()
 
-    # Save
+    # Save: mmap → torch tensor → .pt file
     os.makedirs(os.path.dirname(args.output) or ".", exist_ok=True)
-    torch.save(all_features, args.output)
+    all_features.flush()
+    print(f"\nFlush complete, converting mmap → .pt ...")
+    final_tensor = torch.from_numpy(np.array(all_features))  # mmap → copy → tensor
+    torch.save(final_tensor, args.output)
+    del final_tensor, all_features
+    os.remove(mmap_path)
 
     elapsed = time.time() - t0
     size_mb = os.path.getsize(args.output) / (1024 * 1024)
-    print(f"\nDone. {total_frames} frames -> {all_features.shape} fp16")
+    print(f"Done. {total_frames} frames → {feat_shape} fp16")
     print(f"  Time: {elapsed:.0f}s ({total_frames/elapsed:.0f} frames/s)")
     print(f"  File: {args.output} ({size_mb:.1f} MB)")
 
