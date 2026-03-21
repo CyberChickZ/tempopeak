@@ -204,11 +204,11 @@ def main():
         print(f"\nRunning {head}...")
         try:
             model, saved_metrics = load_model(head, ckpt_path, device)
+            probs, preds, gt_out, vlen = run_inference(model, val_loader, device)
         except RuntimeError as e:
             print(f"  SKIP {head}: {e}")
-            print(f"  (Mamba heads require GPU — re-run with --device cuda)")
+            print(f"  (Mamba heads require CUDA — re-run with --device cuda on GPU node)")
             continue
-        probs, preds, gt_out, vlen = run_inference(model, val_loader, device)
 
         if gt is None:
             gt = gt_out
