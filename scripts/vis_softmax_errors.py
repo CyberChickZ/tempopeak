@@ -173,8 +173,23 @@ def main():
     _, val_loader = build_dataloaders(
         args.data_dir, t_max=args.t_max, batch_size=args.batch_size,
         backbone="dinov2")
-    n_val = len(val_loader.dataset)
-    print(f"  Val samples: {n_val}")
+
+    # Filter out samples without pre-extracted features (avoid mixed tensor shapes)
+    from pathlib import Path
+    val_ds = val_loader.dataset
+    original_n = len(val_ds)
+    filtered = []
+    for s in val_ds.samples:
+        ci, hi_idx = s[0], s[1]
+        clip = val_ds.clips[ci]
+        hitter = clip["hitters"][hi_idx] if hi_idx < len(clip["hitters"]) else 0
+        pk = "p%d" % hitter if hitter in (1, 2) else "p1"
+        feat_dir = Path(clip["clip_dir"]) / "features" / "dinov2" / pk
+        if feat_dir.exists():
+            filtered.append(s)
+    val_ds.samples = filtered
+    n_val = len(val_ds)
+    print(f"  Val samples: {n_val} (filtered from {original_n}, removed {original_n - n_val} without features)")
 
     # Run inference for each head
     results = {}
